@@ -15,7 +15,9 @@ import json
 import os
 import tempfile
 import webbrowser
-from graphviz import Digraph
+
+# Graphviz is optional; import lazily inside methods that need it
+# This avoids crashing the app at import time when graphviz isn't installed
 
 from .models import Process, Schedule, Task, Resource, ScheduleEntry
 
