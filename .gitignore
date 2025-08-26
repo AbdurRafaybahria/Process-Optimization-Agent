@@ -1,0 +1,41 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments and local env files
+.venv/
+venv/
+env/
+ENV/
+*.env
+
+# IDE/project settings
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test/coverage/cache
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Project-specific generated artifacts
+outputs/
+
+# If you want to keep some generated images, you can remove 'outputs/' above and track specific files
+# Alternatively, consider Git LFS for large binaries: https://git-lfs.com/
