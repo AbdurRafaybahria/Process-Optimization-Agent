@@ -699,21 +699,10 @@ class Visualizer:
                            facecolor=outer_colors[i], edgecolor='white', linewidth=0.8)
                 ax_pies.add_patch(ww)
                 wedges1.append(ww)
-                # Place resource name OUTSIDE the pie with a leader line
-                ang = np.deg2rad((theta1 + theta2) / 2.0)
-                # Start point near the outer edge of the donut
-                x0, y0 = np.cos(ang) * 1.02, np.sin(ang) * 1.02
-                # End point further outside for the label text
-                r_text = 1.45
-                x1, y1 = np.cos(ang) * r_text, np.sin(ang) * r_text
-                ha = 'left' if np.cos(ang) >= 0 else 'right'
-                t_lbl = ax_pies.annotate(
-                    names[i], xy=(x0, y0), xytext=(x1, y1),
-                    ha=ha, va='center', fontsize=9, color='#333333',
-                    textcoords='data', arrowprops=dict(arrowstyle='-', color='#999999', lw=0.8, shrinkA=0, shrinkB=0,
-                                                       connectionstyle='arc3,rad=0.2'), clip_on=False)
-                texts1.append(t_lbl)
+                # REMOVED: Resource names were causing overlap
+                texts1.append(None)
                 # Place equal-split percentage on outer ring
+                ang = np.deg2rad((theta1 + theta2) / 2.0)
                 px, py = np.cos(ang) * 0.88, np.sin(ang) * 0.88
                 t_pct = ax_pies.text(px, py, _pct_fmt(equal_pct), ha='center', va='center', fontsize=9, color='white')
                 autotexts1.append(t_pct)
@@ -726,7 +715,18 @@ class Visualizer:
                     t.set_path_effects([pe.withStroke(linewidth=2, foreground='black', alpha=0.6)])
             except Exception:
                 pass
-            ax_pies.legend(handles=[wedges1[0]], labels=["Outer: Before (equal split) | Inner: After (task hours)"], loc='upper left', bbox_to_anchor=(0.0, 1.0))
+            # Create a proper legend showing resource names with colors
+            legend_items = []
+            legend_labels = []
+            for i, name in enumerate(names):
+                legend_items.append(wedges1[i])
+                after_hours = after_vals[i]
+                legend_labels.append(f"{name} ({after_hours:.1f}h)")
+            
+            # Place legend below the pie chart to avoid overlap
+            ax_pies.legend(legend_items, legend_labels, 
+                         loc='upper center', bbox_to_anchor=(0.5, -0.1),
+                         ncol=2, frameon=False, fontsize=8)
 
             # Bar charts (Resource Time Comparison)
             ax_bars.set_title("Resource Hours: Task Hours (Sequential) vs Working Window (Actual Parallel)")
@@ -807,15 +807,16 @@ class Visualizer:
             total_task_hours = sum(after_vals)
             max_window = max(after_elapsed_vals) if after_elapsed_vals else 0.0
             
-            # Add summary annotation
-            ax_bars.text(0.02, 0.98,
-                       f'Red bars: Sum of task durations ({total_task_hours:.0f}h total)\n'
-                       f'Green bars: Actual calendar working time\n'
-                       f'Process elapsed: {after_elapsed_hours:.0f}h\n'
-                       f'Time saved via parallelization: {total_task_hours - after_elapsed_hours:.0f}h',
+            # Add summary annotation on the right side of the chart
+            ax_bars.text(1.02, 0.98,
+                       f'• Red bars: Sum of task durations ({total_task_hours:.0f}h total)\n'
+                       f'• Green bars: Actual working time\n'
+                       f'• Process elapsed: {after_elapsed_hours:.0f}h\n'
+                       f'• Time saved: {total_task_hours - after_elapsed_hours:.0f}h',
                        transform=ax_bars.transAxes, ha='left', va='top',
                        fontsize=9, bbox=dict(boxstyle='round,pad=0.3', 
-                                            facecolor='yellow', alpha=0.2))
+                                          facecolor='#ffffcc', alpha=0.8,
+                                          edgecolor='#dddd88', linewidth=0.5))
 
             # Task-to-Resource mapping (After schedule): bipartite arrows (no colors)
             # Use task duration hours (not elapsed time) to match pie chart and red bars
@@ -927,22 +928,27 @@ class Visualizer:
             # Vertical gridlines at each column
             for x in x_positions:
                 ax_text.axvline(x, color='#dddddd', linewidth=0.6)
-            # Add summary box with metrics
+            # Add summary box with metrics (moved to the right side of the figure)
             after_assigned_total = float(sum(after_vals))
             time_reduction = before_total_hours - after_elapsed_hours
             time_reduction_pct = (time_reduction / before_total_hours * 100) if before_total_hours > 0 else 0
             
-            summary_lines = [
-                f"📊 Performance Metrics:",
-                f"━━━━━━━━━━━━━━━━━━━━",
-                f"Duration: {before_total_hours:.0f}h → {after_elapsed_hours:.0f}h",
-                f"Time Saved: {time_reduction:.0f}h ({time_reduction_pct:.1f}%)",
-                f"Cost: ${before_total_cost:,.0f} → ${after_total_cost:,.0f}",
-                f"Parallelization: {len(par_groups)} parallel groups"
-            ]
-            ax_text.text(0.99, 0.98, "\n".join(summary_lines), transform=ax_text.transAxes,
-                         ha='right', va='top', fontsize=9,
-                         bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='#cccccc'))
+            # Create a text box on the right side of the figure
+            summary_text = (
+                f"📊 Performance Summary\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"• Duration: {before_total_hours:.0f}h → {after_elapsed_hours:.0f}h\n"
+                f"• Time Saved: {time_reduction:.0f}h ({time_reduction_pct:.1f}%)\n"
+                f"• Cost: ${before_total_cost:,.0f} → ${after_total_cost:,.0f}\n"
+                f"• Parallel Groups: {len(par_groups)}"
+            )
+            
+            # Add text to the right of the last subplot
+            fig.text(1.02, 0.98, summary_text, ha='left', va='top', fontsize=9,
+                   bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', 
+                           edgecolor='#dee2e6', alpha=0.9))
+            
+            # Parallel task groups summary has been removed as requested
 
             fig.tight_layout(rect=[0, 0, 1, 0.97])
             if output_file:
@@ -1140,11 +1146,87 @@ class Visualizer:
         
         # Pie chart for resource costs
         if resource_costs:
-            wedges, texts, autotexts = ax1.pie(resource_costs.values(), 
-                                             labels=resource_costs.keys(),
-                                             autopct='%1.1f%%',
-                                             colors=plt.cm.Set3.colors)
-            ax1.set_title('Cost Distribution by Resource', fontsize=14, weight='bold')
+            # Sort resources by cost in descending order
+            sorted_resources = sorted(resource_costs.items(), key=lambda x: x[1], reverse=True)
+            labels = [f"{k} (${v:,.2f})" for k, v in sorted_resources]
+            sizes = [v for k, v in sorted_resources]
+            
+            # Create figure with massive vertical space
+            fig = plt.gcf()
+            fig.clear()
+            fig.set_size_inches(12, 18)  # Even taller figure
+            
+            # Create THREE distinct zones with clear separation
+            
+            # ZONE 1: Title area (top 20% of figure)
+            title_y = 0.92
+            fig.text(0.5, title_y, 'Resource Utilization', 
+                    ha='center', va='center', fontsize=24, weight='bold')
+            
+            subtitle_y = 0.88
+            fig.text(0.5, subtitle_y, 'Task Hours Distribution',
+                    ha='center', va='center', fontsize=18, color='gray')
+            
+            # ZONE 2: Pie chart (middle 40% of figure, y: 0.30-0.70)
+            ax1 = fig.add_axes([0.1, 0.30, 0.8, 0.40])  # [left, bottom, width, height]
+            
+            # Create clean donut chart WITHOUT any labels
+            wedges, texts, autotexts = ax1.pie(
+                sizes,
+                labels=None,  # NO labels on pie
+                autopct='',  # NO percentages on pie slices either
+                startangle=90,
+                colors=plt.cm.Set3.colors[:len(sizes)],
+                wedgeprops=dict(width=0.5, edgecolor='white', linewidth=2),
+                labeldistance=None  # Explicitly disable label distance
+            )
+            
+            # Remove any text elements that might have been created
+            for text in texts:
+                text.set_visible(False)
+            for text in autotexts:
+                text.set_visible(False)
+            
+            ax1.axis('equal')
+            
+            # ZONE 3: Legend area (bottom 25% of figure)
+            legend_title_y = 0.22
+            fig.text(0.5, legend_title_y, 'Resources', 
+                    ha='center', va='center', fontsize=16, weight='bold')
+            
+            # Create a clean table-like legend layout
+            legend_base_y = 0.17
+            num_items = len(labels)
+            
+            if num_items <= 3:
+                # Single column for few items
+                for i, (label, wedge, size) in enumerate(zip(labels, wedges, sizes)):
+                    pct = size / sum(sizes) * 100
+                    y = legend_base_y - i * 0.04
+                    
+                    # Color marker
+                    fig.text(0.35, y, '●', 
+                            color=wedge.get_facecolor(), fontsize=16, ha='right', va='center')
+                    # Label text
+                    fig.text(0.37, y, f"{label} ({pct:.1f}%)", 
+                            fontsize=11, va='center')
+            else:
+                # Two columns for many items
+                cols = 2
+                for i, (label, wedge, size) in enumerate(zip(labels, wedges, sizes)):
+                    pct = size / sum(sizes) * 100
+                    col = i % cols
+                    row = i // cols
+                    
+                    x_base = 0.25 if col == 0 else 0.55
+                    y = legend_base_y - row * 0.04
+                    
+                    # Color marker
+                    fig.text(x_base, y, '●', 
+                            color=wedge.get_facecolor(), fontsize=14, ha='right', va='center')
+                    # Label text  
+                    fig.text(x_base + 0.02, y, f"{label} ({pct:.1f}%)", 
+                            fontsize=10, va='center')
         
         # Cost by task type
         task_type_costs = {}
