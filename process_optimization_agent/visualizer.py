@@ -656,11 +656,11 @@ class Visualizer:
                 return t.name if t else tid
             par_groups = [[_tname(tid) for tid in grp] for grp in _parallel_groups(schedule.entries)]
 
-            # Figure layout (add a third row for a task-to-resource mapping chart)
-            fig = plt.figure(figsize=(16, 11))
-            gs = GridSpec(3, 2, height_ratios=[3, 1, 2], width_ratios=[1, 1])
+            # Figure layout with expanded width for better space utilization
+            fig = plt.figure(figsize=(24, 12))  # Increased width to 24 for more space
+            gs = GridSpec(3, 3, height_ratios=[3, 1.2, 2], width_ratios=[1, 1.2, 0.8])  # 3 columns for better layout
             ax_pies = fig.add_subplot(gs[0, 0])
-            ax_bars = fig.add_subplot(gs[0, 1])
+            ax_bars = fig.add_subplot(gs[0, 1:])
             ax_text = fig.add_subplot(gs[1, :])
             ax_taskmap = fig.add_subplot(gs[2, :])
             fig.suptitle(title, fontsize=14)
@@ -818,8 +818,11 @@ class Visualizer:
                                           facecolor='#ffffcc', alpha=0.8,
                                           edgecolor='#dddd88', linewidth=0.5))
 
-            # Task-to-Resource mapping (After schedule): bipartite arrows (no colors)
-            # Use task duration hours (not elapsed time) to match pie chart and red bars
+            # Task-to-Resource mapping (expanded to utilize full horizontal space)
+            ax_taskmap.clear()
+            ax_taskmap.set_title('Task Assignment (After Schedule)', pad=20, fontsize=14)
+            
+            # Calculate task hours per resource
             task_hours: Dict[Tuple[str, str], float] = {}
             for e in schedule.entries:
                 task = process.get_task_by_id(e.task_id)
@@ -851,17 +854,24 @@ class Visualizer:
 
             if assignments:
                 n = len(assignments)
-                y_vals = _np.linspace(0.9, 0.1, n)
+                y_vals = _np.linspace(0.95, 0.05, n)  # Use more vertical space
             else:
                 y_vals = _np.array([])
 
-            x_left, x_right = 0.05, 0.95
-            # Place labels using axes-fraction transform for consistent positioning
+            # Expand to use full horizontal space
+            x_left, x_right = 0.02, 0.98
+            # Place labels with better formatting and spacing
             left_texts = []
             right_texts = []
-            for y, (rname, tname, _hrs) in zip(y_vals, assignments):
-                lt = ax_taskmap.text(x_left, y, rname, va='center', ha='left', fontsize=9, transform=ax_taskmap.transAxes)
-                rt = ax_taskmap.text(x_right, y, tname, va='center', ha='right', fontsize=9, transform=ax_taskmap.transAxes)
+            for y, (rname, tname, hrs) in zip(y_vals, assignments):
+                # Enhanced resource labels with background
+                lt = ax_taskmap.text(x_left, y, f'🔧 {rname}', va='center', ha='left', fontsize=10, 
+                                   transform=ax_taskmap.transAxes, weight='bold',
+                                   bbox=dict(boxstyle='round,pad=0.3', facecolor='#e8f4fd', alpha=0.7))
+                # Enhanced task labels with background
+                rt = ax_taskmap.text(x_right, y, f'{tname} ({hrs:.1f}h)', va='center', ha='right', fontsize=10,
+                                   transform=ax_taskmap.transAxes, weight='bold',
+                                   bbox=dict(boxstyle='round,pad=0.3', facecolor='#fff2e8', alpha=0.7))
                 left_texts.append(lt)
                 right_texts.append(rt)
 
@@ -878,56 +888,72 @@ class Visualizer:
                 rt_x0 = inv.transform((rt_bb.x0, rt_bb.y0))[0]
                 start_x = min(max(lt_x1 + pad, x_left + pad), x_right - 2*pad)
                 end_x = max(min(rt_x0 - pad, x_right - pad), start_x + 0.02)
-                # Place the time label first to measure its width, then create a gap so the arrow doesn't cross it
+                # Enhanced center label with better styling
                 mx = (start_x + end_x) / 2
-                ttxt = ax_taskmap.text(mx, y, f"{hrs:.1f}h", fontsize=8, color='#333333', ha='center', va='center', transform=ax_taskmap.transAxes)
+                ttxt = ax_taskmap.text(mx, y, f"⏱️ {hrs:.1f}h", fontsize=9, color='#2c3e50', ha='center', va='center', 
+                                     transform=ax_taskmap.transAxes, weight='bold',
+                                     bbox=dict(boxstyle='round,pad=0.2', facecolor='#f8f9fa', edgecolor='#dee2e6'))
                 fig.canvas.draw()
                 t_bb = ttxt.get_window_extent(renderer=fig.canvas.get_renderer())
                 t_x0 = inv.transform((t_bb.x0, t_bb.y0))[0]
                 t_x1 = inv.transform((t_bb.x1, t_bb.y1))[0]
                 gap_l = max(start_x, t_x0 - pad)
                 gap_r = min(end_x,   t_x1 + pad)
-                # Draw left segment (line)
+                # Enhanced arrow styling with gradient effect
                 if gap_l > start_x:
-                    ax_taskmap.plot([start_x, gap_l], [y, y], color='#555555', lw=1.4, transform=ax_taskmap.transAxes)
-                # Draw right segment with arrow head
+                    ax_taskmap.plot([start_x, gap_l], [y, y], color='#3498db', lw=2.0, transform=ax_taskmap.transAxes, alpha=0.8)
+                # Draw right segment with enhanced arrow head
                 if end_x > gap_r:
                     from matplotlib.patches import FancyArrowPatch
                     arr = FancyArrowPatch((gap_r, y), (end_x, y),
-                                          arrowstyle='-|>', mutation_scale=12,
-                                          linewidth=1.4, color='#555555',
+                                          arrowstyle='-|>', mutation_scale=15,
+                                          linewidth=2.0, color='#3498db', alpha=0.8,
                                           transform=ax_taskmap.transAxes)
                     ax_taskmap.add_patch(arr)
             # Remove old annotation code - values are now shown inside bars
 
-            # Parallel groups chart (stacked boxes per group column)
+            # Parallel groups chart (expanded to utilize more horizontal space)
             import numpy as _np
             from matplotlib.patches import Rectangle
             ax_text.clear()
-            ax_text.set_title("Parallel steps (each column) and tasks in each step")
+            ax_text.set_title("Parallel steps (each column) and tasks in each step", fontsize=14, pad=20)
             G = len(par_groups)
             # Determine max stack height across groups
             max_stack = max((len(g) for g in par_groups), default=0)
-            # Draw columns
-            col_w = 0.8
-            x_positions = _np.arange(1, G + 1)
-            for j, grp in enumerate(par_groups, start=1):
+            
+            # Expand columns to fill more horizontal space
+            if G > 0:
+                col_w = min(1.2, 8.0 / G)  # Adaptive column width based on number of groups
+                spacing = max(0.3, 1.0 / G)  # Adaptive spacing
+                x_positions = _np.linspace(1, max(8, G * 1.5), G)  # Spread across more space
+            else:
+                col_w = 0.8
+                x_positions = _np.array([])
+                
+            for j, (grp, x_pos) in enumerate(zip(par_groups, x_positions)):
                 for idx, task_name in enumerate(grp):
                     y0 = idx  # stack vertically within the group
-                    rect = Rectangle((j - col_w/2, y0 + 0.05), col_w, 0.9,
-                                     facecolor='#4e79a7', alpha=0.15, edgecolor='#4e79a7', linewidth=1.0)
+                    rect = Rectangle((x_pos - col_w/2, y0 + 0.05), col_w, 0.9,
+                                     facecolor='#4e79a7', alpha=0.2, edgecolor='#4e79a7', linewidth=1.2)
                     ax_text.add_patch(rect)
-                    ax_text.text(j, y0 + 0.5, task_name, ha='center', va='center', fontsize=8, color='#2f2f2f')
-            # Axes cosmetics
-            ax_text.set_xlim(0.5, G + 0.5)
-            ax_text.set_ylim(-0.1, max_stack + 0.9)
+                    # Wrap long task names for better display
+                    wrapped_name = task_name if len(task_name) <= 20 else task_name[:17] + '...'
+                    ax_text.text(x_pos, y0 + 0.5, wrapped_name, ha='center', va='center', 
+                               fontsize=9, color='#2f2f2f', weight='bold')
+            
+            # Axes cosmetics with expanded range
+            if G > 0:
+                ax_text.set_xlim(0.2, max(8.8, max(x_positions) + 1))
+            else:
+                ax_text.set_xlim(0.2, 8.8)
+            ax_text.set_ylim(-0.2, max_stack + 1.0)
             ax_text.set_xticks(x_positions)
-            ax_text.set_xticklabels([str(i) for i in x_positions])
-            ax_text.set_xlabel('Parallel step (sequence)')
+            ax_text.set_xticklabels([f'Step {i+1}' for i in range(len(x_positions))], fontsize=10)
+            ax_text.set_xlabel('Parallel step sequence', fontsize=12, labelpad=10)
             ax_text.set_yticks([])
-            # Vertical gridlines at each column
+            # Vertical gridlines at each column with better styling
             for x in x_positions:
-                ax_text.axvline(x, color='#dddddd', linewidth=0.6)
+                ax_text.axvline(x, color='#e0e0e0', linewidth=0.8, alpha=0.7)
             # Add summary box with metrics (moved to the right side of the figure)
             after_assigned_total = float(sum(after_vals))
             time_reduction = before_total_hours - after_elapsed_hours
@@ -943,10 +969,11 @@ class Visualizer:
                 f"• Parallel Groups: {len(par_groups)}"
             )
             
-            # Add text to the right of the last subplot
-            fig.text(1.02, 0.98, summary_text, ha='left', va='top', fontsize=9,
-                   bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', 
-                           edgecolor='#dee2e6', alpha=0.9))
+            # Add text to the right side of the parallel steps chart
+            ax_text.text(1.02, 0.98, summary_text, ha='left', va='top', fontsize=9,
+                       transform=ax_text.transAxes,
+                       bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', 
+                               edgecolor='#dee2e6', alpha=0.9))
             
             # Parallel task groups summary has been removed as requested
 
