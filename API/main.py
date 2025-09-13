@@ -7,7 +7,7 @@ import base64
 import asyncio
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from datetime import datetime
@@ -18,6 +18,10 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+# Import CMS integration modules
+from process_optimization_agent.cms_client import CMSClient
+from process_optimization_agent.cms_transformer import CMSDataTransformer
+
 import webbrowser as _webbrowser
 import os as _os
 
@@ -27,6 +31,10 @@ except Exception as e:
     raise RuntimeError(f"Failed to import run_rl_optimizer: {e}")
 
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs", "visualizations")
+
+# Default CMS configuration
+DEFAULT_CMS_URL = "https://server-digitaltwin-enterprise-production.up.railway.app"
+DEFAULT_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoic3VwZXJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGUiOiJTVVBFUl9BRE1JTiIsIm5hbWUiOiJTdXBlciBBZG1pbiIsImlhdCI6MTc1NzMxNDc2OSwiZXhwIjoxNzU3OTE5NTY5fQ.OLdaZNroqLnbfub-0jRVwZUQZJIyMTegioFGtj2dsEk"
 
 app = FastAPI(title="Process Optimization API", version="1.0")
 app.add_middleware(
@@ -135,67 +143,214 @@ async def health():
     return {"status": "ok"}
 
 
-# Legacy name-based endpoint /optimize removed.
+@app.get("/cms/process/{process_id}")
+async def get_cms_process(process_id: int, authorization: Optional[str] = Header(None)):
+    """Fetch process data from CMS and return in agent-compatible format."""
+    # Use provided token or default
+    token = DEFAULT_BEARER_TOKEN
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    # Fetch process from CMS
+    cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+    if not cms_data:
+        raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+    
+    # Transform to agent format
+    agent_format = transformer.transform_process(cms_data)
+    return agent_format
 
 
-@app.post("/optimize/payload")
-async def optimize_payload(payload: Dict[str, Any]):
-    """Accept full process JSON payload, write to temp file, optimize, return base64 charts."""
-    if not isinstance(payload, dict) or not payload:
-        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
-
-    meta = await asyncio.to_thread(write_temp_process_json, payload)
+@app.post("/cms/optimize/{process_id}")
+async def optimize_cms_process(process_id: int, authorization: Optional[str] = Header(None)):
+    """Fetch process from CMS, optimize it, and return results."""
+    # Use provided token or default
+    token = DEFAULT_BEARER_TOKEN
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    # Fetch process from CMS
+    cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+    if not cms_data:
+        raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+    
+    # Transform to agent format
+    agent_format = transformer.transform_process(cms_data)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
     paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
-
+    
     alloc_b64 = await asyncio.to_thread(encode_png_base64, paths["alloc_png_path"])
     summary_b64 = await asyncio.to_thread(encode_png_base64, paths["summary_png_path"])
-
+    
     return {
-        "process_id": meta["id"],
-        "process_name": meta["name"],
-        "alloc_chart": {
-            "filename": os.path.basename(paths["alloc_png_path"]),
-            "path": os.path.abspath(paths["alloc_png_path"]),
-            "base64": alloc_b64,
-        },
-        "summary_chart": {
-            "filename": os.path.basename(paths["summary_png_path"]),
-            "path": os.path.abspath(paths["summary_png_path"]),
-            "base64": summary_b64,
-        },
+        "process_id": str(process_id),
+        "process_name": agent_format.get("process_name", ""),
+        "company": agent_format.get("company", ""),
+        "original_cms_data": cms_data,
+        "transformed_data": agent_format,
+        "optimization_results": {
+            "alloc_chart": {
+                "filename": os.path.basename(paths["alloc_png_path"]),
+                "path": os.path.abspath(paths["alloc_png_path"]),
+                "base64": alloc_b64,
+            },
+            "summary_chart": {
+                "filename": os.path.basename(paths["summary_png_path"]),
+                "path": os.path.abspath(paths["summary_png_path"]),
+                "base64": summary_b64,
+            },
+        }
     }
 
 
-@app.post("/optimize/payload/alloc_png")
-async def optimize_payload_alloc_png(payload: Dict[str, Any]):
-    """Accept full process JSON payload and return allocation chart as PNG file."""
-    if not isinstance(payload, dict) or not payload:
-        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
-
-    meta = await asyncio.to_thread(write_temp_process_json, payload)
+@app.post("/cms/optimize/payload")
+async def optimize_cms_payload(payload: Dict[str, Any]):
+    """Accept CMS process data directly and optimize it."""
+    transformer = CMSDataTransformer()
+    
+    # Transform CMS format to agent format
+    agent_format = transformer.transform_process(payload)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
     paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
+    
+    alloc_b64 = await asyncio.to_thread(encode_png_base64, paths["alloc_png_path"])
+    summary_b64 = await asyncio.to_thread(encode_png_base64, paths["summary_png_path"])
+    
+    return {
+        "process_id": agent_format.get("process_id", ""),
+        "process_name": agent_format.get("process_name", ""),
+        "company": agent_format.get("company", ""),
+        "transformed_data": agent_format,
+        "optimization_results": {
+            "alloc_chart": {
+                "filename": os.path.basename(paths["alloc_png_path"]),
+                "path": os.path.abspath(paths["alloc_png_path"]),
+                "base64": alloc_b64,
+            },
+            "summary_chart": {
+                "filename": os.path.basename(paths["summary_png_path"]),
+                "path": os.path.abspath(paths["summary_png_path"]),
+                "base64": summary_b64,
+            },
+        }
+    }
+
+
+@app.post("/cms/optimize/{process_id}/alloc_png")
+async def optimize_cms_process_alloc_png(process_id: int, authorization: Optional[str] = Header(None)):
+    """Fetch process from CMS, optimize it, and return allocation chart as PNG file."""
+    # Use provided token or default
+    token = DEFAULT_BEARER_TOKEN
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    # Fetch process from CMS
+    cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+    if not cms_data:
+        raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+    
+    # Transform to agent format
+    agent_format = transformer.transform_process(cms_data)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
+    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
+    
     alloc_path = paths["alloc_png_path"]
     return FileResponse(
         alloc_path,
         media_type="image/png",
-        filename=os.path.basename(alloc_path),
+        filename=f"process_{process_id}_allocation_chart.png",
     )
 
 
-@app.post("/optimize/payload/summary_png")
-async def optimize_payload_summary_png(payload: Dict[str, Any]):
-    """Accept full process JSON payload and return summary chart as PNG file."""
-    if not isinstance(payload, dict) or not payload:
-        raise HTTPException(status_code=400, detail="Request body must be a non-empty JSON object")
-
-    meta = await asyncio.to_thread(write_temp_process_json, payload)
+@app.post("/cms/optimize/{process_id}/summary_png")
+async def optimize_cms_process_summary_png(process_id: int, authorization: Optional[str] = Header(None)):
+    """Fetch process from CMS, optimize it, and return summary chart as PNG file."""
+    # Use provided token or default
+    token = DEFAULT_BEARER_TOKEN
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    # Fetch process from CMS
+    cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+    if not cms_data:
+        raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+    
+    # Transform to agent format
+    agent_format = transformer.transform_process(cms_data)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
     paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
+    
     summary_path = paths["summary_png_path"]
     return FileResponse(
         summary_path,
         media_type="image/png",
-        filename=os.path.basename(summary_path),
+        filename=f"process_{process_id}_summary_chart.png",
     )
+
+
+@app.post("/cms/optimize/payload/alloc_png")
+async def optimize_cms_payload_alloc_png(payload: Dict[str, Any]):
+    """Accept CMS process data directly and return allocation chart as PNG file."""
+    transformer = CMSDataTransformer()
+    
+    # Transform CMS format to agent format
+    agent_format = transformer.transform_process(payload)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
+    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
+    
+    alloc_path = paths["alloc_png_path"]
+    process_name = agent_format.get("process_name", "process").replace(" ", "_")
+    return FileResponse(
+        alloc_path,
+        media_type="image/png",
+        filename=f"{process_name}_allocation_chart.png",
+    )
+
+
+@app.post("/cms/optimize/payload/summary_png")
+async def optimize_cms_payload_summary_png(payload: Dict[str, Any]):
+    """Accept CMS process data directly and return summary chart as PNG file."""
+    transformer = CMSDataTransformer()
+    
+    # Transform CMS format to agent format
+    agent_format = transformer.transform_process(payload)
+    
+    # Write to temp file and optimize
+    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
+    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
+    
+    summary_path = paths["summary_png_path"]
+    process_name = agent_format.get("process_name", "process").replace(" ", "_")
+    return FileResponse(
+        summary_path,
+        media_type="image/png",
+        filename=f"{process_name}_summary_chart.png",
+    )
+
+
+# Non-CMS endpoints removed - all optimization must go through CMS-aligned endpoints
 
 
 # Legacy name-based endpoints (/optimize/alloc_png, /optimize/summary_png, /optimize/bundle) removed.

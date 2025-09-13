@@ -656,14 +656,26 @@ class Visualizer:
                 return t.name if t else tid
             par_groups = [[_tname(tid) for tid in grp] for grp in _parallel_groups(schedule.entries)]
 
-            # Figure layout with expanded width for better space utilization
-            fig = plt.figure(figsize=(24, 12))  # Increased width to 24 for more space
-            gs = GridSpec(3, 3, height_ratios=[3, 1.2, 2], width_ratios=[1, 1.2, 0.8])  # 3 columns for better layout
+            # Figure layout with main charts at the very top
+            fig = plt.figure(figsize=(22, 15))  # Adjusted height
+            gs = GridSpec(3, 3, height_ratios=[3.0, 2, 2.5], width_ratios=[1.2, 1.8, 0.8], 
+                         hspace=0.4, wspace=0.25, top=0.98, bottom=0.04)  # Further reduced first row height and increased spacing
+            
+            # Main charts in top row with title integrated
             ax_pies = fig.add_subplot(gs[0, 0])
             ax_bars = fig.add_subplot(gs[0, 1:])
-            ax_text = fig.add_subplot(gs[1, :])
+            
+            # Add main title at the very top
+            fig.suptitle(title, fontsize=18, weight='bold', y=0.995)
+            
+            # Parallel steps in second row (using only first two columns)
+            ax_text = fig.add_subplot(gs[1, :2])
+            
+            # Summary box in second row, third column
+            ax_summary = fig.add_subplot(gs[1, 2])
+            
+            # Task mapping in third row
             ax_taskmap = fig.add_subplot(gs[2, :])
-            fig.suptitle(title, fontsize=14)
 
             # Pie charts (Resource Utilization)
             def _pct_fmt(pct):
@@ -723,10 +735,10 @@ class Visualizer:
                 after_hours = after_vals[i]
                 legend_labels.append(f"{name} ({after_hours:.1f}h)")
             
-            # Place legend below the pie chart to avoid overlap
+            # Place legend below the pie chart with better spacing
             ax_pies.legend(legend_items, legend_labels, 
-                         loc='upper center', bbox_to_anchor=(0.5, -0.1),
-                         ncol=2, frameon=False, fontsize=8)
+                         loc='upper center', bbox_to_anchor=(0.5, -0.05),
+                         ncol=2, frameon=False, fontsize=9)
 
             # Bar charts (Resource Time Comparison)
             ax_bars.set_title("Resource Hours: Task Hours (Sequential) vs Working Window (Actual Parallel)")
@@ -784,36 +796,39 @@ class Visualizer:
             ax_bars.set_xlabel('Resources')
             ax_bars.set_ylabel('Hours')
             ax_bars.set_xticks(x)
-            ax_bars.set_xticklabels(names, rotation=30, ha='right')
-            ax_bars.legend(loc='upper right')
+            ax_bars.set_xticklabels(names, rotation=45, ha='right', fontsize=9)
+            ax_bars.legend(loc='upper right', fontsize=9)
             ax_bars.grid(axis='y', linestyle='--', alpha=0.4)
             
-            # Add value labels on bars
+            # Adjust margins to prevent label cutoff
+            plt.setp(ax_bars.get_xticklabels(), rotation=45, ha='right')
+            
+            # Add value labels on bars - positioned properly above each bar (in minutes)
             for bar, val in zip(before_bars, after_vals):
                 if val > 0:
                     height = bar.get_height()
-                    ax_bars.text(bar.get_x() + bar.get_width()/2., height + 1,
-                               f'{val:.0f}h', ha='center', va='bottom',
-                               fontsize=8, color=before_color)
+                    ax_bars.text(bar.get_x() + bar.get_width()/2., height + 0.02,
+                               f'{val*60:.0f}m', ha='center', va='bottom',
+                               fontsize=8, color=before_color, weight='bold')
             
             for bar, val in zip(after_bars, after_elapsed_vals):
                 if val > 0:
                     height = bar.get_height()
-                    ax_bars.text(bar.get_x() + bar.get_width()/2., height + 1,
-                               f'{val:.0f}h', ha='center', va='bottom',
-                               fontsize=8, color=after_color)
+                    ax_bars.text(bar.get_x() + bar.get_width()/2., height + 0.02,
+                               f'{val*60:.0f}m', ha='center', va='bottom',
+                               fontsize=8, color=after_color, weight='bold')
             
             # Calculate totals for annotation
             total_task_hours = sum(after_vals)
             max_window = max(after_elapsed_vals) if after_elapsed_vals else 0.0
             
-            # Add summary annotation on the right side of the chart
-            ax_bars.text(1.02, 0.98,
+            # Move summary annotation to bottom right to avoid overlap
+            ax_bars.text(0.98, 0.02,
                        f'• Red bars: Sum of task durations ({total_task_hours:.0f}h total)\n'
                        f'• Green bars: Actual working time\n'
                        f'• Process elapsed: {after_elapsed_hours:.0f}h\n'
                        f'• Time saved: {total_task_hours - after_elapsed_hours:.0f}h',
-                       transform=ax_bars.transAxes, ha='left', va='top',
+                       transform=ax_bars.transAxes, ha='right', va='bottom',
                        fontsize=9, bbox=dict(boxstyle='round,pad=0.3', 
                                           facecolor='#ffffcc', alpha=0.8,
                                           edgecolor='#dddd88', linewidth=0.5))
@@ -868,8 +883,8 @@ class Visualizer:
                 lt = ax_taskmap.text(x_left, y, f'🔧 {rname}', va='center', ha='left', fontsize=10, 
                                    transform=ax_taskmap.transAxes, weight='bold',
                                    bbox=dict(boxstyle='round,pad=0.3', facecolor='#e8f4fd', alpha=0.7))
-                # Enhanced task labels with background
-                rt = ax_taskmap.text(x_right, y, f'{tname} ({hrs:.1f}h)', va='center', ha='right', fontsize=10,
+                # Enhanced task labels with background (remove minutes from task names)
+                rt = ax_taskmap.text(x_right, y, f'{tname}', va='center', ha='right', fontsize=10,
                                    transform=ax_taskmap.transAxes, weight='bold',
                                    bbox=dict(boxstyle='round,pad=0.3', facecolor='#fff2e8', alpha=0.7))
                 left_texts.append(lt)
@@ -888,9 +903,9 @@ class Visualizer:
                 rt_x0 = inv.transform((rt_bb.x0, rt_bb.y0))[0]
                 start_x = min(max(lt_x1 + pad, x_left + pad), x_right - 2*pad)
                 end_x = max(min(rt_x0 - pad, x_right - pad), start_x + 0.02)
-                # Enhanced center label with better styling
+                # Enhanced center label with better styling (in minutes)
                 mx = (start_x + end_x) / 2
-                ttxt = ax_taskmap.text(mx, y, f"⏱️ {hrs:.1f}h", fontsize=9, color='#2c3e50', ha='center', va='center', 
+                ttxt = ax_taskmap.text(mx, y, f"⏱️ {hrs*60:.0f}m", fontsize=9, color='#2c3e50', ha='center', va='center', 
                                      transform=ax_taskmap.transAxes, weight='bold',
                                      bbox=dict(boxstyle='round,pad=0.2', facecolor='#f8f9fa', edgecolor='#dee2e6'))
                 fig.canvas.draw()
@@ -916,7 +931,7 @@ class Visualizer:
             import numpy as _np
             from matplotlib.patches import Rectangle
             ax_text.clear()
-            ax_text.set_title("Parallel steps (each column) and tasks in each step", fontsize=14, pad=20)
+            ax_text.set_title("Parallel steps (each column) and tasks in each step", fontsize=14, pad=10)
             G = len(par_groups)
             # Determine max stack height across groups
             max_stack = max((len(g) for g in par_groups), default=0)
@@ -969,18 +984,21 @@ class Visualizer:
                 f"• Parallel Groups: {len(par_groups)}"
             )
             
-            # Add text to the right side of the parallel steps chart
-            ax_text.text(1.02, 0.98, summary_text, ha='left', va='top', fontsize=9,
-                       transform=ax_text.transAxes,
+            # Place summary text in the dedicated summary box
+            ax_summary.axis('off')
+            ax_summary.text(0.5, 0.5, summary_text, ha='center', va='center', fontsize=9,
+                       transform=ax_summary.transAxes,
                        bbox=dict(boxstyle='round,pad=0.5', facecolor='#f8f9fa', 
                                edgecolor='#dee2e6', alpha=0.9))
             
             # Parallel task groups summary has been removed as requested
 
-            fig.tight_layout(rect=[0, 0, 1, 0.97])
+            # Use tight_layout with minimal padding to maximize space usage
+            plt.tight_layout(pad=0.1, h_pad=0.5, w_pad=0.5, rect=[0, 0, 1, 0.995])
+            
             if output_file:
                 out = output_file if output_file.lower().endswith('.png') else f"{output_file}.png"
-                plt.savefig(out, dpi=140, bbox_inches='tight')
+                plt.savefig(out, dpi=150, bbox_inches='tight', pad_inches=0.1)
                 plt.close(fig)
                 return out
             else:
