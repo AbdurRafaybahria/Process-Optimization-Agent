@@ -1,17 +1,21 @@
-
 import os
 import sys
+import asyncio
+import base64
+import tempfile
 import json
 import glob
-import base64
-import asyncio
-from typing import Optional, Dict, Any
-
+from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Header
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from datetime import datetime
-import tempfile
+from fastapi.middleware.cors import CORSMiddleware
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, will use system environment variables
 
 # Ensure project root is on sys.path so we can import run_rl_optimizer
 PROJECT_ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
@@ -33,7 +37,7 @@ except Exception as e:
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs", "visualizations")
 
 # Default CMS configuration
-DEFAULT_CMS_URL = "https://server-digitaltwin-enterprise-production.up.railway.app"
+DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
 DEFAULT_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoic3VwZXJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGUiOiJTVVBFUl9BRE1JTiIsIm5hbWUiOiJTdXBlciBBZG1pbiIsImlhdCI6MTc1NzMxNDc2OSwiZXhwIjoxNzU3OTE5NTY5fQ.OLdaZNroqLnbfub-0jRVwZUQZJIyMTegioFGtj2dsEk"
 
 app = FastAPI(title="Process Optimization API", version="1.0")

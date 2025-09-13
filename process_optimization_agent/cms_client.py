@@ -11,7 +11,7 @@ from datetime import datetime
 class CMSClient:
     """Client for interacting with the CMS API"""
     
-    def __init__(self, base_url: str = "https://server-digitaltwin-enterprise-production.up.railway.app", 
+    def __init__(self, base_url: str = None, 
                  bearer_token: str = None):
         """
         Initialize the CMS client
@@ -20,7 +20,8 @@ class CMSClient:
             base_url: Base URL of the CMS API
             bearer_token: Bearer token for authentication
         """
-        self.base_url = base_url
+        import os
+        self.base_url = base_url or os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
         self.bearer_token = bearer_token
         self.headers = {
             "Authorization": f"Bearer {bearer_token}" if bearer_token else "",
