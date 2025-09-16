@@ -18,15 +18,51 @@ class CMSClient:
         
         Args:
             base_url: Base URL of the CMS API
-            bearer_token: Bearer token for authentication
+            bearer_token: Bearer token for authentication (if None, will authenticate automatically)
         """
         import os
         self.base_url = base_url or os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
+        
+        # Get fresh token if not provided
+        if not bearer_token:
+            bearer_token = self._authenticate()
+        
         self.bearer_token = bearer_token
         self.headers = {
             "Authorization": f"Bearer {bearer_token}" if bearer_token else "",
             "Content-Type": "application/json"
         }
+    
+    def _authenticate(self) -> Optional[str]:
+        """
+        Authenticate with the CMS to get a fresh access token
+        
+        Returns:
+            Access token string or None if authentication fails
+        """
+        try:
+            auth_url = f"{self.base_url}/auth/login"
+            auth_data = {
+                "email": "superadmin@example.com",
+                "password": "ChangeMe123!"
+            }
+            
+            response = requests.post(auth_url, json=auth_data, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            token = data.get("access_token")
+            
+            if token:
+                print("Successfully authenticated with CMS")
+                return token
+            else:
+                print("Authentication response missing access_token")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Authentication failed: {e}")
+            return None
     
     def get_process_with_relations(self, process_id: int) -> Optional[Dict[str, Any]]:
         """

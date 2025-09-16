@@ -10,6 +10,8 @@ env/
 ENV/
 *.env
 
+#jjj
+
 # IDE/project settings
 .vscode/
 .idea/

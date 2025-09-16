@@ -38,7 +38,6 @@ OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs", "visualizations")
 
 # Default CMS configuration
 DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
-DEFAULT_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoic3VwZXJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGUiOiJTVVBFUl9BRE1JTiIsIm5hbWUiOiJTdXBlciBBZG1pbiIsImlhdCI6MTc1NzMxNDc2OSwiZXhwIjoxNzU3OTE5NTY5fQ.OLdaZNroqLnbfub-0jRVwZUQZJIyMTegioFGtj2dsEk"
 
 app = FastAPI(title="Process Optimization API", version="1.0")
 app.add_middleware(
@@ -150,11 +149,12 @@ async def health():
 @app.get("/cms/process/{process_id}")
 async def get_cms_process(process_id: int, authorization: Optional[str] = Header(None)):
     """Fetch process data from CMS and return in agent-compatible format."""
-    # Use provided token or default
-    token = DEFAULT_BEARER_TOKEN
+    # Use provided token or authenticate dynamically
+    token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
     
+    # CMSClient will authenticate automatically if token is None
     client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
     transformer = CMSDataTransformer()
     
@@ -171,11 +171,12 @@ async def get_cms_process(process_id: int, authorization: Optional[str] = Header
 @app.post("/cms/optimize/{process_id}")
 async def optimize_cms_process(process_id: int, authorization: Optional[str] = Header(None)):
     """Fetch process from CMS, optimize it, and return results."""
-    # Use provided token or default
-    token = DEFAULT_BEARER_TOKEN
+    # Use provided token or authenticate dynamically
+    token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
     
+    # CMSClient will authenticate automatically if token is None
     client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
     transformer = CMSDataTransformer()
     
@@ -253,11 +254,12 @@ async def optimize_cms_payload(payload: Dict[str, Any]):
 @app.post("/cms/optimize/{process_id}/alloc_png")
 async def optimize_cms_process_alloc_png(process_id: int, authorization: Optional[str] = Header(None)):
     """Fetch process from CMS, optimize it, and return allocation chart as PNG file."""
-    # Use provided token or default
-    token = DEFAULT_BEARER_TOKEN
+    # Use provided token or authenticate dynamically
+    token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
     
+    # CMSClient will authenticate automatically if token is None
     client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
     transformer = CMSDataTransformer()
     
@@ -284,11 +286,12 @@ async def optimize_cms_process_alloc_png(process_id: int, authorization: Optiona
 @app.post("/cms/optimize/{process_id}/summary_png")
 async def optimize_cms_process_summary_png(process_id: int, authorization: Optional[str] = Header(None)):
     """Fetch process from CMS, optimize it, and return summary chart as PNG file."""
-    # Use provided token or default
-    token = DEFAULT_BEARER_TOKEN
+    # Use provided token or authenticate dynamically
+    token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
     
+    # CMSClient will authenticate automatically if token is None
     client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
     transformer = CMSDataTransformer()
     

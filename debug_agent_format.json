@@ -1,0 +1,224 @@
+{
+  "id": "7",
+  "name": "E-Commerce Platform Development",
+  "process_name": "E-Commerce Platform Development",
+  "process_id": 7,
+  "company": "Crystal System Pakistan",
+  "description": "Build a modern e-commerce platform with user management, product, catalog, and payment processing.",
+  "tasks": [
+    {
+      "id": "10",
+      "name": "Database Design and Setup",
+      "description": "Design database schema and set up initial database structure.",
+      "duration": 32,
+      "duration_hours": 0.5333333333333333,
+      "required_skills": [
+        {
+          "name": "Database Admin",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "DBDS-01"
+    },
+    {
+      "id": "11",
+      "name": "User Authentication",
+      "description": "Implement user registration login and authentication.",
+      "duration": 24,
+      "duration_hours": 0.4,
+      "required_skills": [
+        {
+          "name": "Senior Backend",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "10"
+      ],
+      "order": 2,
+      "code": "UA-01"
+    },
+    {
+      "id": "12",
+      "name": "Product Catalog API",
+      "description": "Build Rest APIs for product management and catalog.",
+      "duration": 40,
+      "duration_hours": 0.6666666666666666,
+      "required_skills": [
+        {
+          "name": "Fullstack Developer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "11"
+      ],
+      "order": 3,
+      "code": "PCAPI-01"
+    },
+    {
+      "id": "13",
+      "name": "Frontend UI",
+      "description": "Create a responsive frontend with React/Vue.",
+      "duration": 47,
+      "duration_hours": 0.7833333333333333,
+      "required_skills": [
+        {
+          "name": "Frontend Developer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "12"
+      ],
+      "order": 4,
+      "code": "FUI-01"
+    },
+    {
+      "id": "14",
+      "name": "Payment Integration",
+      "description": "Integrate Payment gateways and checkout process.",
+      "duration": 28,
+      "duration_hours": 0.4666666666666667,
+      "required_skills": [
+        {
+          "name": "Payment Specialist",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "13"
+      ],
+      "order": 5,
+      "code": "PI-01"
+    },
+    {
+      "id": "15",
+      "name": "Testing and QA",
+      "description": "Comprehensive testing including unit integration and system level testing.",
+      "duration": 36,
+      "duration_hours": 0.6,
+      "required_skills": [
+        {
+          "name": "QA Engineer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "14"
+      ],
+      "order": 6,
+      "code": "TQA-01"
+    }
+  ],
+  "resources": [
+    {
+      "id": "11",
+      "name": "Database Admin",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Database Admin",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 6,
+      "hourly_rate": 88,
+      "code": "DBA-01"
+    },
+    {
+      "id": "6",
+      "name": "Senior Backend",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Senior Backend",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 94,
+      "code": "SB-01"
+    },
+    {
+      "id": "8",
+      "name": "Fullstack Developer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Fullstack Developer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 80,
+      "code": "FSD-01"
+    },
+    {
+      "id": "7",
+      "name": "Frontend Developer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Frontend Developer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 85,
+      "code": "FD-01"
+    },
+    {
+      "id": "9",
+      "name": "Payment Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Payment Specialist",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 6,
+      "hourly_rate": 99,
+      "code": "PS-01"
+    },
+    {
+      "id": "10",
+      "name": "QA Engineer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "QA Engineer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 7,
+      "hourly_rate": 75,
+      "code": "QAE-01"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "10",
+      "to": "11"
+    },
+    {
+      "from": "11",
+      "to": "12"
+    },
+    {
+      "from": "12",
+      "to": "13"
+    },
+    {
+      "from": "13",
+      "to": "14"
+    },
+    {
+      "from": "14",
+      "to": "15"
+    }
+  ]
+}

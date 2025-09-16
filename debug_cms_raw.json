@@ -1,0 +1,234 @@
+{
+  "process_id": 7,
+  "company_id": 2,
+  "created_at": "2025-09-08T06:56:14.275Z",
+  "updated_at": "2025-09-08T06:56:35.970Z",
+  "capacity_requirement_minutes": 207,
+  "parent_process_id": null,
+  "parent_task_id": null,
+  "process_code": "ECPD-001",
+  "process_name": "E-Commerce Platform Development",
+  "process_overview": "Build a modern e-commerce platform with user management, product, catalog, and payment processing.",
+  "company": {
+    "company_id": 2,
+    "companyCode": "CSP",
+    "name": "Crystal System Pakistan",
+    "created_by": 1,
+    "created_at": "2025-08-28T15:59:06.000Z",
+    "updated_at": "2025-08-29T05:54:25.064Z"
+  },
+  "process": null,
+  "task_process_parent_task_idTotask": null,
+  "process_task": [
+    {
+      "process_id": 7,
+      "task_id": 10,
+      "order": 1,
+      "task": {
+        "task_id": 10,
+        "created_at": "2025-09-08T06:38:16.043Z",
+        "updated_at": "2025-09-08T06:38:16.043Z",
+        "task_capacity_minutes": 32,
+        "task_code": "DBDS-01",
+        "task_company_id": 2,
+        "task_name": "Database Design and Setup",
+        "task_overview": "Design database schema and set up initial database structure.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 11,
+            "task_id": 10,
+            "job": {
+              "job_id": 11,
+              "jobCode": "DBA-01",
+              "job_level_id": 3,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:34:02.081Z",
+              "hourlyRate": 88,
+              "maxHoursPerDay": 6,
+              "updatedAt": "2025-09-08T06:34:02.081Z",
+              "description": "Database design and optimization specialist.",
+              "function_id": 3,
+              "name": "Database Admin"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 7,
+      "task_id": 11,
+      "order": 2,
+      "task": {
+        "task_id": 11,
+        "created_at": "2025-09-08T06:43:04.108Z",
+        "updated_at": "2025-09-08T06:43:04.108Z",
+        "task_capacity_minutes": 24,
+        "task_code": "UA-01",
+        "task_company_id": 2,
+        "task_name": "User Authentication",
+        "task_overview": "Implement user registration login and authentication.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 6,
+            "task_id": 11,
+            "job": {
+              "job_id": 6,
+              "jobCode": "SB-01",
+              "job_level_id": 4,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:15:00.339Z",
+              "hourlyRate": 94,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-09-08T06:15:00.339Z",
+              "description": "Lead Backend developer with API experitse.",
+              "function_id": 3,
+              "name": "Senior Backend"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 7,
+      "task_id": 12,
+      "order": 3,
+      "task": {
+        "task_id": 12,
+        "created_at": "2025-09-08T06:45:29.194Z",
+        "updated_at": "2025-09-08T06:45:29.194Z",
+        "task_capacity_minutes": 40,
+        "task_code": "PCAPI-01",
+        "task_company_id": 2,
+        "task_name": "Product Catalog API",
+        "task_overview": "Build Rest APIs for product management and catalog.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 8,
+            "task_id": 12,
+            "job": {
+              "job_id": 8,
+              "jobCode": "FSD-01",
+              "job_level_id": 3,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:26:59.233Z",
+              "hourlyRate": 80,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-09-08T06:26:59.233Z",
+              "description": "Versatile developer with both frontend and backend skills.",
+              "function_id": 3,
+              "name": "Fullstack Developer"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 7,
+      "task_id": 13,
+      "order": 4,
+      "task": {
+        "task_id": 13,
+        "created_at": "2025-09-08T06:47:33.469Z",
+        "updated_at": "2025-09-08T06:47:33.469Z",
+        "task_capacity_minutes": 47,
+        "task_code": "FUI-01",
+        "task_company_id": 2,
+        "task_name": "Frontend UI",
+        "task_overview": "Create a responsive frontend with React/Vue.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 7,
+            "task_id": 13,
+            "job": {
+              "job_id": 7,
+              "jobCode": "FD-01",
+              "job_level_id": 3,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:21:36.188Z",
+              "hourlyRate": 85,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-09-08T06:21:36.188Z",
+              "description": "Frontend specialist with modern frameworks",
+              "function_id": 3,
+              "name": "Frontend Developer"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 7,
+      "task_id": 14,
+      "order": 5,
+      "task": {
+        "task_id": 14,
+        "created_at": "2025-09-08T06:50:49.180Z",
+        "updated_at": "2025-09-08T06:50:49.180Z",
+        "task_capacity_minutes": 28,
+        "task_code": "PI-01",
+        "task_company_id": 2,
+        "task_name": "Payment Integration",
+        "task_overview": "Integrate Payment gateways and checkout process.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 9,
+            "task_id": 14,
+            "job": {
+              "job_id": 9,
+              "jobCode": "PS-01",
+              "job_level_id": 4,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:29:35.322Z",
+              "hourlyRate": 99,
+              "maxHoursPerDay": 6,
+              "updatedAt": "2025-09-08T06:29:35.322Z",
+              "description": "Specialist in payment gateway integration",
+              "function_id": 3,
+              "name": "Payment Specialist"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 7,
+      "task_id": 15,
+      "order": 6,
+      "task": {
+        "task_id": 15,
+        "created_at": "2025-09-08T06:52:39.166Z",
+        "updated_at": "2025-09-08T06:52:39.166Z",
+        "task_capacity_minutes": 36,
+        "task_code": "TQA-01",
+        "task_company_id": 2,
+        "task_name": "Testing and QA",
+        "task_overview": "Comprehensive testing including unit integration and system level testing.",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 10,
+            "task_id": 15,
+            "job": {
+              "job_id": 10,
+              "jobCode": "QAE-01",
+              "job_level_id": 3,
+              "company_id": 2,
+              "createdAt": "2025-09-08T06:31:50.065Z",
+              "hourlyRate": 75,
+              "maxHoursPerDay": 7,
+              "updatedAt": "2025-09-08T06:31:50.065Z",
+              "description": "Quality assurance and test automation expert.",
+              "function_id": 3,
+              "name": "QA Engineer"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

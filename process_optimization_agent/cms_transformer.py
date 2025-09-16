@@ -36,8 +36,8 @@ class CMSDataTransformer:
             "dependencies": []
         }
         
-        # Transform tasks
-        process_tasks = process_data.get("process_tasks", [])
+        # Extract tasks and resources
+        process_tasks = process_data.get("process_task", [])
         resource_map = {}  # Track unique resources
         
         for pt in process_tasks:
