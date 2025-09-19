@@ -665,8 +665,7 @@ class Visualizer:
             ax_pies = fig.add_subplot(gs[0, 0])
             ax_bars = fig.add_subplot(gs[0, 1:])
             
-            # Add main title at the very top
-            fig.suptitle(title, fontsize=18, weight='bold', y=0.995)
+            # Main title removed as requested
             
             # Parallel steps in second row (using only first two columns)
             ax_text = fig.add_subplot(gs[1, :2])

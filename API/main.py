@@ -5,6 +5,10 @@ import base64
 import tempfile
 import json
 import glob
+import logging
+import traceback
+import subprocess
+from datetime import datetime
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.responses import FileResponse
@@ -16,6 +20,10 @@ try:
     load_dotenv()
 except ImportError:
     pass  # dotenv not installed, will use system environment variables
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Ensure project root is on sys.path so we can import run_rl_optimizer
 PROJECT_ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
@@ -49,7 +57,23 @@ app.add_middleware(
 )
 
 
-# Legacy name-based API removed; only JSON payload endpoints are supported.
+# Only CMS process ID endpoints are supported. Payload endpoints have been removed.
+
+
+def detect_data_format(payload: Dict[str, Any]) -> str:
+    """
+    Detect if the payload is in CMS format or Agent format.
+    Returns 'cms' or 'agent'
+    """
+    # Agent format has 'tasks' and 'resources' at root level
+    # CMS format has 'process_task' and nested structure
+    if 'tasks' in payload and 'resources' in payload:
+        return 'agent'
+    elif 'process_task' in payload or 'company' in payload:
+        return 'cms'
+    else:
+        # Default to agent format if unclear
+        return 'agent'
 
 
 def write_temp_process_json(payload: Dict[str, Any]) -> Dict[str, str]:
@@ -86,6 +110,8 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
     """Run the RL optimizer, suppressing GUI openings, then return paths to the two PNG outputs.
     Returns dict with keys: alloc_png_path, summary_png_path
     """
+    logger.info(f"Starting optimization for process file: {process_json_path}")
+    
     # Ensure outputs dir exists
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
@@ -98,9 +124,40 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
         pass
     _webbrowser.open = lambda *a, **k: False
 
-    # Run optimizer (blocking)
+    # Run optimizer (blocking) with timeout protection
     try:
-        optimizer.main([process_json_path])
+        logger.info("Running RL optimizer...")
+        
+        # Add timeout protection using subprocess
+        
+        # Run the optimizer as a subprocess with timeout
+        cmd = [sys.executable, "run_rl_optimizer.py", process_json_path]
+        logger.info(f"Running command: {' '.join(cmd)}")
+        
+        result = subprocess.run(
+            cmd,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout
+        )
+        
+        if result.returncode != 0:
+            logger.error(f"Optimizer subprocess failed with return code {result.returncode}")
+            logger.error(f"STDOUT: {result.stdout}")
+            logger.error(f"STDERR: {result.stderr}")
+            raise HTTPException(status_code=500, detail=f"Optimization failed: {result.stderr}")
+        
+        logger.info("RL optimizer completed successfully")
+        logger.info(f"Optimizer output: {result.stdout}")
+        
+    except subprocess.TimeoutExpired:
+        logger.error("Optimizer timed out after 5 minutes")
+        raise HTTPException(status_code=500, detail="Optimization timed out after 5 minutes")
+    except Exception as e:
+        logger.error(f"Optimizer failed: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
     finally:
         # Restore
         if orig_startfile is not None:
@@ -216,40 +273,6 @@ async def optimize_cms_process(process_id: int, authorization: Optional[str] = H
     }
 
 
-@app.post("/cms/optimize/payload")
-async def optimize_cms_payload(payload: Dict[str, Any]):
-    """Accept CMS process data directly and optimize it."""
-    transformer = CMSDataTransformer()
-    
-    # Transform CMS format to agent format
-    agent_format = transformer.transform_process(payload)
-    
-    # Write to temp file and optimize
-    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
-    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
-    
-    alloc_b64 = await asyncio.to_thread(encode_png_base64, paths["alloc_png_path"])
-    summary_b64 = await asyncio.to_thread(encode_png_base64, paths["summary_png_path"])
-    
-    return {
-        "process_id": agent_format.get("process_id", ""),
-        "process_name": agent_format.get("process_name", ""),
-        "company": agent_format.get("company", ""),
-        "transformed_data": agent_format,
-        "optimization_results": {
-            "alloc_chart": {
-                "filename": os.path.basename(paths["alloc_png_path"]),
-                "path": os.path.abspath(paths["alloc_png_path"]),
-                "base64": alloc_b64,
-            },
-            "summary_chart": {
-                "filename": os.path.basename(paths["summary_png_path"]),
-                "path": os.path.abspath(paths["summary_png_path"]),
-                "base64": summary_b64,
-            },
-        }
-    }
-
 
 @app.post("/cms/optimize/{process_id}/alloc_png")
 async def optimize_cms_process_alloc_png(process_id: int, authorization: Optional[str] = Header(None)):
@@ -315,46 +338,10 @@ async def optimize_cms_process_summary_png(process_id: int, authorization: Optio
     )
 
 
-@app.post("/cms/optimize/payload/alloc_png")
-async def optimize_cms_payload_alloc_png(payload: Dict[str, Any]):
-    """Accept CMS process data directly and return allocation chart as PNG file."""
-    transformer = CMSDataTransformer()
-    
-    # Transform CMS format to agent format
-    agent_format = transformer.transform_process(payload)
-    
-    # Write to temp file and optimize
-    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
-    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
-    
-    alloc_path = paths["alloc_png_path"]
-    process_name = agent_format.get("process_name", "process").replace(" ", "_")
-    return FileResponse(
-        alloc_path,
-        media_type="image/png",
-        filename=f"{process_name}_allocation_chart.png",
-    )
+# Payload alloc_png endpoint removed
 
 
-@app.post("/cms/optimize/payload/summary_png")
-async def optimize_cms_payload_summary_png(payload: Dict[str, Any]):
-    """Accept CMS process data directly and return summary chart as PNG file."""
-    transformer = CMSDataTransformer()
-    
-    # Transform CMS format to agent format
-    agent_format = transformer.transform_process(payload)
-    
-    # Write to temp file and optimize
-    meta = await asyncio.to_thread(write_temp_process_json, agent_format)
-    paths = await asyncio.to_thread(run_optimizer_and_collect, meta["path"], meta["id"])
-    
-    summary_path = paths["summary_png_path"]
-    process_name = agent_format.get("process_name", "process").replace(" ", "_")
-    return FileResponse(
-        summary_path,
-        media_type="image/png",
-        filename=f"{process_name}_summary_chart.png",
-    )
+# Payload summary_png endpoint removed
 
 
 # Non-CMS endpoints removed - all optimization must go through CMS-aligned endpoints
