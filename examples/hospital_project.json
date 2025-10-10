@@ -1,0 +1,216 @@
+{
+  "id": "hospital_project_001",
+  "name": "Hospital Patient Flow Optimization Project",
+  "description": "Optimize end-to-end patient flow: intake, triage, diagnostics, treatment, and discharge",
+  "constraints": {
+    "quality_gates": true
+  },
+  "tasks": [
+    {
+      "id": "task_001",
+      "name": "Intake & Registration Streamlining",
+      "description": "Assess and streamline patient registration and insurance verification",
+      "duration_hours": 20,
+      "required_skills": [
+        {"name": "process_mapping", "level": 3},
+        {"name": "ehr_configuration", "level": 2}
+      ],
+      "order": 1
+    },
+    {
+      "id": "task_002",
+      "name": "Triage Protocol Redesign",
+      "description": "Redesign triage to prioritize acuity and reduce wait times in ED",
+      "duration_hours": 24,
+      "required_skills": [
+        {"name": "clinical_operations", "level": 4},
+        {"name": "process_design", "level": 3}
+      ],
+      "order": 2
+    },
+    {
+      "id": "task_003",
+      "name": "EHR Workflow Configuration",
+      "description": "Configure order sets, alerts, and routing rules in EHR",
+      "duration_hours": 32,
+      "required_skills": [
+        {"name": "ehr_configuration", "level": 4},
+        {"name": "sql", "level": 3}
+      ],
+      "order": 3
+    },
+    {
+      "id": "task_004",
+      "name": "Diagnostics Scheduling Optimization",
+      "description": "Optimize Radiology/Lab slots and prep to increase throughput",
+      "duration_hours": 28,
+      "required_skills": [
+        {"name": "scheduling", "level": 4},
+        {"name": "operations_research", "level": 3}
+      ],
+      "order": 4
+    },
+    {
+      "id": "task_005",
+      "name": "Care Pathway Standardization",
+      "description": "Standardize care pathways for common ED presentations",
+      "duration_hours": 24,
+      "required_skills": [
+        {"name": "clinical_operations", "level": 3},
+        {"name": "training", "level": 3}
+      ],
+      "order": 5
+    },
+    {
+      "id": "task_006",
+      "name": "Discharge Planning & Pharmacy Coordination",
+      "description": "Improve discharge paperwork, med reconciliation, and patient education",
+      "duration_hours": 20,
+      "required_skills": [
+        {"name": "pharmacy", "level": 3},
+        {"name": "documentation", "level": 3}
+      ],
+      "order": 6
+    },
+    {
+      "id": "task_007",
+      "name": "Pilot Rollout (ED)",
+      "description": "Run pilot of redesigned processes in Emergency Department",
+      "duration_hours": 36,
+      "required_skills": [
+        {"name": "project_management", "level": 3},
+        {"name": "data_collection", "level": 3}
+      ],
+      "order": 7
+    },
+    {
+      "id": "task_008",
+      "name": "Hospital-wide Rollout & Monitoring",
+      "description": "Scale to Radiology/Wards, set up dashboards, weekly reviews",
+      "duration_hours": 30,
+      "required_skills": [
+        {"name": "monitoring", "level": 3},
+        {"name": "change_management", "level": 3}
+      ],
+      "order": 8
+    }
+  ],
+  "resources": [
+    {
+      "id": "pm_clinical",
+      "name": "Jordan Blake (Clinical PM)",
+      "description": "Leads implementation and stakeholder coordination",
+      "skills": [
+        {"name": "project_management", "level": 4},
+        {"name": "change_management", "level": 3}
+      ],
+      "hourly_rate": 95.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "ed_nurse",
+      "name": "Pat Rivera (ED Charge Nurse)",
+      "description": "Oversees ED triage and nursing workflows",
+      "skills": [
+        {"name": "clinical_operations", "level": 4},
+        {"name": "training", "level": 3}
+      ],
+      "hourly_rate": 70.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "physician_lead",
+      "name": "Dr. Casey Morgan (Physician Lead)",
+      "description": "Clinical governance and protocol oversight",
+      "skills": [
+        {"name": "clinical_operations", "level": 4},
+        {"name": "process_design", "level": 3}
+      ],
+      "hourly_rate": 120.0,
+      "max_hours_per_day": 6.0
+    },
+    {
+      "id": "ehr_analyst",
+      "name": "Alex Kim (EHR Analyst)",
+      "description": "Builds and configures EHR workflows",
+      "skills": [
+        {"name": "ehr_configuration", "level": 4},
+        {"name": "sql", "level": 3}
+      ],
+      "hourly_rate": 85.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "radiology_coordinator",
+      "name": "Taylor Singh (Radiology Coordinator)",
+      "description": "Coordinates imaging schedule and prep",
+      "skills": [
+        {"name": "scheduling", "level": 4},
+        {"name": "operations_research", "level": 2}
+      ],
+      "hourly_rate": 68.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "lab_manager",
+      "name": "Riley Patel (Lab Manager)",
+      "description": "Optimizes lab routing and turnaround",
+      "skills": [
+        {"name": "scheduling", "level": 3},
+        {"name": "operations_research", "level": 3}
+      ],
+      "hourly_rate": 72.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "pharmacist",
+      "name": "Jamie Brooks (Pharmacist)",
+      "description": "Leads medication reconciliation and counseling",
+      "skills": [
+        {"name": "pharmacy", "level": 4},
+        {"name": "documentation", "level": 3}
+      ],
+      "hourly_rate": 78.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "qa_analyst",
+      "name": "Dana Lee (Quality Analyst)",
+      "description": "Measures KPIs and validates outcomes",
+      "skills": [
+        {"name": "monitoring", "level": 4},
+        {"name": "data_analysis", "level": 3}
+      ],
+      "hourly_rate": 65.0,
+      "max_hours_per_day": 8.0
+    },
+    {
+      "id": "trainer",
+      "name": "Morgan Chen (Clinical Trainer)",
+      "description": "Conducts staff training and simulations",
+      "skills": [
+        {"name": "training", "level": 4},
+        {"name": "change_management", "level": 3}
+      ],
+      "hourly_rate": 60.0,
+      "max_hours_per_day": 6.0
+    },
+    {
+      "id": "ops_engineer",
+      "name": "Evan Diaz (Operations Engineer)",
+      "description": "Implements dashboards and data collection",
+      "skills": [
+        {"name": "monitoring", "level": 3},
+        {"name": "data_collection", "level": 4}
+      ],
+      "hourly_rate": 62.0,
+      "max_hours_per_day": 8.0
+    }
+  ],
+  "metadata": {
+    "project_type": "hospital_operations",
+    "complexity": "medium",
+    "team_size": 10,
+    "estimated_budget": 55000
+  }
+}
