@@ -3,13 +3,184 @@ INTELLIGENT PROCESS DETECTION TEST
 ======================================================================
 
 1. Loading CMS process data...
-   File: D:\Main Process Optimization Agent\visualization_outputs\10_otree16q.json
-   [OK] Loaded process: Patient Registration
+   File: D:\Main Process Optimization Agent\visualization_outputs\18_048inh_8.json
+   [OK] Loaded process: Insurance Household Claims Processing
 
 2. Transforming CMS data to process model...
 
-[ERROR] 'str' object has no attribute 'get'
+   Task Classifications from Transformer:
+     - Claim Submission Review: admin
+     - Verification in Household Claims Processing: admin
+     - Claim Assessment in Household Claims Processing: admin
+     - Approval/Denial in Household Claims Processing: admin
+     - Settlement and Payment in Household Claims Processing: admin
+   [OK] Transformed to process with 5 tasks and 4 resources
+
+3. Testing Process Type Detection...
+
+4. Process Overview:
+   - Process Name: Insurance Household Claims Processing
+   - Process ID: 18
+   - Tasks:
+     * Claim Submission Review (4.0 hours)
+     * Verification in Household Claims Processing (6.0 hours)
+     * Claim Assessment in Household Claims Processing (8.0 hours)
+     * Approval/Denial in Household Claims Processing (6.0 hours)
+     * Settlement and Payment in Household Claims Processing (8.0 hours)
+   - Resources:
+     * Claim Examiner ($35/hour)
+     * Claim Adjuster ($33/hour)
+     * Claim Assessor ($34/hour)
+     * Claims Payment Coordinator ($32/hour)
+
+5. Process Type Detection Results:
+
+   DETECTION RESULTS:
+   ----------------
+   [OK] Process Type: MANUFACTURING
+   [OK] Confidence: 87.1%
+   [OK] Strategy: parallel_production
+
+   Characteristics:
+     * user_centric: False
+     * sequential_flow: False
+     * parallelism_level: high
+     * human_interaction: low
+
+   Reasoning:
+     * Process name matches manufacturing keywords
+     * Task names match manufacturing domain
+     * Task patterns match manufacturing workflows
+     * Task names contain manufacturing specific terms
+     * Resources match manufacturing roles
+
+6. Optimization Parameters for this Process Type:
+   * strategy: parallel_production
+   * process_type: manufacturing
+   * confidence: 0.8706809917139611
+   * maximize_parallelism: True
+   * enforce_sequential: False
+   * optimize_throughput: True
+   * balance_workload: True
+   * minimize_idle_time: True
+
+7. Running Intelligent Optimization...
+
+   OPTIMIZATION RESULTS:
+   --------------------
+
+   PRODUCTION METRICS (Manufacturing Perspective):
+   ===============================================
+     * Cycle Time (Makespan): 12.0 hours
+     * Total Production Cost: $1064.00
+     * Cost Per Task: $212.80
+     * Throughput: 0.42 tasks/hour
+     * Max Parallel Tasks: 4
+     * Parallelization: 69.2%
+     * Time Efficiency: 66.7%
+     * Resource Utilization: 5.0%
+     * Idle Time: 15.0 hours
+     * Total Tasks: 5
+
+   PARALLEL EXECUTION ANALYSIS:
+   ============================
+
+   Time 0.0h - 4 tasks running in PARALLEL:
+     • Claim Submission Review (4.0h) - Claim Examiner
+     • Verification in Household Claims Processing (6.0h) - Claim Adjuster
+     • Claim Assessment in Household Claims Processing (8.0h) - Claim Assessor
+     • Settlement and Payment in Household Claims Processing (8.0h) - Claims Payment Coordinator
+
+   Time 6.0h - 1 task running:
+     • Approval/Denial in Household Claims Processing (6.0h) - Claim Adjuster
+
+   INDEPENDENT TASKS (Can run in parallel from start):
+     • Claim Submission Review (4.0h)
+     • Verification in Household Claims Processing (6.0h)
+     • Claim Assessment in Household Claims Processing (8.0h)
+     • Approval/Denial in Household Claims Processing (6.0h)
+     • Settlement and Payment in Household Claims Processing (8.0h)
+
+   Recommendations:
+     1. High idle time detected (33% of available time). Consider reducing resources or increasing workload to improve cost efficiency.
+     2. Task 'Claim Submission Review' takes 4.0h (33% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+     3. Task 'Verification in Household Claims Processing' takes 6.0h (50% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+
+   ADMINISTRATIVE RESOURCE TRACKING:
+   =================================
+
+   Resource: Claim Examiner ($35/hour)
+   Tasks Performed:
+     - Claim Submission Review
+       Time: 0.0h - 4.0h (4.0 hours)
+       Cost: $140.00
+   Total Hours: 4.0
+   Total Cost: $140.00
+
+   Resource: Claim Adjuster ($33/hour)
+   Tasks Performed:
+     - Verification in Household Claims Processing
+       Time: 0.0h - 6.0h (6.0 hours)
+       Cost: $198.00
+     - Approval/Denial in Household Claims Processing
+       Time: 6.0h - 12.0h (6.0 hours)
+       Cost: $198.00
+   Total Hours: 12.0
+   Total Cost: $396.00
+
+   Resource: Claim Assessor ($34/hour)
+   Tasks Performed:
+     - Claim Assessment in Household Claims Processing
+       Time: 0.0h - 8.0h (8.0 hours)
+       Cost: $272.00
+   Total Hours: 8.0
+   Total Cost: $272.00
+
+   Resource: Claims Payment Coordinator ($32/hour)
+   Tasks Performed:
+     - Settlement and Payment in Household Claims Processing
+       Time: 0.0h - 8.0h (8.0 hours)
+       Cost: $256.00
+   Total Hours: 8.0
+   Total Cost: $256.00
+
+   OVERALL ADMINISTRATIVE SUMMARY:
+     Total Process Duration: 12.0 hours
+     Total Process Cost: $1064.00
+     Average Resource Utilization: 5.0%
+     Number of Resources Used: 4
+
+7a. Generating Visualizations...
+   [INFO] Detected process type: Manufacturing
+   [INFO] Creating summary page...
+   [OK] Summary page saved: visualization_outputs\manufacturing_summary_18.png
+   [INFO] Creating allocation page...
+   [OK] Allocation page saved: visualization_outputs\manufacturing_allocation_18.png
+
+   ✓ Manufacturing visualizations generated successfully!
+   ✓ Check the 'visualization_outputs' folder for PNG files
+
+   [INFO] Opening visualizations...
+   ✓ Images opened successfully!
+
+8. Detection Validation:
+   [INFO] Process detected as: MANUFACTURING
+   [INFO] Confidence: 87.1%
+
+   Manufacturing/Development Indicators Found:
+     * Development/Production in name: False
+     * Platform/Product in name: False
+     * Developer/Engineer resources: False
+     * Build/Design/Create tasks: False
+     * Testing/QA tasks: False
+
+9. Testing Sequential Flow Detection:
+   [OK] Sequential dependencies detected:
+     * Approval/Denial in Household Claims Processing depends on: Claim Assessment in Household Claims Processing, Claim Submission Review
+
+   [OK] Critical path identified:
+     Claim Submission Review
 
 ======================================================================
-TEST COMPLETE - FAILED!
+TEST COMPLETE - SUCCESS!
 ======================================================================

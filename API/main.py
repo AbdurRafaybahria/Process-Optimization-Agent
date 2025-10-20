@@ -46,7 +46,8 @@ except Exception as e:
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "visualization_outputs")
 
 # Default CMS configuration
-DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
+# Use deployed CMS URL if available, fallback to localhost
+DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "https://fyp-cms-frontend.vercel.app")
 
 app = FastAPI(title="Process Optimization API", version="1.0")
 app.add_middleware(
@@ -133,9 +134,13 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
 
     # Run optimizer (blocking) with timeout protection
     try:
-        logger.info("Running RL optimizer...")
+        logger.info("Running test_process_detection.py...")
+        logger.info(f"Process JSON path: {process_json_path}")
+        logger.info(f"Process ID: {process_id}")
         
-        # Add timeout protection using subprocess
+        # Ensure output directory exists
+        os.makedirs(OUTPUTS_DIR, exist_ok=True)
+        logger.info(f"Output directory ensured: {OUTPUTS_DIR}")
         
         # Run the test_process_detection.py as a subprocess with timeout
         cmd = [sys.executable, "test_process_detection.py", process_json_path]
@@ -150,13 +155,18 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
         )
         
         if result.returncode != 0:
-            logger.error(f"Optimizer subprocess failed with return code {result.returncode}")
-            logger.error(f"STDOUT: {result.stdout}")
-            logger.error(f"STDERR: {result.stderr}")
-            raise HTTPException(status_code=500, detail=f"Optimization failed: {result.stderr}")
+            logger.error(f"test_process_detection.py failed with return code {result.returncode}")
+            logger.error(f"STDOUT:\n{result.stdout}")
+            logger.error(f"STDERR:\n{result.stderr}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Optimization failed. Return code: {result.returncode}. Error: {result.stderr[:500]}"
+            )
         
-        logger.info("RL optimizer completed successfully")
-        logger.info(f"Optimizer output: {result.stdout}")
+        logger.info("test_process_detection.py completed successfully")
+        logger.info(f"Optimizer STDOUT (last 500 chars): {result.stdout[-500:]}")
+        if result.stderr:
+            logger.warning(f"Optimizer STDERR: {result.stderr}")
         
     except subprocess.TimeoutExpired:
         logger.error("Optimizer timed out after 5 minutes")
@@ -211,10 +221,26 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
             summary_files.append(pattern)
     
     if not alloc_files or not summary_files:
-        raise HTTPException(status_code=500, detail=f"Expected output PNGs not found after optimization. Process ID: {process_id}")
+        # List all files in the output directory for debugging
+        logger.error(f"PNG files not found for process ID: {process_id}")
+        logger.error(f"Output directory: {OUTPUTS_DIR}")
+        if os.path.exists(OUTPUTS_DIR):
+            all_files = os.listdir(OUTPUTS_DIR)
+            logger.error(f"Available files: {all_files}")
+            png_files = [f for f in all_files if f.endswith('.png')]
+            logger.error(f"PNG files in directory: {png_files}")
+        else:
+            logger.error(f"Output directory does not exist: {OUTPUTS_DIR}")
+        
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Expected output PNGs not found after optimization. Process ID: {process_id}. Check logs for details."
+        )
 
     alloc_png = max(alloc_files, key=os.path.getmtime)
     summary_png = max(summary_files, key=os.path.getmtime)
+    logger.info(f"Found allocation PNG: {alloc_png}")
+    logger.info(f"Found summary PNG: {summary_png}")
     return {"alloc_png_path": alloc_png, "summary_png_path": summary_png}
 
 

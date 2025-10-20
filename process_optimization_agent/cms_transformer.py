@@ -19,21 +19,34 @@ class CMSDataTransformer:
         Transform CMS process data to agent format
         
         Args:
-            cms_data: Raw process data from CMS API
+            cms_data: Raw process data from CMS API or already in agent format
             
         Returns:
             Dict in the format expected by the process optimization agent
         """
         process_data = cms_data.get("process_data", cms_data)
         
+        # Check if data is already in agent format (has 'tasks' and 'resources' arrays)
+        if 'tasks' in process_data and 'resources' in process_data:
+            # Data is already in agent format, return as-is
+            return process_data
+        
         # Extract basic process information
         process_id = process_data.get("process_id", "")
+        
+        # Handle company field - can be either a dict or a string
+        company_data = process_data.get("company", "")
+        if isinstance(company_data, dict):
+            company_name = company_data.get("name", "")
+        else:
+            company_name = str(company_data) if company_data else ""
+        
         transformed = {
             "id": str(process_id),  # Add id field for optimizer (as string)
             "name": process_data.get("process_name", ""),  # Add name field for optimizer
             "process_name": process_data.get("process_name", ""),
             "process_id": int(process_id) if str(process_id).isdigit() else process_id,  # Keep as int for CMS compatibility
-            "company": process_data.get("company", {}).get("name", ""),
+            "company": company_name,
             "description": process_data.get("process_overview", ""),
             "tasks": [],
             "resources": [],

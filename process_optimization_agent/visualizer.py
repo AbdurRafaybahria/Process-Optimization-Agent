@@ -539,6 +539,7 @@ class Visualizer:
             resource = process.get_resource_by_id(resource_id)
             resource_name = resource.name if resource else resource_id
             
+            # Plot each task assignment on a separate row
             for entry in entries:
                 task = process.get_task_by_id(entry.task_id)
                 task_name = task.name if task else entry.task_id
@@ -563,16 +564,16 @@ class Visualizer:
                 
                 # Store task name for right side listing
                 task_names_right.append((y_pos, task_name))
-            
-            # Add resource name at the left (as blue blocks like task names)
-            ax.text(-0.2, y_pos, resource_name, ha='right', va='center',
-                   fontsize=9, fontweight='normal',
-                   bbox=dict(boxstyle='round,pad=0.25', facecolor='lightblue', 
-                            edgecolor='#2E86AB', alpha=0.8))
-            
-            y_labels.append(resource_name)
-            y_positions.append(y_pos)
-            y_pos += 1
+                
+                # Add resource name at the left (as blue blocks like task names)
+                ax.text(-0.2, y_pos, resource_name, ha='right', va='center',
+                       fontsize=9, fontweight='normal',
+                       bbox=dict(boxstyle='round,pad=0.25', facecolor='lightblue', 
+                                edgecolor='#2E86AB', alpha=0.8))
+                
+                y_labels.append(resource_name)
+                y_positions.append(y_pos)
+                y_pos += 1  # Increment for EACH task, not just each resource
         
         # Add task names on the right side in a list format
         right_x_pos = max_time + 0.3
