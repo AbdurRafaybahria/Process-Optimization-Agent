@@ -28,8 +28,8 @@ class CMSDataTransformer:
         
         # Check if data is already in agent format (has 'tasks' and 'resources' arrays)
         if 'tasks' in process_data and 'resources' in process_data:
-            # Data is already in agent format, return as-is
-            return process_data
+            # Data is already in agent format, but may need normalization
+            return self._normalize_agent_format(process_data)
         
         # Extract basic process information
         process_id = process_data.get("process_id", "")
@@ -263,3 +263,88 @@ class CMSDataTransformer:
         )
         
         return process
+    
+    def _normalize_agent_format(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Normalize agent format data to ensure consistency
+        - Convert dependencies from [{from, to}] to task.dependencies array
+        - Ensure all required fields are present
+        """
+        normalized = data.copy()
+        
+        # Normalize tasks
+        if 'tasks' in normalized:
+            tasks = []
+            for task in normalized['tasks']:
+                normalized_task = task.copy()
+                
+                # Ensure duration_hours exists
+                if 'duration_hours' not in normalized_task and 'duration' in normalized_task:
+                    # Convert minutes to hours if needed
+                    duration = normalized_task['duration']
+                    if duration > 24:  # Likely in minutes
+                        normalized_task['duration_hours'] = duration / 60
+                    else:
+                        normalized_task['duration_hours'] = duration
+                
+                # Initialize dependencies array if not present
+                if 'dependencies' not in normalized_task:
+                    normalized_task['dependencies'] = []
+                
+                tasks.append(normalized_task)
+            
+            normalized['tasks'] = tasks
+        
+        # Convert global dependencies format [{from, to}] to task-level dependencies
+        if 'dependencies' in normalized and isinstance(normalized['dependencies'], list):
+            if normalized['dependencies'] and isinstance(normalized['dependencies'][0], dict):
+                # Build dependency map: task_id -> [prerequisite_ids]
+                dep_map = {}
+                for dep in normalized['dependencies']:
+                    to_task = str(dep.get('to', ''))
+                    from_task = str(dep.get('from', ''))
+                    if to_task:
+                        if to_task not in dep_map:
+                            dep_map[to_task] = []
+                        if from_task:
+                            dep_map[to_task].append(from_task)
+                
+                # Apply dependencies to tasks
+                for task in normalized['tasks']:
+                    task_id = str(task['id'])
+                    if task_id in dep_map:
+                        task['dependencies'] = dep_map[task_id]
+        
+        # Validate and fix resources
+        if 'resources' in normalized:
+            resources = []
+            for resource in normalized['resources']:
+                normalized_resource = resource.copy()
+                
+                # Fix invalid hourly_rate (negative or zero)
+                hourly_rate = normalized_resource.get('hourly_rate', 0)
+                if hourly_rate <= 0:
+                    # Use a default rate based on skill level
+                    skill_level = 'intermediate'
+                    if 'skills' in normalized_resource and normalized_resource['skills']:
+                        skill_level = normalized_resource['skills'][0].get('level', 'intermediate')
+                    
+                    # Default rates by skill level
+                    default_rates = {
+                        'beginner': 20,
+                        'intermediate': 30,
+                        'advanced': 40,
+                        'expert': 50
+                    }
+                    normalized_resource['hourly_rate'] = default_rates.get(skill_level, 30)
+                
+                # Fix invalid max_hours_per_day (zero or negative)
+                max_hours = normalized_resource.get('max_hours_per_day', 8)
+                if max_hours <= 0:
+                    normalized_resource['max_hours_per_day'] = 8  # Default to 8 hours
+                
+                resources.append(normalized_resource)
+            
+            normalized['resources'] = resources
+        
+        return normalized

@@ -297,7 +297,8 @@ class UserJourneyOptimizer(BaseOptimizer):
         
         for entry in schedule.entries:
             if entry.resource_id == resource.id:
-                latest_end = max(latest_end, entry.end_time)
+                # Use end_hour (float) instead of end_time (datetime)
+                latest_end = max(latest_end, entry.end_hour)
         
         return latest_end
     

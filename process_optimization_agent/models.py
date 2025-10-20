@@ -439,14 +439,18 @@ class Schedule:
         # Calculate total schedule duration using simplified hours
         if self.entries:
             # Find the maximum end_hour or calculate from datetime if needed
-            max_end_hour = 0
+            max_end_hour = 0.0
             for entry in self.entries:
-                if entry.end_hour:
-                    max_end_hour = max(max_end_hour, entry.end_hour)
-                elif entry.end_time:
+                if entry.end_hour and entry.end_hour > 0:
+                    max_end_hour = max(max_end_hour, float(entry.end_hour))
+                elif entry.end_time and process.start_date:
                     # Fallback to datetime calculation if hours not set
-                    hours_from_start = (entry.end_time - process.start_date).total_seconds() / 3600
-                    max_end_hour = max(max_end_hour, hours_from_start)
+                    try:
+                        hours_from_start = (entry.end_time - process.start_date).total_seconds() / 3600
+                        max_end_hour = max(max_end_hour, float(hours_from_start))
+                    except (TypeError, AttributeError):
+                        # If datetime comparison fails, skip this entry
+                        pass
             
             self.total_duration_hours = max_end_hour
             if max_end_hour > 0:

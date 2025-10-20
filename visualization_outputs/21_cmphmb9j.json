@@ -1,0 +1,165 @@
+{
+  "id": "21",
+  "name": "Medical Billing and Insurance Process",
+  "process_name": "Medical Billing and Insurance Process",
+  "process_id": 21,
+  "company": "Maldova Hospital",
+  "description": "<p data-pm-slice=\"0 0 []\">The medical billing and insurance process is a crucial financial function within healthcare organizations, ensuring accurate invoicing, claim processing, and reimbursement for medical services provided to patients. It serves as the link between healthcare providers, patients, and insurance companies, enabling a smooth flow of payments while maintaining compliance with healthcare regulations and policies. The process begins when a patient seeks medical care, and their personal and insurance details are recorded. Healthcare services rendered, including consultations, diagnostic tests, treatments, and medications, are documented and converted into standardized billing codes following international classification systems. These codes help in the accurate calculation of service charges and enable insurance providers to process claims efficiently.\n</p><p>Once medical services are documented, the financial department compiles an itemized bill detailing the costs associated with the patient's treatment. This information is then sent to the relevant insurance provider for claim verification and processing. Insurance companies assess claims based on policy coverage, medical necessity, and compliance with contractual terms. Claims may be approved, partially reimbursed, or denied, depending on the policy's terms and conditions.\n</p><p>In cases where claims are rejected or underpaid, follow-up procedures are initiated to rectify errors, provide additional documentation, or appeal the decision. For uninsured or self-paying patients, financial counseling may be offered to discuss payment plans and alternative funding options. By integrating technology such as electronic health records (EHRs) and automated billing systems, organizations improve accuracy, reduce administrative errors, and ensure timely reimbursements. A well-managed billing and insurance process enhances financial stability, operational efficiency, and overall patient satisfaction.\n</p>",
+  "tasks": [
+    {
+      "id": "86",
+      "name": "Medical Bill Generation",
+      "description": "<p data-pm-slice=\"0 0 []\">Medical bill generation is a critical task within the hospital’s revenue cycle management process. It involves converting the healthcare services provided to a patient—such as consultations, diagnostics, treatments, surgeries, medications, and room charges—into an itemized invoice for payment. This task ensures accurate financial representation of the care delivered, forming the basis for insurance claims or direct payments from patients. The process starts when a patient is admitted or receives outpatient care. Every service, test, and procedure performed is recorded in the hospital’s Electronic Health Record (EHR) or Hospital Information System (HIS). These records are captured using service codes such as ICD (International Classification of Diseases) for diagnoses and CPT (Current Procedural Terminology) for procedures. The Medical Billing Officer or Billing Department collects this information to compile a comprehensive and precise medical bill.\n</p><p>\n</p><p>\n</p><p>\n</p><p>The bill generation process involves cross-verifying documentation, checking patient eligibility and insurance coverage, applying the appropriate tariffs or negotiated rates, and ensuring compliance with legal and regulatory billing standards. It also includes identifying co-payments, deductibles, and exclusions applicable to insurance plans. Once verified, the bill is generated and forwarded to either the patient, the insurance company, or both, depending on the payment arrangement. Inaccurate or incomplete billing can lead to claim denials or revenue loss, making this task critical to both financial sustainability and patient satisfaction in healthcare delivery.\n</p><p>\n</p><p>Inputs of the Task:\n</p><p>• Patient admission or registration details\n</p><p>• Physician orders and treatment plans\n</p><p>• Diagnostic test and procedure records\n</p><p>• Medication dispensed and consumables used\n</p><p>• Bed and room occupancy logs\n</p><p>• Service and procedure codes (ICD, CPT, etc.)\n</p><p>• Insurance coverage and plan details\n</p><p>• Pricing/tariff schedules or insurance contracts\n</p><p>• Discharge summary and final treatment records\n</p><p>\n</p><p>Subtasks:\n</p><p>1. Service Data Collection:\n</p><p>o Pull all patient-related service data from the EHR or HIS\n</p><p>o Confirm diagnostics, lab tests, surgeries, medications, and other treatments provided\n</p><p>o Collect supporting documentation from respective departments (e.g., pharmacy, radiology)\n</p><p>2. Coding and Classification:\n</p><p>o Apply ICD and CPT codes to diagnoses and procedures\n</p><p>o Ensure compliance with billing standards and insurer requirements\n</p><p>o Cross-check for duplicate or missed services\n</p><p>3. Tariff and Rate Application:\n</p><p>o Match services with the appropriate tariff plan (cash or insurance)\n</p><p>o Apply agreed pricing for services, equipment, and doctor’s fees\n</p><p>o Calculate applicable taxes, discounts, or additional charges\n</p><p>4. Insurance Reconciliation (if applicable):\n</p><p>o Check patient insurance eligibility and policy limits\n</p><p>o Apply co-pay, deductible, or exclusions as per the insurance agreement\n</p><p>o Generate insurance claim documentation along with the bill\n</p><p>5. Final Bill Generation:\n</p><p>o Create a detailed, itemized bill with all charges and services listed\n</p><p>o Review bill for accuracy and completeness\n</p><p>o Submit bill to patient or insurance provider\n</p><p>o Store digital or hardcopy record for audit and legal purposes\n</p><p>Outputs of the Task:\n</p><p>• Itemized medical bill for inpatient or outpatient services\n</p><p>• Submission-ready insurance claim form\n</p><p>• Updated patient financial records in billing system\n</p><p>• Clear cost breakdown for patient reference\n</p><p>• Billing reports for hospital finance or audit purposes\n</p><p>• Trigger for next process: payment collection or claim follow-up\n</p>",
+      "duration": 5,
+      "duration_hours": 0.08333333333333333,
+      "required_skills": [
+        {
+          "name": "Billing Executive",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-BG",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "85",
+      "name": "Medical Insurance Verification",
+      "description": "<p data-pm-slice=\"0 0 []\">Medical insurance verification is a vital administrative task that ensures a patient’s health insurance coverage is valid, active, and sufficient to cover the anticipated healthcare services. This task serves as a safeguard for both the healthcare provider and the patient by confirming the financial responsibility and avoiding unexpected out-of-pocket costs or claim rejections. Performed by medical billing or front-desk staff, this task is typically executed during or prior to patient admission, outpatient visits, or planned medical procedures. The verification process begins by collecting insurance details from the patient, such as the name of the insurer, policy number, and group ID. The responsible staff then contacts the insurance provider—either through an online portal, electronic clearinghouse, or via phone—to verify policy details. These include effective coverage dates, type of plan, covered services, copayment and deductible amounts, preauthorization requirements, and policy limits.\n</p><p>\n</p><p>This task also identifies if the patient’s chosen healthcare provider is within the insurer’s network. For more complex procedures, prior authorization may be required, and this is initiated during the verification process to avoid delays or denial of claims later. Accurate and timely insurance verification helps prevent billing errors, claim denials, and financial losses. It also improves patient experience by clarifying payment responsibilities early in the care process. Overall, it is a foundational step in ensuring financial transparency and operational efficiency in hospital revenue cycle management.\n</p><p>\n</p><p>Inputs of the Task:\n</p><p>Patient demographic and insurance details (ID card, insurer name, policy number)\n</p><p>\n</p><p>Planned medical services or procedures\n</p><p>\n</p><p>Date of service or admission\n</p><p>\n</p><p>Hospital/clinic provider details\n</p><p>\n</p><p>Insurance provider database or portal access\n</p><p>\n</p><p>Healthcare service codes (for coverage confirmation)\n</p><p>\n</p><p>Prior medical records (if required for preauthorization)\n</p><p>\n</p><p>Subtasks:\n</p><p>Information Collection:\n</p><p>\n</p><p>Gather the patient’s insurance information during registration or appointment scheduling\n</p><p>\n</p><p>Photocopy or scan the insurance ID card\n</p><p>\n</p><p>Confirm the spelling of names, birthdates, and insurance identifiers\n</p><p>\n</p><p>Eligibility Check:\n</p><p>\n</p><p>Contact the insurance provider via online system or telephone\n</p><p>\n</p><p>Confirm policy status (active/inactive) and effective dates\n</p><p>\n</p><p>Check for patient’s eligibility for the specific service or procedure\n</p><p>\n</p><p>Coverage Review:\n</p><p>\n</p><p>Verify details such as copayment, deductible, out-of-pocket maximums\n</p><p>\n</p><p>Check limits or exclusions for specific services (e.g., surgery, radiology, physiotherapy)\n</p><p>\n</p><p>Determine whether the provider is in-network or out-of-network\n</p><p>\n</p><p>Preauthorization and Referral Check:\n</p><p>\n</p><p>Identify services that require prior approval\n</p><p>\n</p><p>Request preauthorization where applicable, including submission of clinical documentation\n</p><p>\n</p><p>Confirm if a referral from a primary care physician is needed for specialist visits\n</p><p>\n</p><p>Record and Notify:\n</p><p>\n</p><p>Document verified insurance details into the hospital’s Electronic Health Record (EHR) or billing system\n</p><p>\n</p><p>Notify billing department and clinical staff of the verification status\n</p><p>\n</p><p>Inform the patient about their coverage, expected payments, or authorization status\n</p><p>\n</p><p>Outputs of the Task:\n</p><p>Verified insurance status and eligibility\n</p><p>\n</p><p>Updated patient profile with insurance details\n</p><p>\n</p><p>Authorization numbers (if applicable) for planned procedures\n</p><p>\n</p><p>Notification to clinical and billing teams regarding coverage scope\n</p><p>\n</p><p>Clarified financial responsibility for the patient (copay, deductible, exclusions)\n</p><p>\n</p><p>Prepared groundwork for accurate medical billing and claims submission\n</p>",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Medical Insurance Liaison Officer",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "86"
+      ],
+      "order": 2,
+      "code": "HC-IVV",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "84",
+      "name": "Medical Claim Submission",
+      "description": "<p data-pm-slice=\"0 0 []\">Medical claim submission is a pivotal task in the hospital revenue cycle that involves sending formal requests to health insurance companies for reimbursement of healthcare services provided to insured patients. This task transforms clinical services into financial documentation, enabling providers to receive payments for the care delivered. The claim submission process is typically managed by the billing department or a specialized medical claims team within the hospital. The process begins after a patient receives medical services and a detailed account of the treatments, diagnostics, medications, and procedures is recorded. These services are coded using standard medical coding systems such as ICD (International Classification of Diseases) for diagnoses and CPT (Current Procedural Terminology) for procedures. Once coded, this data is used to prepare the claim, which includes essential patient, provider, and insurance details.\n</p><p>\n</p><p>Claims are submitted either electronically through EDI (Electronic Data Interchange) systems or manually using paper forms, depending on the payer’s requirements. Accuracy, completeness, and compliance with insurer-specific rules are critical to avoid denials, rejections, or payment delays. A successful claim submission ensures that hospitals maintain healthy cash flow and reduces the need for costly rework or appeals. It also helps in maintaining strong relationships with patients by avoiding billing disputes and promoting transparency. The task requires cross-departmental coordination between clinical, administrative, and financial teams. A well-structured claim submission process improves operational efficiency, reduces claim errors, and enhances the overall financial sustainability of the hospital.\n</p><p>\n</p><p>Inputs of the Task:\n</p><p>• Patient demographic and insurance information\n</p><p>• Itemized list of services rendered\n</p><p>• Diagnosis (ICD) and procedure (CPT/HCPCS) codes\n</p><p>• Preauthorization and referral numbers (if applicable)\n</p><p>• Provider details (hospital, physician credentials, NPI)\n</p><p>• Documentation from EHR (clinical summaries, treatment notes)\n</p><p>• Billing software or claim management system\n</p><p>• Payer-specific guidelines and claim formats\n</p><p>\n</p><p>Subtasks:\n</p><p>1. Patient and Insurance Data Verification:\n</p><p>o Confirm that all patient demographic and insurance details are accurate and up-to-date\n</p><p>o Validate policy coverage and benefits for services rendered\n</p><p>2. Medical Coding and Charge Entry:\n</p><p>o Convert clinical documentation into diagnosis and procedure codes\n</p><p>o Assign charges for each service based on hospital pricing or insurance agreements\n</p><p>3. Claim Form Preparation:\n</p><p>o Populate claim forms such as CMS-1500 (for outpatient) or UB-04 (for inpatient)\n</p><p>o Ensure inclusion of all necessary fields and attach required documentation\n</p><p>4. Compliance Check and Audit:\n</p><p>o Verify that the claim complies with payer-specific rules and national billing standards\n</p><p>o Conduct internal audits to ensure accuracy, prevent duplicate claims, or overbilling\n</p><p>5. Claim Submission:\n</p><p>o Submit the claim via electronic clearinghouse, direct payer portal, or by mailing paper forms\n</p><p>o Track submission status and receive acknowledgment from the payer\n</p><p>6. Record Maintenance and Follow-up:\n</p><p>o Log the claim submission in hospital systems\n</p><p>o Monitor payer response timelines and prepare for appeals or resubmissions if needed\n</p><p>\n</p><p>Outputs of the Task:\n</p><p>• Successfully submitted medical claim to insurance payer\n</p><p>• Receipt acknowledgment or tracking number\n</p><p>• Updated patient billing records in hospital system\n</p><p>• Claims report for finance department monitoring\n</p><p>• Initiation of reimbursement process by insurance company\n</p><p>• Documentation for follow-up, audits, or appeals if claim is denied or delayed\n</p>",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Medical Insurance Liaison Officer",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "85"
+      ],
+      "order": 3,
+      "code": "HC-CS",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "83",
+      "name": "Medical Record Keeping",
+      "description": "<p data-pm-slice=\"0 0 []\">Medical record keeping is a fundamental administrative task in healthcare settings, encompassing the systematic documentation, storage, retrieval, and management of patient health information. It ensures that comprehensive, accurate, and up-to-date information is available for clinical decision-making, legal compliance, research, and quality care delivery. Proper record keeping supports continuity of care, enhances communication among healthcare providers, and safeguards patient safety. The process begins the moment a patient engages with the healthcare facility—starting with registration, continuing through diagnosis, treatment, procedures, and discharge, and includes post-care follow-ups. Records typically contain patient demographics, medical histories, lab results, radiology images, prescriptions, physician notes, and billing information. These records may be in paper format, but are increasingly digitized into Electronic Medical Records (EMR) or Electronic Health Records (EHR) systems for efficiency and accessibility.\n</p><p>\n</p><p>Healthcare professionals depend on accurate records for clinical decisions, reducing the risk of medication errors, redundant tests, and missed diagnoses. From a legal standpoint, medical records serve as evidence of care provided, helping protect both patients and institutions. Administratively, records support billing accuracy, insurance claims, audits, and reporting.\n</p><p>Medical record keeping requires adherence to data protection regulations such as HIPAA (in the U.S.) to maintain confidentiality and privacy. Healthcare institutions often appoint trained health information professionals or medical record officers to manage this critical function. In essence, well-maintained medical records are vital to delivering safe, effective, and accountable healthcare services across all hospital departments.\n</p><p>Inputs of the Task:\n</p><p>• Patient registration data (name, age, gender, contact, etc.)\n</p><p>• Clinical documentation (doctor’s notes, diagnosis, prescriptions)\n</p><p>• Lab and imaging reports\n</p><p>• Surgical and procedural summaries\n</p><p>• Consent forms and insurance documents\n</p><p>• Billing and payment records\n</p><p>• Follow-up and discharge summaries\n</p><p>\n</p><p>Subtasks:\n</p><p>1. Data Collection and Entry:\n</p><p>At the point of admission or registration, demographic and preliminary clinical information is collected. During the patient's stay, medical staff continuously document progress, test results, and treatment plans. All entries must be accurate and time-stamped.\n</p><p>2. Record Organization and Classification:\n</p><p>Collected data is categorized into relevant sections such as clinical history, investigations, treatment plans, and billing records. This organization ensures information is easy to retrieve for clinical or administrative use.\n</p><p>3. Digital Record Management:\n</p><p>If using EMR/EHR systems, records are scanned, digitized, and uploaded to centralized databases. This allows for integration across departments and remote access by authorized personnel.\n</p><p>4. Quality Assurance and Review:\n</p><p>Records are periodically reviewed for completeness, accuracy, and compliance with regulatory standards. Missing data or discrepancies are flagged for resolution.\n</p><p>5. Security and Confidentiality Maintenance:\n</p><p>Access to records is role-based, ensuring patient confidentiality. Records are encrypted and backed up regularly to prevent data loss or breaches.\n</p><p>6. Retrieval and Archiving:\n</p><p>Medical records may be retrieved upon physician request or for legal, research, or audit purposes. Inactive records are securely archived per retention policies.\n</p><p>7. Compliance and Legal Documentation:\n</p><p>Documentation is maintained in line with local, national, and international regulations. Records may be used in case of litigation or insurance disputes.\n</p><p>\n</p><p>Outputs of the Task:\n</p><p>• Complete, accurate, and organized patient medical records\n</p><p>• Updated digital files in EMR/EHR systems\n</p><p>• Securely archived patient history for long-term use\n</p><p>• Accessible documentation for clinical, billing, or legal reference\n</p><p>• Improved coordination among healthcare teams\n</p><p>• Compliance with healthcare laws and institutional policies\n</p>",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Medical Accountant",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "84"
+      ],
+      "order": 4,
+      "code": "HC-RK",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "82",
+      "name": "Medical Claim Reconciliation",
+      "description": "<p data-pm-slice=\"0 0 []\">Medical claim reconciliation is the financial and administrative process of verifying that payments received from insurance companies match the claims submitted by a healthcare provider. It is a key task in the healthcare revenue cycle, ensuring that the hospital or medical facility is properly reimbursed for the services delivered. This task plays a pivotal role in detecting underpayments, overpayments, or claim denials, and facilitates prompt corrective actions to maintain financial integrity and operational efficiency. After claims are submitted to insurance payers, the hospital receives Electronic Remittance Advices (ERAs) or Explanation of Benefits (EOBs) detailing the amount approved, paid, denied, or adjusted. The medical billing or finance department must reconcile these documents against internal billing records to confirm that every service provided and billed has been compensated as expected. The reconciliation process helps identify any discrepancies between billed and paid amounts, such as incorrect deductions, non-covered services, or incorrect adjustments. When mismatches occur, staff must investigate the root causes, whether they are due to incorrect coding, documentation issues, missed authorizations, or payer processing errors. Effective claim reconciliation enables accurate revenue tracking, improves cash flow, and reduces the risk of revenue leakage. It also supports transparency and accountability within hospital operations. This task is usually supported by hospital billing software, revenue cycle management systems, and integration with banking platforms for real-time tracking of payments and remittances. A proactive approach to reconciliation minimizes delays in revenue realization and supports the long-term financial health of the healthcare organization.\n</p><p>\n</p><p>\n</p><p>\n</p><p>Inputs of the Task:\n</p><p>• Medical claim submissions and tracking records\n</p><p>• Electronic Remittance Advice (ERA) or Explanation of Benefits (EOB) from payers\n</p><p>• Bank deposit records for received payments\n</p><p>• Billing software or hospital revenue cycle management system\n</p><p>• Patient and insurance details\n</p><p>• Internal payment expectations (based on contracts or billing policies)\n</p><p>• Claim adjustment reason codes from insurers\n</p><p>\n</p><p>Subtasks:\n</p><p>1. Receipt of Remittance and Payment Data:\n</p><p>o Collect ERAs/EOBs from payers\n</p><p>o Retrieve bank statements to confirm payment deposits\n</p><p>o Match remittance advice with respective claims\n</p><p>2. Data Entry and Matching:\n</p><p>o Record payer payment details in the billing system\n</p><p>o Link each payment to corresponding patient accounts and claims\n</p><p>o Identify partial payments, overpayments, or denials\n</p><p>3. Variance Identification:\n</p><p>o Compare billed amount vs. paid amount\n</p><p>o Identify any discrepancies or claim adjustments\n</p><p>o Use adjustment reason codes to categorize issues\n</p><p>4. Discrepancy Resolution:\n</p><p>o Investigate underpaid or denied claims\n</p><p>o Recheck service codes, documentation, or authorizations\n</p><p>o Prepare for claim appeal, resubmission, or adjustment if needed\n</p><p>5. Reporting and Documentation:\n</p><p>o Generate reconciliation reports for finance and audit purposes\n</p><p>o Maintain logs of resolved and pending discrepancies\n</p><p>o Document corrective actions taken\n</p><p>6. Account Update and Closure:\n</p><p>o Apply payments to patient accounts\n</p><p>o Flag accounts with unresolved balances for further action\n</p><p>o Finalize account status once reconciled\n</p><p>\n</p><p>Outputs of the Task:\n</p><p>• Verified and reconciled payment records\n</p><p>• Updated patient account balances in hospital system\n</p><p>• Reconciliation reports for finance and management teams\n</p><p>• Identified list of claims for follow-up, appeal, or resubmission\n</p><p>• Adjusted billing records reflecting actual reimbursement received\n</p><p>• Improved financial accuracy and audit readiness\n</p>",
+      "duration": 20,
+      "duration_hours": 0.3333333333333333,
+      "required_skills": [
+        {
+          "name": "Medical Insurance Liaison Officer",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "83"
+      ],
+      "order": 5,
+      "code": "HC-REC",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "56",
+      "name": "Billing Executive",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Billing Executive",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 18,
+      "code": "HC-BE"
+    },
+    {
+      "id": "57",
+      "name": "Medical Insurance Liaison Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Medical Insurance Liaison Officer",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 25,
+      "code": "HC-ILO"
+    },
+    {
+      "id": "58",
+      "name": "Medical Accountant",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Medical Accountant",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "HC-ACC"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "86",
+      "to": "85"
+    },
+    {
+      "from": "85",
+      "to": "84"
+    },
+    {
+      "from": "84",
+      "to": "83"
+    },
+    {
+      "from": "83",
+      "to": "82"
+    }
+  ]
+}
