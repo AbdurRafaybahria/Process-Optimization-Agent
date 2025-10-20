@@ -30,20 +30,23 @@ except ImportError:
     )
 
 from .models import Task, Resource, Process, Schedule, ScheduleEntry
+from typing import Tuple
 
 
 class DependencyDetector:
     """Detects dependencies between tasks using NLP and rule-based methods"""
     
-    def __init__(self, use_nlp: bool = True, similarity_threshold: float = 0.7):
+    def __init__(self, use_nlp: bool = True, similarity_threshold: float = 0.7, process_type: str = "unknown"):
         """Initialize the dependency detector
         
         Args:
             use_nlp: Whether to use NLP for dependency detection
             similarity_threshold: Threshold for considering task descriptions similar (0-1)
+            process_type: Type of process (healthcare, manufacturing, etc.) for context-aware detection
         """
         self.use_nlp = use_nlp
         self.similarity_threshold = similarity_threshold
+        self.process_type = process_type
         self.nlp = None
         self.vectorizer = TfidfVectorizer(stop_words='english')
         
@@ -572,6 +575,200 @@ class DependencyDetector:
                 tgt.dependencies = set(deps)
                 applied += 1
         return applied
+    
+    def detect_sequential_dependencies(self, tasks: List[Task]) -> Dict[str, Set[str]]:
+        """
+        Enhanced dependency detection for sequential processes (e.g., healthcare)
+        Identifies tasks that must follow each other in sequence
+        """
+        dependencies = {}
+        task_map = {task.id: task for task in tasks}
+        
+        # Sequential keywords indicating order
+        sequential_indicators = {
+            'after': ['after', 'following', 'post', 'subsequent'],
+            'before': ['before', 'prior', 'pre', 'preceding'],
+            'then': ['then', 'next', 'followed by'],
+            'requires': ['requires', 'needs', 'depends on', 'prerequisite'],
+            'completes': ['complete', 'finish', 'done', 'end']
+        }
+        
+        # Healthcare-specific sequential patterns
+        if self.process_type == "healthcare":
+            healthcare_sequence = [
+                'registration', 'triage', 'assessment', 'examination',
+                'diagnosis', 'treatment', 'prescription', 'discharge'
+            ]
+            
+            # Create sequential dependencies based on typical flow
+            for i in range(len(tasks)):
+                for j in range(i + 1, len(tasks)):
+                    task1 = tasks[i]
+                    task2 = tasks[j]
+                    
+                    # Check if tasks follow healthcare sequence
+                    task1_keywords = task1.name.lower() + ' ' + task1.description.lower()
+                    task2_keywords = task2.name.lower() + ' ' + task2.description.lower()
+                    
+                    for k in range(len(healthcare_sequence) - 1):
+                        if healthcare_sequence[k] in task1_keywords and \
+                           healthcare_sequence[k + 1] in task2_keywords:
+                            if task2.id not in dependencies:
+                                dependencies[task2.id] = set()
+                            dependencies[task2.id].add(task1.id)
+        
+        # General sequential pattern detection
+        for task in tasks:
+            task_text = f"{task.name} {task.description}".lower()
+            
+            # Look for explicit sequential indicators
+            for indicator_type, keywords in sequential_indicators.items():
+                for keyword in keywords:
+                    if keyword in task_text:
+                        # Extract referenced tasks
+                        for other_task in tasks:
+                            if other_task.id != task.id:
+                                other_text = other_task.name.lower()
+                                if other_text in task_text:
+                                    if indicator_type in ['after', 'requires']:
+                                        if task.id not in dependencies:
+                                            dependencies[task.id] = set()
+                                        dependencies[task.id].add(other_task.id)
+                                    elif indicator_type == 'before':
+                                        if other_task.id not in dependencies:
+                                            dependencies[other_task.id] = set()
+                                        dependencies[other_task.id].add(task.id)
+        
+        return dependencies
+    
+    def detect_parallel_opportunities(self, tasks: List[Task]) -> List[List[str]]:
+        """
+        Detect tasks that can be executed in parallel
+        Returns groups of task IDs that can run simultaneously
+        """
+        parallel_groups = []
+        
+        # Find tasks with no dependencies or same dependencies
+        dependency_groups = defaultdict(list)
+        for task in tasks:
+            dep_key = frozenset(task.dependencies) if task.dependencies else frozenset()
+            dependency_groups[dep_key].append(task.id)
+        
+        # Groups with same dependencies can potentially run in parallel
+        for dep_set, task_ids in dependency_groups.items():
+            if len(task_ids) > 1:
+                # Additional checks for parallel compatibility
+                if self._can_run_parallel(task_ids, tasks):
+                    parallel_groups.append(task_ids)
+        
+        return parallel_groups
+    
+    def _can_run_parallel(self, task_ids: List[str], all_tasks: List[Task]) -> bool:
+        """
+        Check if tasks can actually run in parallel
+        Consider resource conflicts and logical constraints
+        """
+        task_map = {task.id: task for task in all_tasks}
+        tasks_to_check = [task_map[tid] for tid in task_ids if tid in task_map]
+        
+        # Check for resource conflicts
+        required_resources = defaultdict(int)
+        for task in tasks_to_check:
+            for skill in task.required_skills:
+                required_resources[skill.name] += 1
+        
+        # If multiple tasks need the same unique resource, they can't run in parallel
+        # This is a simplified check - could be enhanced with actual resource availability
+        
+        # For healthcare processes, be more restrictive about parallelization
+        if self.process_type == "healthcare":
+            # In healthcare, tasks involving the patient directly cannot be parallel
+            patient_interaction_keywords = [
+                'patient', 'examination', 'consultation', 'treatment', 
+                'diagnosis', 'assessment', 'procedure'
+            ]
+            
+            patient_tasks = 0
+            for task in tasks_to_check:
+                task_text = f"{task.name} {task.description}".lower()
+                if any(keyword in task_text for keyword in patient_interaction_keywords):
+                    patient_tasks += 1
+            
+            # If multiple tasks involve direct patient interaction, they can't be parallel
+            if patient_tasks > 1:
+                return False
+        
+        return True
+    
+    def detect_critical_sequence(self, tasks: List[Task]) -> List[str]:
+        """
+        Detect the critical sequence of tasks that form the main flow
+        Particularly useful for single-user journey processes
+        """
+        if not tasks:
+            return []
+        
+        # Build dependency graph
+        graph = defaultdict(list)
+        reverse_graph = defaultdict(list)
+        task_map = {task.id: task for task in tasks}
+        
+        for task in tasks:
+            for dep_id in task.dependencies:
+                if dep_id in task_map:
+                    graph[dep_id].append(task.id)
+                    reverse_graph[task.id].append(dep_id)
+        
+        # Find tasks with no dependencies (potential start points)
+        start_tasks = [task.id for task in tasks if not task.dependencies]
+        
+        # Find tasks with no dependents (potential end points)
+        end_tasks = [
+            task.id for task in tasks 
+            if task.id not in graph or not graph[task.id]
+        ]
+        
+        # If single start and end, find the path
+        if len(start_tasks) == 1 and len(end_tasks) == 1:
+            return self._find_longest_path(start_tasks[0], end_tasks[0], graph, task_map)
+        
+        # Otherwise, find the longest path overall
+        longest_path = []
+        for start in start_tasks:
+            for end in end_tasks:
+                path = self._find_longest_path(start, end, graph, task_map)
+                if len(path) > len(longest_path):
+                    longest_path = path
+        
+        return longest_path
+    
+    def _find_longest_path(self, start: str, end: str, 
+                           graph: Dict[str, List[str]], 
+                           task_map: Dict[str, Task]) -> List[str]:
+        """
+        Find the longest path between two tasks
+        Uses modified BFS to find the path with most tasks
+        """
+        if start == end:
+            return [start]
+        
+        # BFS with path tracking
+        queue = [(start, [start])]
+        longest_path = []
+        
+        while queue:
+            current, path = queue.pop(0)
+            
+            if current == end:
+                if len(path) > len(longest_path):
+                    longest_path = path
+                continue
+            
+            for next_task in graph.get(current, []):
+                if next_task not in path:  # Avoid cycles
+                    queue.append((next_task, path + [next_task]))
+        
+        return longest_path
 
 
 class DeadlockDetector:

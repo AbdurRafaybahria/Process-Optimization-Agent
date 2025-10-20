@@ -24,11 +24,38 @@ from process_optimization_agent.optimizers import RLBasedOptimizer
 from process_optimization_agent.models import Process, Task, Resource, Skill, ScheduleEntry
 from process_optimization_agent.visualizer import Visualizer
 from process_optimization_agent.analyzers import WhatIfAnalyzer, DependencyDetector
+from process_optimization_agent.process_intelligence import ProcessIntelligence
+from process_optimization_agent.cms_transformer import CMSDataTransformer
+
+def detect_data_format(data):
+    """Detect if data is in CMS format or Agent format"""
+    # CMS format has 'process_task' and nested structure
+    if 'process_task' in data or 'company' in data:
+        return 'cms'
+    # Agent format has 'tasks' and 'resources' at root level
+    elif 'tasks' in data and 'resources' in data:
+        return 'agent'
+    else:
+        return 'unknown'
 
 def load_process_from_json(filepath):
-    """Load a process from a JSON file."""
+    """Load a process from a JSON file (auto-detects CMS or Agent format)."""
     with open(filepath, 'r') as f:
         data = json.load(f)
+    
+    # Detect format and transform if needed
+    data_format = detect_data_format(data)
+    print(f"Detected data format: {data_format.upper()}")
+    
+    if data_format == 'cms':
+        print("Transforming CMS format to Agent format...")
+        transformer = CMSDataTransformer()
+        data = transformer.transform_process(data)
+        print("✓ Transformation complete")
+        print(f"  - Tasks: {len(data.get('tasks', []))}")
+        print(f"  - Resources: {len(data.get('resources', []))}")
+    elif data_format == 'unknown':
+        print("Warning: Unknown data format, attempting to parse as Agent format...")
     
     # Create skills mapping
     all_skills = {}
@@ -106,10 +133,14 @@ def load_process_from_json(filepath):
     
     project_duration_hours = (target_end_date - start_date).total_seconds() / 3600.0
     
+    # Handle both CMS format (process_id) and agent format (id)
+    process_id = data.get('id') or data.get('process_id') or 'unknown'
+    process_name = data.get('name') or data.get('process_name') or 'Unnamed Process'
+    
     process = Process(
-        id=data['id'],
-        name=data['name'],
-        description=data.get('description', ''),
+        id=str(process_id),
+        name=process_name,
+        description=data.get('description') or data.get('process_overview', ''),
         start_date=start_date,
         project_duration_hours=project_duration_hours,
         tasks=tasks,
@@ -186,8 +217,16 @@ def main(argv=None):
     optimizer.initial_epsilon = 0.3  # Store initial epsilon for reset
     visualizer = Visualizer()
     
+    # Detect process type using ProcessIntelligence
+    print("\n=== Detecting Process Type ===")
+    intelligence = ProcessIntelligence()
+    classification = intelligence.detect_process_type(process)
+    print(f"Process Type Detected: {classification.process_type.value.upper()}")
+    print(f"Confidence: {classification.confidence:.1%}")
+    print(f"Optimization Strategy: {classification.optimization_strategy.value}")
+    
     # Run optimization (includes training internally)
-    print("Training and optimizing...")
+    print("\nTraining and optimizing...")
     try:
         schedule = optimizer.optimize(process)
         if not schedule or not schedule.entries:
@@ -536,22 +575,36 @@ def main(argv=None):
                 # Image pop-up disabled for API usage
                 print("What-if allocations chart generated (pop-up disabled)")
 
-            # New: Allocation charts (pie + bar) with parallel groups summary
-            alloc_chart_out = os.path.join(output_dir, f"{process.id}_alloc_charts_{ts}")
-            # Prefer our constructed sequential baseline; if unavailable, fall back to wi_results
-            baseline_sched = baseline_sched_seq
-            alloc_chart_png = visualizer.plot_allocation_charts(
-                process,
-                schedule,
-                title=f"Resource Allocation — {process.name}",
-                output_file=alloc_chart_out,
-                show=False,
-                baseline_schedule=baseline_sched,
-            )
-            if alloc_chart_png and os.path.exists(alloc_chart_png):
-                print(f"Allocation charts saved to: {os.path.abspath(alloc_chart_png)}")
-                # Image pop-up disabled for API usage
-                print("Allocation charts generated (pop-up disabled)")
+            # New: Allocation page using unified visualizer (auto-detects process type)
+            alloc_chart_out = os.path.join(output_dir, f"{process.id}_alloc_charts_{ts}.png")
+            try:
+                visualizer.create_allocation_page(
+                    process=process,
+                    schedule=schedule,
+                    process_type=classification.process_type.value,
+                    save_path=alloc_chart_out
+                )
+                if os.path.exists(alloc_chart_out):
+                    print(f"Allocation page saved to: {os.path.abspath(alloc_chart_out)}")
+                    print(f"Allocation page generated ({classification.process_type.value} format)")
+                    
+                    # Open the image automatically
+                    try:
+                        import subprocess
+                        import platform
+                        if platform.system() == 'Windows':
+                            subprocess.Popen(['start', alloc_chart_out], shell=True)
+                        elif platform.system() == 'Darwin':  # macOS
+                            subprocess.Popen(['open', alloc_chart_out])
+                        else:  # Linux
+                            subprocess.Popen(['xdg-open', alloc_chart_out])
+                        print("✓ Allocation image opened successfully!")
+                    except Exception as img_error:
+                        print(f"Warning: Could not auto-open allocation image: {img_error}")
+                else:
+                    print("Warning: Allocation page file not found after generation")
+            except Exception as e:
+                print(f"Error generating allocation page: {e}")
             # Disabled: do not write What-if Markdown summary
             pass
         except Exception as e:
@@ -785,24 +838,51 @@ def main(argv=None):
             'schedule': schedule,  # allow Visualizer to compute unique resources used
         }
         
-        # Pass the computed metrics for the summary chart
-        chart_out = os.path.join(output_dir, f"{process.id}_summary_{ts}")
+        # Generate summary page using unified visualizer (auto-detects process type)
+        chart_out = os.path.join(output_dir, f"{process.id}_summary_{ts}.png")
         
-        summary_output = visualizer.plot_summary_comparison(
-            before=before,
-            after=after,
-            title=f"Optimization Summary — {process.name}",
-            output_file=chart_out,
-            show=False
-        )
-        if summary_output and os.path.exists(summary_output):
-            print(f"Summary chart saved to: {os.path.abspath(summary_output)}")
-            print(f"[Summary] Before people (team size): {before.get('total_resources')}, After people (unique resources used): {len({e.resource_id for e in schedule.entries})}")
-            print(f"[Summary] Costs — Before (cheapest-qualified sequential): ${before['total_cost']:,.2f}, After (assigned rates): ${after['total_cost']:,.2f}")
-            # Browser pop-up disabled for API usage
-            print("Summary chart generated (pop-up disabled)")
-        else:
-            print("Warning: Failed to generate summary comparison chart")
+        # Prepare before metrics for the new visualizer
+        before_metrics = {
+            'duration': before['duration_hours'],
+            'resources': before.get('total_resources', len(process.resources)),
+            'cost': before['total_cost']
+        }
+        
+        try:
+            detected_type = classification.process_type.value
+            print(f"\n[DEBUG] Passing process_type to visualizer: '{detected_type}'")
+            print(f"[DEBUG] Process type enum: {classification.process_type}")
+            
+            visualizer.create_summary_page(
+                process=process,
+                schedule=schedule,
+                process_type=detected_type,
+                before_metrics=before_metrics,
+                save_path=chart_out
+            )
+            if os.path.exists(chart_out):
+                print(f"Summary page saved to: {os.path.abspath(chart_out)}")
+                print(f"[Summary] Before people (team size): {before.get('total_resources')}, After people (unique resources used): {len({e.resource_id for e in schedule.entries})}")
+                print(f"[Summary] Costs — Before: ${before['total_cost']:,.2f}, After: ${after['total_cost']:,.2f}")
+                print(f"Summary page generated ({classification.process_type.value} format)")
+                
+                # Open the image automatically
+                try:
+                    import subprocess
+                    import platform
+                    if platform.system() == 'Windows':
+                        subprocess.Popen(['start', chart_out], shell=True)
+                    elif platform.system() == 'Darwin':  # macOS
+                        subprocess.Popen(['open', chart_out])
+                    else:  # Linux
+                        subprocess.Popen(['xdg-open', chart_out])
+                    print("✓ Summary image opened successfully!")
+                except Exception as img_error:
+                    print(f"Warning: Could not auto-open summary image: {img_error}")
+            else:
+                print("Warning: Summary page file not found after generation")
+        except Exception as e:
+            print(f"Error generating summary page: {e}")
 
         # Allocation summary image (disabled per request)
         # Intentionally skipped to avoid generating the spreadsheet-like page.

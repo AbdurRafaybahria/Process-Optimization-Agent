@@ -1,0 +1,420 @@
+{
+  "process_id": 101,
+  "company_id": 1,
+  "created_at": "2025-01-15T09:00:00.000Z",
+  "updated_at": "2025-01-15T09:00:00.000Z",
+  "capacity_requirement_minutes": 660,
+  "parent_process_id": null,
+  "parent_task_id": null,
+  "process_code": "LOAN-001",
+  "process_name": "Personal Loan Approval Process",
+  "process_overview": "Complete loan approval process from application to disbursement including KYC, credit checks, and compliance",
+  "company": {
+    "company_id": 1,
+    "companyCode": "BNK",
+    "name": "Banking Corporation",
+    "created_by": 1,
+    "created_at": "2025-01-01T00:00:00.000Z",
+    "updated_at": "2025-01-01T00:00:00.000Z"
+  },
+  "process": null,
+  "task_process_parent_task_idTotask": null,
+  "process_task": [
+    {
+      "process_id": 101,
+      "task_id": 1,
+      "order": 1,
+      "task": {
+        "task_id": 1,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 120,
+        "task_code": "DOC-VER-01",
+        "task_company_id": 1,
+        "task_name": "Document Verification",
+        "task_overview": "Verify customer documents including ID, proof of income, and address",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 1,
+            "task_id": 1,
+            "job": {
+              "job_id": 1,
+              "jobCode": "DOC-OFF-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 25,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Document verification and customer service specialist",
+              "function_id": 1,
+              "name": "Document Verification Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 2,
+      "order": 2,
+      "task": {
+        "task_id": 2,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 90,
+        "task_code": "KYC-VER-01",
+        "task_company_id": 1,
+        "task_name": "KYC Verification",
+        "task_overview": "Know Your Customer verification and identity check",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 2,
+            "task_id": 2,
+            "job": {
+              "job_id": 2,
+              "jobCode": "KYC-SPEC-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 35,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "KYC verification and compliance specialist",
+              "function_id": 1,
+              "name": "KYC Specialist",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 3,
+      "order": 3,
+      "task": {
+        "task_id": 3,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "CREDIT-CHK-01",
+        "task_company_id": 1,
+        "task_name": "Credit Score Check",
+        "task_overview": "Pull and analyze credit report and credit score from bureau",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 3,
+            "task_id": 3,
+            "job": {
+              "job_id": 3,
+              "jobCode": "CREDIT-AN-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 45,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Credit analysis and financial assessment expert",
+              "function_id": 1,
+              "name": "Credit Analyst",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 4,
+      "order": 4,
+      "task": {
+        "task_id": 4,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 120,
+        "task_code": "INC-VER-01",
+        "task_company_id": 1,
+        "task_name": "Income Verification",
+        "task_overview": "Verify employment status and income level",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 3,
+            "task_id": 4,
+            "job": {
+              "job_id": 3,
+              "jobCode": "CREDIT-AN-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 45,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Credit analysis and financial assessment expert",
+              "function_id": 1,
+              "name": "Credit Analyst",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 5,
+      "order": 5,
+      "task": {
+        "task_id": 5,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 90,
+        "task_code": "RISK-ASS-01",
+        "task_company_id": 1,
+        "task_name": "Risk Assessment",
+        "task_overview": "Evaluate risk score based on credit history, income, and debt ratio",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 4,
+            "task_id": 5,
+            "job": {
+              "job_id": 4,
+              "jobCode": "RISK-MGR-01",
+              "job_level_id": 4,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 55,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Risk assessment and management specialist",
+              "function_id": 1,
+              "name": "Risk Manager",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 6,
+      "order": 6,
+      "task": {
+        "task_id": 6,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "FRAUD-CHK-01",
+        "task_company_id": 1,
+        "task_name": "Anti-Fraud Check",
+        "task_overview": "Screen for fraudulent activity and suspicious patterns",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 5,
+            "task_id": 6,
+            "job": {
+              "job_id": 5,
+              "jobCode": "FRAUD-AN-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 40,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Fraud detection and prevention analyst",
+              "function_id": 1,
+              "name": "Fraud Detection Analyst",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 7,
+      "order": 7,
+      "task": {
+        "task_id": 7,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "COMP-CHK-01",
+        "task_company_id": 1,
+        "task_name": "Compliance Check",
+        "task_overview": "Ensure regulatory compliance and adherence to banking regulations",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 2,
+            "task_id": 7,
+            "job": {
+              "job_id": 2,
+              "jobCode": "KYC-SPEC-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 35,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "KYC verification and compliance specialist",
+              "function_id": 1,
+              "name": "KYC Specialist",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 8,
+      "order": 8,
+      "task": {
+        "task_id": 8,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "LOAN-APP-01",
+        "task_company_id": 1,
+        "task_name": "Loan Approval Decision",
+        "task_overview": "Final approval decision based on all checks and assessments",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 6,
+            "task_id": 8,
+            "job": {
+              "job_id": 6,
+              "jobCode": "LOAN-OFF-01",
+              "job_level_id": 4,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 50,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Senior loan officer with approval authority",
+              "function_id": 1,
+              "name": "Senior Loan Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 9,
+      "order": 9,
+      "task": {
+        "task_id": 9,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "DOC-PREP-01",
+        "task_company_id": 1,
+        "task_name": "Loan Agreement Preparation",
+        "task_overview": "Prepare loan agreement documents and terms",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 6,
+            "task_id": 9,
+            "job": {
+              "job_id": 6,
+              "jobCode": "LOAN-OFF-01",
+              "job_level_id": 4,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 50,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Senior loan officer with approval authority",
+              "function_id": 1,
+              "name": "Senior Loan Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 10,
+      "order": 10,
+      "task": {
+        "task_id": 10,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "CUST-NOT-01",
+        "task_company_id": 1,
+        "task_name": "Customer Notification",
+        "task_overview": "Notify customer of approval decision and next steps",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 1,
+            "task_id": 10,
+            "job": {
+              "job_id": 1,
+              "jobCode": "DOC-OFF-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 25,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Document verification and customer service specialist",
+              "function_id": 1,
+              "name": "Document Verification Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 101,
+      "task_id": 11,
+      "order": 11,
+      "task": {
+        "task_id": 11,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "DISB-01",
+        "task_company_id": 1,
+        "task_name": "Loan Disbursement",
+        "task_overview": "Disburse approved loan amount to customer account",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 7,
+            "task_id": 11,
+            "job": {
+              "job_id": 7,
+              "jobCode": "DISB-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 30,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Disbursement and payment processing officer",
+              "function_id": 1,
+              "name": "Disbursement Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

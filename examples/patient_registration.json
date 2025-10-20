@@ -1,0 +1,204 @@
+{
+    "process_id": 10,
+    "company_id": 1,
+    "created_at": "2025-09-19T12:54:16.590Z",
+    "updated_at": "2025-09-19T14:36:44.032Z",
+    "capacity_requirement_minutes": 67,
+    "parent_process_id": null,
+    "parent_task_id": null,
+    "process_code": "HC-PR",
+    "process_name": "Patient Registration",
+    "process_overview": "In healthcare organizations, patient registration serves as the foundational step that establishes a patient's interaction with the healthcare system. It is a systematic process that ensures accurate data collection, streamlined administrative workflows, and optimal resource management.",
+    "company": {
+        "company_id": 1,
+        "companyCode": "MLDH",
+        "name": "Maldova Hospital",
+        "created_by": 1,
+        "created_at": "2025-08-28T08:56:58.889Z",
+        "updated_at": "2025-08-28T11:13:20.164Z"
+    },
+    "process": null,
+    "task_process_parent_task_idTotask": null,
+    "process_task": [
+        {
+            "process_id": 10,
+            "task_id": 24,
+            "order": 1,
+            "task": {
+                "task_id": 24,
+                "created_at": "2025-09-19T13:18:46.565Z",
+                "updated_at": "2025-09-19T13:18:46.565Z",
+                "task_capacity_minutes": 2,
+                "task_code": "HC-PG",
+                "task_company_id": 1,
+                "task_name": "Patient Greeting & Form Distribution",
+                "task_overview": "The Patient Greeting & Form Distribution process is the first interaction between a healthcare facility and a patient upon arrival. This task plays a crucial role in setting the tone for the patient's experience, ensuring they receive clear instructions for registration and medical treatment.",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 15,
+                        "task_id": 24,
+                        "job": {
+                            "job_id": 15,
+                            "jobCode": "HC-R",
+                            "job_level_id": 2,
+                            "company_id": 1,
+                            "createdAt": "2025-09-19T13:14:45.265Z",
+                            "hourlyRate": 43,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-09-19T13:14:45.264Z",
+                            "description": "A receptionist greets visitors and manages front-desk communication.",
+                            "function_id": 11,
+                            "name": "Receptionist",
+                            "overview": null
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 42,
+            "order": 2,
+            "task": {
+                "task_id": 42,
+                "created_at": "2025-09-19T13:52:24.671Z",
+                "updated_at": "2025-09-19T13:55:17.594Z",
+                "task_capacity_minutes": 25,
+                "task_code": "HC-IV",
+                "task_company_id": 1,
+                "task_name": "Identity & Insurance Verification",
+                "task_overview": "The Identity & Insurance Verification process ensures that a patient's identity is accurately confirmed and their insurance coverage is validated before receiving medical services. This step is critical to preventing fraud, ensuring accurate patient records, and facilitating seamless billing processes.",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 16,
+                        "task_id": 42,
+                        "job": {
+                            "job_id": 16,
+                            "jobCode": "HC-RC",
+                            "job_level_id": 3,
+                            "company_id": 1,
+                            "createdAt": "2025-09-19T13:22:43.989Z",
+                            "hourlyRate": 30,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-09-19T13:22:43.987Z",
+                            "description": "A registration clerk registers and verifies patients.",
+                            "function_id": 10,
+                            "name": "Registration Clerk",
+                            "overview": null
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 52,
+            "order": 3,
+            "task": {
+                "task_id": 52,
+                "created_at": "2025-09-19T14:35:28.615Z",
+                "updated_at": "2025-09-19T14:35:28.615Z",
+                "task_capacity_minutes": 15,
+                "task_code": "HC-EPDITS",
+                "task_company_id": 1,
+                "task_name": "Enter patient details into the system",
+                "task_overview": "A Data Entry Officer plays a vital role in maintaining accurate and organized patient records within a healthcare facility. Their primary responsibility is to enter and update electronic health records (EHR) with essential details such as patient demographics, medical history, diagnoses, prescriptions, treatment plans, and test results.",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 24,
+                        "task_id": 52,
+                        "job": {
+                            "job_id": 24,
+                            "jobCode": "HC-DEO",
+                            "job_level_id": 4,
+                            "company_id": 1,
+                            "createdAt": "2025-09-19T14:31:49.472Z",
+                            "hourlyRate": 30,
+                            "maxHoursPerDay": 3,
+                            "updatedAt": "2025-09-19T14:31:49.471Z",
+                            "description": "A data entry officer inputs and updates information accurately.",
+                            "function_id": 12,
+                            "name": "Data Entry Officer",
+                            "overview": null
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 44,
+            "order": 4,
+            "task": {
+                "task_id": 44,
+                "created_at": "2025-09-19T14:08:05.375Z",
+                "updated_at": "2025-09-19T14:08:05.375Z",
+                "task_capacity_minutes": 15,
+                "task_code": "HC-MV",
+                "task_company_id": 1,
+                "task_name": "Medical Records Validation",
+                "task_overview": "Medical Records Validation is a crucial step in ensuring the accuracy, completeness, and consistency of patient information stored within the healthcare system. This process involves reviewing electronic medical records (EMRs) to verify that all patient data, including demographic details, medical history, diagnoses, prescribed treatments, and insurance information, is accurate and up to date.",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 18,
+                        "task_id": 44,
+                        "job": {
+                            "job_id": 18,
+                            "jobCode": "HC-MRO",
+                            "job_level_id": 3,
+                            "company_id": 1,
+                            "createdAt": "2025-09-19T14:06:35.825Z",
+                            "hourlyRate": 40,
+                            "maxHoursPerDay": 2,
+                            "updatedAt": "2025-09-19T14:06:35.824Z",
+                            "description": "A medical records officer manages and secures patient files.",
+                            "function_id": 12,
+                            "name": "Medical Records Officer",
+                            "overview": null
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 45,
+            "order": 5,
+            "task": {
+                "task_id": 45,
+                "created_at": "2025-09-19T14:11:25.796Z",
+                "updated_at": "2025-09-19T14:11:25.796Z",
+                "task_capacity_minutes": 10,
+                "task_code": "HC-RF",
+                "task_company_id": 1,
+                "task_name": "Registration Fee Collection",
+                "task_overview": "The Registration Fee Collection process ensures that patients complete the necessary financial transactions before receiving medical services. It involves verifying the applicable fees, processing payments, and generating receipts. This step is crucial for maintaining the financial stability of healthcare facilities and ensuring compliance with billing policies.",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 19,
+                        "task_id": 45,
+                        "job": {
+                            "job_id": 19,
+                            "jobCode": "HC-BS",
+                            "job_level_id": 3,
+                            "company_id": 1,
+                            "createdAt": "2025-09-19T14:09:50.921Z",
+                            "hourlyRate": 20,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-09-19T14:09:50.920Z",
+                            "description": "A billing specialist prepares and manages patient invoices.",
+                            "function_id": 11,
+                            "name": "Billing Specialist",
+                            "overview": null
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

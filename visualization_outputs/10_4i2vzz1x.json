@@ -1,0 +1,193 @@
+{
+  "id": "10",
+  "name": "Patient Registration",
+  "process_name": "Patient Registration",
+  "process_id": 10,
+  "company": "Maldova Hospital",
+  "description": "In healthcare organizations, patient registration serves as the foundational step that establishes a patient’s interaction with the healthcare system. It is a systematic process that ensures accurate data collection, streamlined administrative workflows, and optimal resource management. The efficiency and accuracy of patient registration directly impact the quality of patient care, operational effectiveness, and financial sustainability of healthcare institutions. From an organizational standpoint, patient registration is more than just a front-desk activity; it is an essential function that integrates multiple departments and stakeholders. It is the first point of interaction where crucial patient information is collected, verified, and processed, forming the basis for further medical treatment, billing, insurance claims, and record-keeping. An efficient patient registration process reduces administrative burdens, enhances patient satisfaction, minimizes errors, and supports compliance with regulatory requirements. To support an effective registration process, healthcare organizations invest in advanced infrastructure and technology. Electronic Health Record (EHR) systems, patient portals, biometric verification, and cloud-based databases are commonly used to ensure data accuracy, reduce paperwork, and improve accessibility. These technologies help in storing patient demographics, medical histories, and other essential details that enable smooth transitions across different departments. Moreover, many healthcare institutions implement self-service kiosks or mobile applications to allow patients to pre-register before arriving at the facility. This reduces waiting times, alleviates congestion at registration counters, and enhances overall efficiency. Organizations also ensure that their systems comply with data privacy laws such as HIPAA (Health Insurance Portability and Accountability Act) in the United States or GDPR (General Data Protection Regulation) in Europe to protect patient confidentiality. From an organizational perspective, patient registration is a critical function that ensures seamless healthcare delivery, efficient administration, and financial stability. By leveraging technology, optimizing workflows, and prioritizing data security, healthcare institutions can enhance the registration process, improving both patient satisfaction and operational effectiveness. As the healthcare landscape continues to evolve, organizations must adapt their registration strategies to meet emerging challenges and opportunities in patient management.",
+  "tasks": [
+    {
+      "id": "24",
+      "name": "Patient Greeting & Form Distribution",
+      "description": "<p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">The Patient Greeting &amp; Form Distribution process is the first interaction between a healthcare facility and a patient upon arrival. This task plays a crucial role in setting the tone for the patient’s experience, ensuring they receive clear instructions for registration and medical treatment. A front desk representative, receptionist, or healthcare assistant welcomes the patient, verifies their initial appointment or walk-in status, and provides them with necessary documentation to proceed with the registration process.</span></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Forms distributed during this step typically include personal information sheets, medical history forms, consent agreements, insurance verification documents, and privacy policy acknowledgments. This information is essential for building an accurate medical record, facilitating insurance claims, and ensuring compliance with legal and hospital regulations.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Additionally, patient queries about hospital policies, estimated waiting times, and procedural steps are addressed at this stage. In some modern healthcare environments, self-service kiosks or digital patient portals allow for paperless form submission, streamlining this step for efficiency and accuracy.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">By ensuring that patients complete necessary documentation before proceeding, this task helps prevent delays in further processing and medical consultation. An effective Patient Greeting &amp; Form Distribution process fosters a welcoming atmosphere, reduces confusion, and enhances the overall efficiency of healthcare workflows.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Inputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Patient’s appointment details (if scheduled)</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Patient identification (ID card, passport, or medical insurance card)</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Pre-filled online forms (if applicable)</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Language preferences or accessibility requirements</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Sub-Tasks</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">1. Welcoming and Initial Inquiry: Greeting the patient, verifying their reason for the visit, and confirming their appointment or walk-in status.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">2. Providing Forms: Distributing paper or digital forms for personal details, medical history, and insurance verification.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">3. Guidance on Form Completion: Assisting patients with any questions related to form fields, required information, or additional documentation.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">4. Basic Verification: Ensuring that forms are filled out correctly before submission to the registration team.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Outputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Completed and signed patient registration and consent forms</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Verified identification details</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Preliminary patient data entered into the healthcare system</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Clear patient guidance on next steps in the registration or medical examination process</span></div>",
+      "duration": 2,
+      "duration_hours": 0.03333333333333333,
+      "required_skills": [
+        {
+          "name": "Receptionist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-PG",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "42",
+      "name": "Identity & Insurance Verification",
+      "description": "<div style=\"\"><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">The Identity &amp; Insurance Verification process ensures that a patient's identity is accurately confirmed and their insurance coverage is validated before receiving medical services. This step is critical to preventing fraud, ensuring accurate patient records, and facilitating seamless billing processes.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Upon arrival, patients present a government-issued ID and their insurance card, which are checked against the healthcare facility’s records. The verification process ensures that the patient’s details match those stored in the hospital database and that their insurance plan covers the medical services required. Any discrepancies, such as expired insurance, incorrect personal information, or missing documentation, are resolved at this stage.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Hospitals and clinics use automated verification systems to reduce manual errors and speed up this process. These systems cross-check patient data with insurance providers, confirm eligibility, and highlight any co-payment or deductible requirements. If necessary, financial counselors or administrative staff assist patients with alternative payment options.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Effective identity and insurance verification ensures compliance with healthcare regulations, prevents fraudulent claims, and avoids billing disputes between patients, healthcare providers, and insurance companies.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Inputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Government-issued ID (e.g., passport, driver’s license)</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Insurance card or policy details</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Hospital database records</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Online insurance verification portals</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Sub-Tasks</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">1. Identity Verification: Matching patient ID with hospital records.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">2. Insurance Eligibility Check: Confirming active coverage with insurance providers.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">3. Coverage Verification: Checking if the patient's policy covers the required medical services.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">4. Resolving Discrepancies: Addressing any issues related to expired policies or mismatched data.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Outputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Verified patient identity</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Confirmed insurance eligibility</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Documentation of co-payment or deductible amounts</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Updated patient records in the hospital system</span></div><div><span style=\"font-size: 18px;\"><br></span></div></div>",
+      "duration": 25,
+      "duration_hours": 0.4166666666666667,
+      "required_skills": [
+        {
+          "name": "Registration Clerk",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "24"
+      ],
+      "order": 2,
+      "code": "HC-IV",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "52",
+      "name": "Enter patient details into the system",
+      "description": "<span style=\"font-size: 18px;\">A Data Entry Officer plays a vital role in maintaining accurate and organized patient records within a healthcare facility.</span><div><span style=\"font-size: 18px;\">Their primary responsibility is to enter and update electronic health records (EHR) with essential details such as patient demographics, medical history, diagnoses, prescriptions, treatment plans, and test results. Accuracy is critical, as errors can affect treatment decisions, billing, insurance claims, and patient safety. They ensure that doctors, nurses, and pharmacists have access to up-to-date information for efficient healthcare delivery.</span></div><div><span style=\"font-size: 18px;\">In emergency rooms (ERs), Data Entry Officers log real-time patient details, including diagnoses, treatments, and medications, ensuring that healthcare professionals can make informed decisions quickly. They must work under high-pressure conditions, keeping records time-stamped and compliant with hospital policies and confidentiality regulations.</span></div><div><span style=\"font-size: 18px;\">Beyond medical data, they assist with billing codes, insurance claims, appointment logs, and pharmacy inventory records, collaborating with hospital staff to resolve discrepancies. They ensure compliance with data security standards like HIPAA (or equivalent regulations) to protect patient confidentiality.</span></div><div><span style=\"font-size: 18px;\">This role requires proficiency in data management systems, attention to detail, and strong organizational skills. The ability to work quickly and accurately under pressure is essential, especially in emergency settings where real-time updates are crucial.</span></div><div><span style=\"font-size: 18px;\">By ensuring accurate and efficient data entry, Data Entry Officers contribute to seamless hospital workflows, safe medication management, and improved healthcare compliance, ultimately supporting high-quality patient care and operational efficiency.</span></div><div><br style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></div>",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "42"
+      ],
+      "order": 3,
+      "code": "HC-EPDITS",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "44",
+      "name": "Medical Records Validation",
+      "description": "<div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Medical Records Validation is a crucial step in ensuring the accuracy, completeness, and consistency of patient information stored within the healthcare system. This process involves reviewing electronic medical records (EMRs) to verify that all patient data, including demographic details, medical history, diagnoses, prescribed treatments, and insurance information, is accurate and up to date.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">The validation process helps in preventing errors that could impact patient care, insurance claims processing, and legal compliance. Hospitals and healthcare providers rely on accurate records to make informed medical decisions and maintain compliance with regulatory standards such as HIPAA. The process may involve cross-referencing records with previous patient visits, doctor’s notes, and insurance claims.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">This task is typically performed by medical records clerks or health information management professionals who have expertise in handling sensitive patient data. Many organizations use automated validation tools within their EMR systems to flag discrepancies or missing information, which are then manually reviewed and corrected.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">By maintaining validated medical records, healthcare organizations can enhance patient safety, improve treatment efficiency, and reduce administrative errors.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Inputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Patient's existing medical records</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Doctor's notes and treatment history</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Insurance and billing information</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Data from external healthcare providers (if applicable)</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Sub-Tasks</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">1. Data Verification: Reviewing patient records for errors, missing information, or inconsistencies.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">2. Cross-Referencing Information: Comparing data with past records, prescriptions, and physician notes.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">3. Correcting Errors: Updating or rectifying incorrect information in the system.</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">4. Approval &amp; Finalization: Ensuring all necessary validations are complete before making records available for use.</span></div><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"></p><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\"><b style=\"font-weight: bold;\">Outputs of the Task</b></span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Validated and error-free patient medical records</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Updated records reflecting the latest patient history and treatment details</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Improved compliance with regulatory standards</span></div><div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">• Higher accuracy in insurance claims and billing processes</span></div>",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Medical Records Officer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "52"
+      ],
+      "order": 4,
+      "code": "HC-MV",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "45",
+      "name": "Registration Fee Collection",
+      "description": "<p data-pm-slice=\"0 0 []\">The Registration Fee Collection process ensures that patients complete the necessary financial transactions before receiving medical services. It involves verifying the applicable fees, processing payments, and generating receipts. This step is crucial for maintaining the financial stability of healthcare facilities and ensuring compliance with billing policies.\n</p><p>\n</p><p>Upon registration, the system determines the patient's fee based on their insurance coverage, type of medical service, and hospital policies. Patients may be required to pay a consultation fee, administrative charges, or deposits for further treatments. The payment can be made through various methods such as cash, credit/debit cards, online banking, or insurance coverage.\n</p><p>Hospitals use digital billing systems integrated with patient records to track payments and issue receipts automatically. Ensuring accurate fee collection minimizes disputes and enhances transparency in financial transactions.\n</p><p>Proper documentation and reporting of transactions also help in auditing and financial planning within the healthcare organization.\n</p><p>Inputs of the Task\n</p><p>• Patient registration details\n</p><p>• Insurance coverage information\n</p><p>• Hospital fee structure\n</p><p>• Payment method details\n</p><p>Sub-Tasks\n</p><p>1. Fee Calculation: Determining the exact amount based on service type and insurance.\n</p><p>2. Payment Processing: Accepting and recording payments through various modes.\n</p><p>3. Receipt Generation: Issuing receipts as proof of payment.\n</p><p>4. Financial Reporting: Logging transactions for accounting and auditing.\n</p><p>Outputs of the Task\n</p><p>• Completed financial transaction record\n</p><p>• Issued receipt for the patient\n</p><p>• Updated patient account status\n</p><p>• Reports for financial tracking and auditing\n</p><p>\n</p>",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Billing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "44"
+      ],
+      "order": 5,
+      "code": "HC-RF",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "15",
+      "name": "Receptionist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Receptionist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 43,
+      "code": "HC-R"
+    },
+    {
+      "id": "16",
+      "name": "Registration Clerk",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Registration Clerk",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "HC-RC"
+    },
+    {
+      "id": "24",
+      "name": "Data Entry Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 3,
+      "hourly_rate": 30,
+      "code": "HC-DEO"
+    },
+    {
+      "id": "18",
+      "name": "Medical Records Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Medical Records Officer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 2,
+      "hourly_rate": 40,
+      "code": "HC-MRO"
+    },
+    {
+      "id": "19",
+      "name": "Billing Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Billing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 20,
+      "code": "HC-BS"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "24",
+      "to": "42"
+    },
+    {
+      "from": "42",
+      "to": "52"
+    },
+    {
+      "from": "52",
+      "to": "44"
+    },
+    {
+      "from": "44",
+      "to": "45"
+    }
+  ]
+}

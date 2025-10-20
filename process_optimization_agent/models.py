@@ -41,6 +41,32 @@ class SkillLevel(Enum):
         return cls.BEGINNER
 
 
+class UserInvolvement(Enum):
+    """Level of user/patient involvement in a task"""
+    DIRECT = "direct"           # User actively participates (e.g., consultation, examination)
+    PASSIVE = "passive"         # User present but not active (e.g., waiting)
+    ADMINISTRATIVE = "admin"    # User not involved at all (e.g., documentation, prep work)
+    
+    @classmethod
+    def from_string(cls, value: str):
+        """Convert string to UserInvolvement"""
+        if isinstance(value, cls):
+            return value
+        
+        value_lower = value.lower()
+        
+        # Try to match by enum value first
+        for member in cls:
+            if member.value == value_lower:
+                return member
+        
+        # Try to match by enum name
+        try:
+            return cls[value.upper()]
+        except (ValueError, KeyError):
+            return cls.DIRECT  # Default to direct involvement
+
+
 @dataclass
 class Skill:
     """Represents a skill with proficiency level"""
@@ -78,6 +104,7 @@ class Task:
     assigned_resource: Optional[str] = None  # Resource ID
     start_hour: Optional[float] = None  # Start hour (0-based from project start)
     end_hour: Optional[float] = None  # End hour (0-based from project start)
+    user_involvement: UserInvolvement = UserInvolvement.DIRECT  # Level of user/patient involvement
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
@@ -104,6 +131,7 @@ class Task:
             'assigned_resource': self.assigned_resource,
             'start_hour': self.start_hour,
             'end_hour': self.end_hour,
+            'user_involvement': self.user_involvement.value,
             'metadata': self.metadata
         }
 
@@ -351,6 +379,10 @@ class Schedule:
     deadlocks_detected: List[str] = field(default_factory=list)  # Task IDs with deadlocks
     idle_resources: Dict[str, float] = field(default_factory=dict)  # resource_id -> idle hours
     optimization_metrics: Dict[str, Any] = field(default_factory=dict)
+    
+    def add_entry(self, entry: ScheduleEntry):
+        """Add a schedule entry to the schedule"""
+        self.entries.append(entry)
     
     def get_task_schedule(self, task_id: str) -> Optional[ScheduleEntry]:
         """Get schedule entry for a specific task"""

@@ -1,0 +1,492 @@
+{
+  "process_id": 102,
+  "company_id": 1,
+  "created_at": "2025-01-15T09:00:00.000Z",
+  "updated_at": "2025-01-15T09:00:00.000Z",
+  "capacity_requirement_minutes": 510,
+  "parent_process_id": null,
+  "parent_task_id": null,
+  "process_code": "ACC-OPEN-001",
+  "process_name": "New Bank Account Opening Process",
+  "process_overview": "Process for opening a new savings or checking account with KYC and compliance checks",
+  "company": {
+    "company_id": 1,
+    "companyCode": "BNK",
+    "name": "Banking Corporation",
+    "created_by": 1,
+    "created_at": "2025-01-01T00:00:00.000Z",
+    "updated_at": "2025-01-01T00:00:00.000Z"
+  },
+  "process": null,
+  "task_process_parent_task_idTotask": null,
+  "process_task": [
+    {
+      "process_id": 102,
+      "task_id": 1,
+      "order": 1,
+      "task": {
+        "task_id": 1,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "CUST-INFO-01",
+        "task_company_id": 1,
+        "task_name": "Customer Information Collection",
+        "task_overview": "Collect customer personal information and contact details",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 1,
+            "task_id": 1,
+            "job": {
+              "job_id": 1,
+              "jobCode": "CSR-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 20,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Customer service representative",
+              "function_id": 1,
+              "name": "Customer Service Representative",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 2,
+      "order": 2,
+      "task": {
+        "task_id": 2,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "ID-VER-01",
+        "task_company_id": 1,
+        "task_name": "Identity Verification",
+        "task_overview": "Verify customer identity using government-issued ID",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 2,
+            "task_id": 2,
+            "job": {
+              "job_id": 2,
+              "jobCode": "KYC-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 30,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "KYC and identity verification officer",
+              "function_id": 1,
+              "name": "KYC Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 3,
+      "order": 3,
+      "task": {
+        "task_id": 3,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 90,
+        "task_code": "KYC-CHK-01",
+        "task_company_id": 1,
+        "task_name": "KYC Check",
+        "task_overview": "Perform Know Your Customer verification and background check",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 2,
+            "task_id": 3,
+            "job": {
+              "job_id": 2,
+              "jobCode": "KYC-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 30,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "KYC and identity verification officer",
+              "function_id": 1,
+              "name": "KYC Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 4,
+      "order": 4,
+      "task": {
+        "task_id": 4,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "ADDR-VER-01",
+        "task_company_id": 1,
+        "task_name": "Address Verification",
+        "task_overview": "Verify customer residential address with proof documents",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 2,
+            "task_id": 4,
+            "job": {
+              "job_id": 2,
+              "jobCode": "KYC-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 30,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "KYC and identity verification officer",
+              "function_id": 1,
+              "name": "KYC Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 5,
+      "order": 5,
+      "task": {
+        "task_id": 5,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "AGE-CIT-01",
+        "task_company_id": 1,
+        "task_name": "Age and Citizenship Verification",
+        "task_overview": "Verify customer age (18+) and citizenship status",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 3,
+            "task_id": 5,
+            "job": {
+              "job_id": 3,
+              "jobCode": "COMP-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 40,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Compliance and regulatory officer",
+              "function_id": 1,
+              "name": "Compliance Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 6,
+      "order": 6,
+      "task": {
+        "task_id": 6,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "FRAUD-SCR-01",
+        "task_company_id": 1,
+        "task_name": "Anti-Fraud Screening",
+        "task_overview": "Screen customer against fraud databases and watchlists",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 4,
+            "task_id": 6,
+            "job": {
+              "job_id": 4,
+              "jobCode": "FRAUD-SPEC-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 35,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Fraud prevention specialist",
+              "function_id": 1,
+              "name": "Fraud Prevention Specialist",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 7,
+      "order": 7,
+      "task": {
+        "task_id": 7,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "REG-COMP-01",
+        "task_company_id": 1,
+        "task_name": "Regulatory Compliance Check",
+        "task_overview": "Ensure compliance with banking regulations and AML requirements",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 3,
+            "task_id": 7,
+            "job": {
+              "job_id": 3,
+              "jobCode": "COMP-OFF-01",
+              "job_level_id": 3,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 40,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Compliance and regulatory officer",
+              "function_id": 1,
+              "name": "Compliance Officer",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 8,
+      "order": 8,
+      "task": {
+        "task_id": 8,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "ACC-TYPE-01",
+        "task_company_id": 1,
+        "task_name": "Account Type Selection",
+        "task_overview": "Help customer select appropriate account type and features",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 1,
+            "task_id": 8,
+            "job": {
+              "job_id": 1,
+              "jobCode": "CSR-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 20,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Customer service representative",
+              "function_id": 1,
+              "name": "Customer Service Representative",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 9,
+      "order": 9,
+      "task": {
+        "task_id": 9,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "ACC-APP-01",
+        "task_company_id": 1,
+        "task_name": "Account Approval",
+        "task_overview": "Final approval for account opening",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 5,
+            "task_id": 9,
+            "job": {
+              "job_id": 5,
+              "jobCode": "ACC-MGR-01",
+              "job_level_id": 4,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 35,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Account management specialist",
+              "function_id": 1,
+              "name": "Account Manager",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 10,
+      "order": 10,
+      "task": {
+        "task_id": 10,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "ACC-SETUP-01",
+        "task_company_id": 1,
+        "task_name": "Account Setup",
+        "task_overview": "Create account in banking system and assign account number",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 5,
+            "task_id": 10,
+            "job": {
+              "job_id": 5,
+              "jobCode": "ACC-MGR-01",
+              "job_level_id": 4,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 35,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Account management specialist",
+              "function_id": 1,
+              "name": "Account Manager",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 11,
+      "order": 11,
+      "task": {
+        "task_id": 11,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "INIT-DEP-01",
+        "task_company_id": 1,
+        "task_name": "Initial Deposit Processing",
+        "task_overview": "Process customer's initial deposit into new account",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 6,
+            "task_id": 11,
+            "job": {
+              "job_id": 6,
+              "jobCode": "TELLER-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 18,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Bank teller for transaction processing",
+              "function_id": 1,
+              "name": "Bank Teller",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 12,
+      "order": 12,
+      "task": {
+        "task_id": 12,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 60,
+        "task_code": "WELCOME-KIT-01",
+        "task_company_id": 1,
+        "task_name": "Welcome Kit Preparation",
+        "task_overview": "Prepare welcome kit with debit card, checkbook, and account details",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 7,
+            "task_id": 12,
+            "job": {
+              "job_id": 7,
+              "jobCode": "OPS-CLERK-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 22,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Operations clerk for documentation",
+              "function_id": 1,
+              "name": "Operations Clerk",
+              "overview": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "process_id": 102,
+      "task_id": 13,
+      "order": 13,
+      "task": {
+        "task_id": 13,
+        "created_at": "2025-01-15T09:00:00.000Z",
+        "updated_at": "2025-01-15T09:00:00.000Z",
+        "task_capacity_minutes": 30,
+        "task_code": "CUST-NOT-01",
+        "task_company_id": 1,
+        "task_name": "Customer Notification",
+        "task_overview": "Notify customer of successful account opening and provide details",
+        "task_process_id": null,
+        "jobTasks": [
+          {
+            "job_id": 1,
+            "task_id": 13,
+            "job": {
+              "job_id": 1,
+              "jobCode": "CSR-01",
+              "job_level_id": 2,
+              "company_id": 1,
+              "createdAt": "2025-01-15T09:00:00.000Z",
+              "hourlyRate": 20,
+              "maxHoursPerDay": 8,
+              "updatedAt": "2025-01-15T09:00:00.000Z",
+              "description": "Customer service representative",
+              "function_id": 1,
+              "name": "Customer Service Representative",
+              "overview": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

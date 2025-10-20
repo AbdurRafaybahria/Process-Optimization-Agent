@@ -33,6 +33,7 @@ if PROJECT_ROOT not in sys.path:
 # Import CMS integration modules
 from process_optimization_agent.cms_client import CMSClient
 from process_optimization_agent.cms_transformer import CMSDataTransformer
+from process_optimization_agent.intelligent_optimizer import IntelligentOptimizer
 
 import webbrowser as _webbrowser
 import os as _os
@@ -42,7 +43,7 @@ try:
 except Exception as e:
     raise RuntimeError(f"Failed to import run_rl_optimizer: {e}")
 
-OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs", "visualizations")
+OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "visualization_outputs")
 
 # Default CMS configuration
 DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
@@ -136,8 +137,8 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
         
         # Add timeout protection using subprocess
         
-        # Run the optimizer as a subprocess with timeout
-        cmd = [sys.executable, "run_rl_optimizer.py", process_json_path]
+        # Run the test_process_detection.py as a subprocess with timeout
+        cmd = [sys.executable, "test_process_detection.py", process_json_path]
         logger.info(f"Running command: {' '.join(cmd)}")
         
         result = subprocess.run(
@@ -186,13 +187,31 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
     if not process_id:
         raise HTTPException(status_code=500, detail="Could not determine process id from JSON")
 
-    # Find latest allocation and summary PNGs
-    alloc_pattern = os.path.join(OUTPUTS_DIR, f"{process_id}_alloc_charts_*.png")
-    summary_pattern = os.path.join(OUTPUTS_DIR, f"{process_id}_summary_*.png")
-    alloc_files = glob.glob(alloc_pattern)
-    summary_files = glob.glob(summary_pattern)
+    # Find latest allocation and summary PNGs (healthcare or manufacturing format)
+    # test_process_detection.py generates files like:
+    # healthcare_allocation_{process_id}.png or manufacturing_allocation_{process_id}.png
+    alloc_patterns = [
+        os.path.join(OUTPUTS_DIR, f"healthcare_allocation_{process_id}.png"),
+        os.path.join(OUTPUTS_DIR, f"manufacturing_allocation_{process_id}.png")
+    ]
+    summary_patterns = [
+        os.path.join(OUTPUTS_DIR, f"healthcare_summary_{process_id}.png"),
+        os.path.join(OUTPUTS_DIR, f"manufacturing_summary_{process_id}.png")
+    ]
+    
+    # Find the most recent files
+    alloc_files = []
+    for pattern in alloc_patterns:
+        if os.path.exists(pattern):
+            alloc_files.append(pattern)
+    
+    summary_files = []
+    for pattern in summary_patterns:
+        if os.path.exists(pattern):
+            summary_files.append(pattern)
+    
     if not alloc_files or not summary_files:
-        raise HTTPException(status_code=500, detail="Expected output PNGs not found after optimization")
+        raise HTTPException(status_code=500, detail=f"Expected output PNGs not found after optimization. Process ID: {process_id}")
 
     alloc_png = max(alloc_files, key=os.path.getmtime)
     summary_png = max(summary_files, key=os.path.getmtime)

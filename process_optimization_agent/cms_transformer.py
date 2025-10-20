@@ -4,11 +4,15 @@ Transformer to convert CMS data format to Process Optimization Agent format
 
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-from .models import Process, Task, Resource, Skill, SkillLevel
+from .models import Process, Task, Resource, Skill, SkillLevel, UserInvolvement
+from .task_classifier import TaskClassifier
 
 
 class CMSDataTransformer:
     """Transform CMS process data to agent-compatible format"""
+    
+    def __init__(self):
+        self.task_classifier = TaskClassifier()
     
     def transform_process(self, cms_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -42,13 +46,19 @@ class CMSDataTransformer:
         
         for pt in process_tasks:
             task = pt.get("task", {})
-            task_transformed = self._transform_task(task, pt.get("order", 1))
+            task_transformed = self._transform_task(task, pt.get("order", 1), pt.get("job"))
             transformed["tasks"].append(task_transformed)
             
-            # Extract resources from job tasks
+            # Extract resources from job tasks (nested in task)
             for job_task in task.get("jobTasks", []):
                 job = job_task.get("job", {})
                 resource = self._extract_resource(job)
+                if resource and resource["id"] not in resource_map:
+                    resource_map[resource["id"]] = resource
+            
+            # Also check for job at process_task level (simplified format)
+            if "job" in pt:
+                resource = self._extract_resource(pt["job"])
                 if resource and resource["id"] not in resource_map:
                     resource_map[resource["id"]] = resource
         
@@ -60,13 +70,14 @@ class CMSDataTransformer:
         
         return transformed
     
-    def _transform_task(self, task_data: Dict[str, Any], order: int) -> Dict[str, Any]:
+    def _transform_task(self, task_data: Dict[str, Any], order: int, process_task_job: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Transform a single task from CMS format to agent format
         
         Args:
             task_data: Raw task data from CMS
             order: Task order in process
+            process_task_job: Job data from process_task level (for simplified format)
             
         Returns:
             Transformed task dictionary
@@ -75,6 +86,7 @@ class CMSDataTransformer:
         job_tasks = task_data.get("jobTasks", [])
         required_skills = []
         
+        # First check jobTasks in the task
         for jt in job_tasks:
             job = jt.get("job", {})
             skill = {
@@ -83,16 +95,30 @@ class CMSDataTransformer:
             }
             required_skills.append(skill)
         
+        # If no jobTasks, use process_task level job
+        if not required_skills and process_task_job:
+            skill = {
+                "name": process_task_job.get("name", ""),
+                "level": self._map_skill_level(process_task_job.get("job_level_id", 3))
+            }
+            required_skills.append(skill)
+        
+        # Classify user involvement
+        task_name = task_data.get("task_name", "")
+        task_description = task_data.get("task_overview", "")
+        user_involvement = self.task_classifier.classify_task(task_name, task_description)
+        
         return {
             "id": str(task_data.get("task_id", "")),
-            "name": task_data.get("task_name", ""),
-            "description": task_data.get("task_overview", ""),
+            "name": task_name,
+            "description": task_description,
             "duration": task_data.get("task_capacity_minutes", 60),  # Duration in minutes
             "duration_hours": task_data.get("task_capacity_minutes", 60) / 60,  # Duration in hours
             "required_skills": required_skills,
             "dependencies": [],  # Will be filled by dependency inference
             "order": order,
-            "code": task_data.get("task_code", "")
+            "code": task_data.get("task_code", ""),
+            "user_involvement": user_involvement.value
         }
     
     def _extract_resource(self, job_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -194,7 +220,8 @@ class CMSDataTransformer:
                     Skill(name=s["name"], level=SkillLevel[s["level"].upper()])
                     for s in task_data["required_skills"]
                 ],
-                dependencies=set(task_data["dependencies"])  # Convert to set
+                dependencies=set(task_data["dependencies"]),  # Convert to set
+                user_involvement=UserInvolvement.from_string(task_data.get("user_involvement", "direct"))
             )
             tasks.append(task)
         

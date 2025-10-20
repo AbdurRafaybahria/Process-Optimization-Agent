@@ -25,9 +25,22 @@ from .models import Task, Resource, Process, Schedule
 from .optimizers import ProcessOptimizer, RLBasedOptimizer, GeneticOptimizer
 from .analyzers import DependencyDetector, WhatIfAnalyzer, ProcessMiner
 
+# Domain-specific modules
+from .healthcare_optimizer import HealthcareOptimizer
+from .healthcare_models import HealthcareProcess, HealthcareMetrics
+from .manufacturing_optimizer import ManufacturingOptimizer
+from .manufacturing_models import ManufacturingProcess, ManufacturingMetrics
+from .banking_optimizer import BankingProcessOptimizer
+from .banking_models import BankingProcess
+from .banking_detector import BankingProcessDetector
+
 __all__ = [
     'Task', 'Resource', 'Process', 'Schedule',
     'ProcessOptimizer', 'RLBasedOptimizer', 'GeneticOptimizer',
     'DependencyDetector', 'WhatIfAnalyzer', 'ProcessMiner',
-    'Visualizer', 'VISUALIZATION_AVAILABLE'
+    'Visualizer', 'VISUALIZATION_AVAILABLE',
+    # Domain-specific
+    'HealthcareOptimizer', 'HealthcareProcess', 'HealthcareMetrics',
+    'ManufacturingOptimizer', 'ManufacturingProcess', 'ManufacturingMetrics',
+    'BankingProcessOptimizer', 'BankingProcess', 'BankingProcessDetector'
 ]
