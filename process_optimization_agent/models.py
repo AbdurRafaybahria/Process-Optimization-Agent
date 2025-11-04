@@ -242,6 +242,7 @@ class Process:
     description: str
     tasks: List[Task] = field(default_factory=list)
     resources: List[Resource] = field(default_factory=list)
+    company: str = ""  # Company name for process classification
     start_date: datetime = field(default_factory=datetime.now)  # Keep for compatibility
     project_duration_hours: float = 160.0  # Default project duration in hours
     constraints: Dict[str, Any] = field(default_factory=dict)

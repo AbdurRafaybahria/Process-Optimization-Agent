@@ -292,6 +292,10 @@ class ProcessIntelligence:
                     'insurance', 'billing', 'claim', 'claims', 'reimbursement', 'payer',
                     'coverage', 'policy', 'premium', 'deductible', 'copay', 'coinsurance',
                     
+                    # Customer service and support
+                    'customer service', 'customer support', 'policyholder', 'insured',
+                    'inquiry', 'issue resolution', 'claims assistance', 'feedback',
+                    
                     # Medical billing specific
                     'medical billing', 'health insurance', 'medical insurance',
                     'insurance verification', 'insurance processing', 'claim processing',
@@ -429,7 +433,27 @@ class ProcessIntelligence:
             ProcessClassification with type, confidence, and strategy
         """
         # CRITICAL RULES for immediate classification
-        process_text = f"{process.name} {' '.join([t.name for t in process.tasks])} {' '.join([r.name for r in process.resources])}".lower()
+        company_name = getattr(process, 'company', '') or ''
+        process_text = f"{process.name} {company_name} {' '.join([t.name for t in process.tasks])} {' '.join([r.name for r in process.resources])}".lower()
+        
+        # RULE 0: If company name contains "insurance", it's likely an INSURANCE process
+        if 'insurance' in company_name.lower():
+            # Check if this is a customer-facing insurance process
+            customer_indicators = ['customer', 'service', 'support', 'inquiry', 'claim', 'policy']
+            customer_count = sum(1 for ind in customer_indicators if ind in process_text)
+            
+            if customer_count >= 2:  # Customer-facing insurance process
+                return ProcessClassification(
+                    process_type=ProcessType.INSURANCE,
+                    confidence=0.95,
+                    optimization_strategy=OptimizationStrategy.INSURANCE_WORKFLOW,
+                    characteristics=self.patterns[ProcessType.INSURANCE]['characteristics'],
+                    reasoning=[
+                        "CRITICAL RULE: Company name contains 'insurance' - classified as INSURANCE",
+                        f"Customer-facing indicators found: {customer_count}",
+                        "Insurance company processes are insurance by definition"
+                    ]
+                )
         
         # RULE 1: If "patient" is mentioned AND no strong insurance indicators, it's HEALTHCARE
         if 'patient' in process_text:

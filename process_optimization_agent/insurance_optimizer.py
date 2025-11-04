@@ -148,6 +148,11 @@ class InsuranceScenarioDetector:
         scores[InsuranceScenarioType.BUNDLED_PAYMENTS] = bundled_score
         reasoning_map[InsuranceScenarioType.BUNDLED_PAYMENTS] = bundled_reasons
         
+        # Scenario 11: Customer Service
+        customer_score, customer_reasons = self._check_customer_service(process_text, task_names)
+        scores[InsuranceScenarioType.CUSTOMER_SERVICE] = customer_score
+        reasoning_map[InsuranceScenarioType.CUSTOMER_SERVICE] = customer_reasons
+        
         # Determine best match
         best_scenario = max(scores, key=scores.get)
         best_score = scores[best_scenario]
@@ -306,6 +311,38 @@ class InsuranceScenarioDetector:
             reasons.append("Bundled payment keywords detected")
         
         return score, reasons
+    
+    def _check_customer_service(self, process_text: str, task_names: List[str]) -> Tuple[float, List[str]]:
+        """Check for customer service scenario"""
+        score = 0.0
+        reasons = []
+        
+        # Customer service sequence: Inquiry → Resolution → Assistance → Feedback → Training
+        service_terms = ['inquiry', 'inquir', 'issue', 'resolution', 'resolv', 'assistance', 
+                        'assist', 'feedback', 'training', 'support', 'customer', 'service']
+        matches = sum(1 for term in service_terms if any(term in task.lower() for task in task_names))
+        
+        if matches >= 3:
+            score += 10
+            reasons.append(f"Customer service workflow detected ({matches} service-related tasks)")
+        
+        if 'customer service' in process_text or 'customer support' in process_text:
+            score += 8
+            reasons.append("Customer service process name detected")
+        
+        # Check for customer-facing indicators
+        customer_terms = ['customer', 'policyholder', 'insured', 'client']
+        if any(term in process_text for term in customer_terms):
+            score += 5
+            reasons.append("Customer-facing process indicators found")
+        
+        # Check for support activities
+        support_terms = ['complaint', 'query', 'help', 'guidance', 'counseling']
+        if any(term in process_text for term in support_terms):
+            score += 3
+            reasons.append("Support activity keywords detected")
+        
+        return score, reasons
 
 
 class InsuranceProcessOptimizer:
@@ -356,7 +393,11 @@ class InsuranceProcessOptimizer:
         success_metrics = self._define_success_metrics(scenario_type)
         
         # Detect user involvement
-        user_involved = detect_user_involvement(process)
+        # Customer service scenarios should use manufacturing visualization (admin-only)
+        if scenario_type == InsuranceScenarioType.CUSTOMER_SERVICE:
+            user_involved = False  # Use manufacturing-style visualization
+        else:
+            user_involved = detect_user_involvement(process)
         
         return InsuranceOptimizationResult(
             scenario_type=scenario_type,
@@ -440,9 +481,11 @@ class InsuranceProcessOptimizer:
             return self._optimize_multi_payer(process)
         elif scenario_type == InsuranceScenarioType.GOVERNMENT_INSURANCE:
             return self._optimize_government_insurance(process)
+        elif scenario_type == InsuranceScenarioType.CUSTOMER_SERVICE:
+            return self._optimize_customer_service(process)
         else:
-            # Default optimization for other scenarios
-            return self._optimize_standard_billing(process)
+            # For unknown scenarios, use standard process optimizer
+            return self._optimize_generic_insurance_process(process)
     
     def _optimize_standard_billing(self, process: Process) -> Tuple[Schedule, InsuranceMetrics]:
         """
@@ -883,6 +926,83 @@ class InsuranceProcessOptimizer:
             }
         ]
         return risks
+    
+    def _optimize_customer_service(self, process: Process) -> Tuple[Schedule, InsuranceMetrics]:
+        """
+        Optimize customer service scenario
+        Strategy: Sequential workflow with load balancing for high-volume tasks
+        Prioritize inquiry handling and issue resolution
+        """
+        from .optimizers import ProcessOptimizer
+        from .models import ScheduleEntry
+        from datetime import datetime, timedelta
+        
+        # Use standard optimizer with sequential execution
+        optimizer = ProcessOptimizer()
+        schedule = optimizer.optimize(process)
+        
+        # Calculate metrics
+        if schedule.entries:
+            total_time = max([entry.end_hour for entry in schedule.entries])
+            total_cost = sum([
+                (entry.end_hour - entry.start_hour) * process.get_resource_by_id(entry.resource_id).hourly_rate
+                for entry in schedule.entries
+            ])
+        else:
+            total_time = 0
+            total_cost = 0
+        
+        # Calculate before metrics
+        before_time = sum([t.duration_hours * 60 for t in process.tasks])
+        before_cost = sum([
+            t.duration_hours * next((r.hourly_rate for r in process.resources 
+                                    if any(s.name in [rs.name for rs in t.required_skills] 
+                                          for s in r.skills)), 50)
+            for t in process.tasks
+        ])
+        
+        metrics = InsuranceMetrics(
+            total_process_time=total_time * 60,  # Convert to minutes
+            total_labor_cost=total_cost,
+            before_process_time=before_time,
+            after_process_time=total_time * 60,
+            before_cost=before_cost,
+            after_cost=total_cost
+        )
+        
+        return schedule, metrics
+    
+    def _optimize_generic_insurance_process(self, process: Process) -> Tuple[Schedule, InsuranceMetrics]:
+        """
+        Generic optimization for insurance processes that don't match specific scenarios
+        Uses standard process optimizer with sequential task execution
+        """
+        from .optimizers import ProcessOptimizer
+        from datetime import datetime
+        
+        # Use standard optimizer for generic insurance processes
+        optimizer = ProcessOptimizer()
+        schedule = optimizer.optimize(process)
+        
+        # Calculate metrics from schedule
+        if schedule.entries:
+            total_time = max([entry.end_hour for entry in schedule.entries])
+            total_cost = sum([
+                (entry.end_hour - entry.start_hour) * process.get_resource_by_id(entry.resource_id).hourly_rate
+                for entry in schedule.entries
+            ])
+        else:
+            total_time = 0
+            total_cost = 0
+        
+        metrics = InsuranceMetrics(
+            total_time=total_time * 60,  # Convert to minutes
+            labor_cost=total_cost,
+            before_time=sum([t.duration_hours * 60 for t in process.tasks]),
+            before_cost=sum([t.duration_hours * 50 for t in process.tasks])  # Estimate
+        )
+        
+        return schedule, metrics
     
     def _define_success_metrics(self, scenario_type: InsuranceScenarioType) -> List[str]:
         """Define success metrics for tracking"""

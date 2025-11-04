@@ -55,7 +55,7 @@ app.add_middleware(
     allow_origins=[
         "https://fyp-cms-frontend.vercel.app",
         "http://localhost:3000",
-        "https://crystalsystemcms-testing-e377.up.railway.app",
+        "https://server-digitaltwin-enterprise-testing.up.railway.app",
         "https://crystalsystemcms-production.up.railway.app",
         "http://localhost:3001",
         "http://127.0.0.1:3000",
@@ -199,15 +199,17 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
     if not process_id:
         raise HTTPException(status_code=500, detail="Could not determine process id from JSON")
 
-    # Find latest allocation and summary PNGs (healthcare or manufacturing format)
+    # Find latest allocation and summary PNGs (healthcare, insurance, or manufacturing format)
     # test_process_detection.py generates files like:
-    # healthcare_allocation_{process_id}.png or manufacturing_allocation_{process_id}.png
+    # healthcare_allocation_{process_id}.png, insurance_allocation_{process_id}.png, or manufacturing_allocation_{process_id}.png
     alloc_patterns = [
         os.path.join(OUTPUTS_DIR, f"healthcare_allocation_{process_id}.png"),
+        os.path.join(OUTPUTS_DIR, f"insurance_allocation_{process_id}.png"),
         os.path.join(OUTPUTS_DIR, f"manufacturing_allocation_{process_id}.png")
     ]
     summary_patterns = [
         os.path.join(OUTPUTS_DIR, f"healthcare_summary_{process_id}.png"),
+        os.path.join(OUTPUTS_DIR, f"insurance_summary_{process_id}.png"),
         os.path.join(OUTPUTS_DIR, f"manufacturing_summary_{process_id}.png")
     ]
     

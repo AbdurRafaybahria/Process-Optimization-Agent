@@ -1,0 +1,165 @@
+{
+  "id": "14",
+  "name": "Surgical Procedure Scheduling Process",
+  "process_name": "Surgical Procedure Scheduling Process",
+  "process_id": 14,
+  "company": "Moldova Hospital",
+  "description": "The Surgical Procedure Scheduling Process is a coordinated effort to allocate operating rooms (OR), staff, and resources for planned or emergency surgeries. This process ensures timely and safe surgical interventions while optimizing hospital resources.The process begins with the physician’s referral for surgery, specifying the procedure type, urgency, and patient requirements. The scheduling team reviews the availability of ORs, surgical teams, and equipment. Once a suitable date and time are identified, the surgery is booked, and the patient is notified.&nbsp;A pre-surgical checklist is completed, including diagnostic tests, patient consent forms, and medical clearance from anesthetists. The patient is briefed on pre-operative preparations such as fasting, medication adjustments, and hygiene protocols.&nbsp;Inventory checks are conducted to ensure the availability of surgical instruments, medications, and sterilized equipment. For emergency cases, the process involves immediate allocation of resources, bypassing routine scheduling steps.&nbsp;On the day of surgery, patients are admitted and prepared for the procedure in pre-operative rooms. OR teams, including surgeons, anesthetists, and nurses, are coordinated to ensure readiness. Any last-minute adjustments, such as delays or cancellations, are communicated promptly to all stakeholders.&nbsp;The Surgical Procedure Scheduling Process is supported by advanced scheduling software, which integrates patient records, resource availability, and OR utilization data to minimize conflicts and inefficiencies.&nbsp;This structured approach ensures the smooth execution of surgeries, reduces delays, and enhances patient safety and satisfaction.",
+  "tasks": [
+    {
+      "id": "265831",
+      "name": "Surgery Scheduling",
+      "description": "Surgery Scheduling is a critical administrative and clinical coordination task within a hospital's surgical services. It involves the systematic planning and allocation of surgical procedures, aligning patient readiness, surgeon availability, operating room capacity, and supporting medical staff to ensure smooth and timely surgical care. This task serves as the link between surgical planning and clinical execution, requiring precise attention to detail, resource management, and collaboration across departments.&nbsp;The scheduling process begins once a surgical procedure is recommended and authorized. The surgical scheduler, often a specialized coordinator or nurse, collects all relevant information—patient condition, urgency, procedure type, and medical clearance—and matches it with available time slots, surgical teams, and operating rooms. The goal is to minimize delays, avoid scheduling conflicts, and ensure patient safety through appropriate resource allocation.This task requires constant communication with surgeons, anesthesiologists, operating room managers, and other staff to confirm availability and preparation. It also involves updating hospital systems with scheduled cases, notifying patients, and verifying that pre-operative assessments and documentation are complete.&nbsp;In elective surgeries, efficient scheduling maximizes OR utilization and patient throughput. In urgent and emergency cases, the system must allow for immediate adjustments. Ultimately, the operation scheduling task plays a vital role in reducing patient wait times, improving hospital efficiency, and ensuring high standards of surgical care.Inputs of the Task:• Surgical request/order from physician or department• Patient medical records and diagnostic results• Surgeon and anesthesiologist availability• Operating room availability and equipment status• Pre-operative clearance and insurance approval• Hospital scheduling software or manual booking system• Priority/urgency level of the procedureSubtasks:1. Surgical Request Verification:o Review physician orders and confirm need for surgeryo Check if pre-operative assessments and diagnostics are completeo Confirm procedure code, type, and expected duration2. Resource Availability Check:o Check surgeon, anesthesiologist, and support staff scheduleso Confirm availability of suitable operating roomo Verify surgical tools, instruments, and sterilized supplies3. Scheduling Coordination:o Allocate procedure to a specific date, time, and operating roomo Confirm with all parties involved (surgeon, OR nurse, anesthesia, etc.)o Update the hospital’s EHR or scheduling system with full details4. Patient Communication and Documentation:o Notify patient of date, time, and pre-surgery instructionso Confirm insurance and administrative documentationo Issue consent forms and surgical prep guidelines5. Emergency Adjustments and Rescheduling:o Modify schedule for emergencies or last-minute changeso Communicate cancellations or rescheduling with patients and staffo Update surgical board and notify downstream departmentsOutputs of the Task:• A confirmed surgical schedule with assigned date, time, room, and team• Updated patient record with surgery details and consents• Notifications sent to all involved departments (e.g., OR, anesthesia, nursing)• Pre-surgical checklists initiated (labs, imaging, pre-op fasting, etc.)• Improved coordination and OR utilization rates• Reduction in cancellations or delays due to resource conflicts",
+      "duration": 25,
+      "duration_hours": 0.4166666666666667,
+      "required_skills": [
+        {
+          "name": "Surgical Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-SD",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265824",
+      "name": "Pre-surgical procedure checklist development",
+      "description": "The pre-surgical procedure checklist development is a critical process in ensuring patient safety and operational efficiency in surgical settings. This checklist is designed to systematically verify that all essential steps and preparations are completed before a surgical procedure takes place. Its purpose is to prevent errors, minimize the risk of complications, and optimize the surgical team’s readiness.&nbsp;The development of a pre-surgical checklist involves collaborating with various stakeholders, including surgeons, anesthesiologists, surgical nurses, and other healthcare professionals. It typically includes key elements such as confirming the patient’s identity, procedure, and surgical site to avoid wrong-site surgery, ensuring informed consent has been obtained, and reviewing the patient’s medical history, including allergies, existing conditions, and medications. The checklist also includes confirming the availability of necessary surgical instruments, equipment, medications, and anesthesia preparations.This checklist is customized based on the specific surgical procedure and patient needs. It’s integrated into hospital protocols and quality control measures to ensure consistency in practice across all surgical teams. The checklist provides a guide for surgical staff to ensure all steps are followed in a standardized and organized manner. It may be updated as needed based on evolving best practices, feedback from clinical teams, and patient outcomes.By using a pre-surgical checklist, the surgical team can ensure that no essential step is overlooked, thus reducing the risk of adverse events and contributing to better surgical outcomes. It also enhances communication within the team, ensuring everyone is aligned on the task at hand.Inputs of the Task:• Patient’s medical records (history, allergies, medications, previous surgeries)• Surgical procedure details (type of surgery, surgical site, date, time)• Patient consent forms (informed consent, including potential risks and recovery process)• Hospital protocols and standards (checklist guidelines, safety protocols)• Surgical team information (surgeons, anesthesiologists, nurses)• Medical equipment and surgical instruments inventory (availability and readiness)• Anesthesia preparation details (medications, patient requirements)• Preoperative tests and diagnostic results (lab reports, imaging, ECG, etc.)Subtasks:1. Collaborating with the Surgical Team:o Engage with surgeons, anesthesiologists, nurses, and other relevant personnel to determine the critical components of the checklist for each specific procedure.o Consider patient-specific factors such as age, medical history, and any comorbidities.2. Identifying Key Components:o Define the essential elements that must be verified before surgery (patient identity, surgical site, informed consent, equipment and medication readiness).o Customize the checklist for different types of surgeries (e.g., orthopedic, cardiac, general surgery).3. Reviewing Hospital Protocols:o Align the checklist with hospital safety standards and regulatory requirements (e.g., Joint Commission standards, infection control protocols).o Ensure the checklist adheres to guidelines related to patient safety, surgical errors, and anesthesia preparation.4. Creating the Checklist Format:o Develop a user-friendly format, either paper-based or digital, that is easy for the surgical team to follow.o Include clear instructions, checkboxes, and fields for documentation to track completion.5. Training the Surgical Team:o Provide training on how to use the checklist properly during preoperative meetings and simulations.o Ensure that all team members are familiar with the checklist process and understand their roles in verifying each item.6. Testing and Feedback Collection:o Pilot the checklist in a real surgical environment and collect feedback from the surgical team to identify potential areas of improvement.o Refine the checklist based on the feedback to address any issues or gaps.7. Implementing and Monitoring:o Roll out the checklist for regular use across surgical departments, ensuring compliance through audits and monitoring.o Continually assess the effectiveness of the checklist in improving surgical outcomes and patient safety.Outputs of the Task:• Completed Pre-Surgical Checklist: A finalized and approved checklist that is tailored to each surgical procedure, ensuring all necessary steps are documented.• Surgical Team Readiness: Assurance that all team members have verified the necessary components before surgery, enhancing coordination and communication.• Reduction in Surgical Errors: Minimized risk of procedural mistakes, such as wrong-site surgery, incorrect medications, or missed patient history.• Improved Patient Safety: Enhanced safety standards with a focus on preventing adverse events by ensuring all critical elements are addressed before surgery.• Standardization of Processes: A consistent approach to surgical preparation across the hospital, ensuring high-quality care and compliance with best practices.• Documentation and Compliance: A record of the checklist’s completion, contributing to legal documentation, quality assurance audits, and regulatory compliance.",
+      "duration": 45,
+      "duration_hours": 0.75,
+      "required_skills": [
+        {
+          "name": "Surgical Room Nurse",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265831"
+      ],
+      "order": 2,
+      "code": "HC-PSC",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265825",
+      "name": "Medical Inventory Check",
+      "description": "The medical inventory check is an essential task within a hospital to ensure the availability, adequacy, and proper condition of medical supplies and equipment needed for patient care. This task is performed regularly to maintain operational efficiency and to avoid shortages or overstocking that could impact the quality of care provided. The medical inventory check ensures that hospitals are always prepared for emergencies, routine procedures, and special treatments, minimizing disruptions in service delivery.&nbsp;The task involves a thorough examination and verification of the stock of medical supplies, including pharmaceuticals, surgical instruments, diagnostic equipment, and other consumables. Inventory checks are crucial for assessing the status of medical supplies such as medications, bandages, syringes, PPE (personal protective equipment), and medical devices like thermometers, ECG machines, and diagnostic kits. The check also includes verifying expiration dates to ensure that any expired items are removed from stock to avoid use in clinical settings.The inventory check is typically done by the medical inventory manager or assigned staff, following a systematic process to ensure all supplies are accounted for and properly categorized. This task also involves reconciling physical stock levels with digital or manual records to identify discrepancies. By maintaining an accurate inventory, hospitals can make timely orders for new supplies, ensuring that the healthcare facility operates smoothly without compromising patient care or safety.Inputs of the Task:• Current inventory records (manual or digital), including stock levels, batch numbers, and expiration dates• Supply and equipment specifications (types of supplies, quantities, usage data)• Patient care requirements and surgical schedules (to anticipate the need for specific supplies)• Inventory management system/software (to track, update, and generate reports)• Vendor/supplier order history (to compare past ordering patterns)• Hospital protocols and compliance regulations (to ensure standards are met for medical supplies and equipment)Subtasks:1. Preparation and Planning:o Review the hospital’s inventory records (digital or manual) and identify items that need to be checked.o Prepare necessary tools or devices such as scanners or inventory management software to assist in checking supplies.o Organize the staff involved in the process, assigning tasks and locations for efficient inventory checks.2. Physical Inventory Check:o Inspect each category of medical supplies, starting from critical items like medications and high-value equipment.o Verify physical stock against the recorded quantities, checking the condition of items, and ensuring they are not expired or damaged.o Mark and segregate any damaged or expired stock, noting the need for disposal or return to suppliers.o Cross-check the location and classification of items (e.g., PPE should be stored in specific areas for easy access).3. Stock Verification and Documentation:o Document the actual count of supplies and update the inventory system with the most accurate, up-to-date data.o Record the batch numbers, expiration dates, and condition of items, ensuring compliance with regulatory requirements.o Identify any discrepancies between the physical stock and inventory records, making a note for further investigation or adjustments.4. Reporting and Communication:o Generate reports detailing the results of the inventory check, including any discrepancies or low-stock items that need to be reordered.o Communicate findings to the procurement team, department heads, or relevant personnel to ensure that orders are placed on time.o Follow up on discrepancies to investigate reasons for stock mismatches (e.g., errors in data entry or unreported usage).5. Inventory Adjustment and Replenishment:o Place orders for medical supplies or equipment that are found to be in short supply.o Adjust inventory levels in the system to reflect the new quantities.o Coordinate the delivery and storage of new supplies or equipment, ensuring they are correctly recorded in the system.6. Compliance and Auditing:o Ensure that all inventory management procedures are compliant with hospital standards and regulatory guidelines (e.g., inventory storage regulations, drug control policies).o Perform routine audits or spot checks to verify compliance with inventory management practices.Outputs of the Task:• Updated inventory records: Accurate and up-to-date records reflecting the current stock levels, conditions, and expiration dates.• Inventory discrepancy reports: Documentation of discrepancies found between the physical count and inventory records, highlighting items for further review or correction.• Replenishment orders: Details of items that need to be reordered, along with the quantities required.• Condition and quality reports: Documentation of the condition of supplies, indicating damaged or expired items for removal or return.• Audit and compliance reports: A record of the task’s adherence to regulatory standards, ensuring that hospital inventory management procedures are followed correctly.• Operational efficiency and readiness: A well-stocked hospital with the right amount of supplies available for patient care, reducing the risk of delays or disruptions in medical procedures",
+      "duration": 28,
+      "duration_hours": 0.4666666666666667,
+      "required_skills": [
+        {
+          "name": "Surgical Supplies Manager",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265824"
+      ],
+      "order": 3,
+      "code": "HC-ICH",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265827",
+      "name": "Post-Surgery Coordination",
+      "description": "Post-surgery coordination is a crucial task within the hospital that focuses on managing patient care and ensuring smooth transitions from surgery to recovery. This process includes a range of activities aimed at monitoring and supporting the patient post-operation, ensuring that all necessary resources are available, and facilitating communication between healthcare teams. The task involves close collaboration with various medical departments such as nursing, anesthesia, physical therapy, and the surgical team to ensure comprehensive care for the patient.Post-surgical coordination starts immediately after the surgery is completed, continuing throughout the recovery phase. The goal is to manage the patient’s recovery, minimize complications, and ensure that the appropriate interventions are carried out. This includes overseeing pain management, preventing infections, ensuring wound care, facilitating rehabilitation, and addressing the patient’s psychological needs.Key responsibilities of post-surgical coordination include scheduling follow-up appointments, providing clear instructions for discharge, coordinating the administration of prescribed medications, and ensuring that the patient has access to necessary resources like physical therapy or home care services. The coordinator also plays a vital role in ensuring that the patient’s family or caregivers are well-informed about the recovery process.Additionally, effective communication is a key element, as it ensures that all team members are aligned regarding the patient’s progress and care plan. The post-surgical coordinator ensures that every step is managed efficiently, and that the patient is monitored throughout their recovery journey.Inputs of the Task:• Surgical report (details of the procedure, anesthesia used, complications during surgery)• Patient’s medical history (comorbidities, allergies, prior surgeries)• Post-surgical care plan (pain management, rehabilitation, follow-up visits)• Medication orders (painkillers, antibiotics, other post-op drugs)• Care team communications (notes from nursing staff, anesthesia, surgeons)• Family or caregiver instructions (support for home recovery or post-discharge care)• Patient’s vital signs and recovery progress (e.g., temperature, blood pressure, surgical site status)Subtasks:1. Monitoring Recovery Progress:o Regularly assess the patient’s condition post-surgery by tracking vital signs such as heart rate, blood pressure, oxygen levels, and surgical site status.o Communicate with nursing staff to review and adjust the recovery plan based on the patient’s condition.o Coordinate with anesthesia providers to ensure appropriate post-anesthesia care and management of potential side effects.2. Pain Management and Medication Administration:o Monitor and adjust the patient’s pain management protocol to ensure comfort and minimize discomfort.o Oversee the administration of medications, including antibiotics, painkillers, and other necessary prescriptions.o Confirm that prescriptions are filled and medications are administered according to the prescribed schedule.3. Follow-Up Scheduling and Appointments:o Schedule necessary follow-up appointments, such as for wound checks, physical therapy, or follow-up imaging.o Communicate with the patient to remind them of their upcoming visits and ensure they understand the importance of these appointments.4. Patient Education and Discharge Planning:o Provide clear instructions to the patient and their family members regarding wound care, medication, and any lifestyle changes required during recovery.o Develop a discharge plan that includes instructions on follow-up care, signs of complications, and when to seek immediate medical attention.o Ensure the patient has access to resources for home care, such as nursing visits or physical therapy.5. Post-Discharge Support:o Provide patients with contact information for any follow-up questions or concerns they may have during their recovery.o Coordinate with home care services or physical therapy to ensure smooth transitions for patients requiring ongoing care after leaving the hospital.o Address any concerns from family members and ensure they understand the patient’s recovery plan.Outputs of the Task:• Recovery progress reports: Documented assessments of the patient’s recovery, including vital signs, complications, and milestones reached.• Follow-up schedules: Planned follow-up appointments for continued care, rehabilitation, or further medical evaluations.• Patient and family instructions: Clear and comprehensive discharge instructions, including wound care, medication administration, and emergency signs.• Post-operative care resources: Coordinated services for physical therapy, home care, or any specialized support required for recovery.• Communication logs: Documentation of all communications with medical teams, family members, and other stakeholders regarding the patient’s post-surgical care.• Patient satisfaction: A record of the patient’s satisfaction with the coordination and post-operative care, ensuring that their recovery process is smooth and well-managed",
+      "duration": 60,
+      "duration_hours": 1.0,
+      "required_skills": [
+        {
+          "name": "Surgical Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265825"
+      ],
+      "order": 4,
+      "code": "CD",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265829",
+      "name": "Surgical Procedure Notification",
+      "description": "The surgical notification task is a critical process within a hospital's surgical department that ensures all relevant parties are informed of a scheduled, emergency, or urgent surgery. This process is designed to guarantee that the necessary medical, administrative, and operational teams are ready and equipped for the procedure. The task typically begins once a surgical procedure has been scheduled, requiring prompt and accurate communication to the appropriate stakeholders, including surgeons, anesthesiologists, nurses, support staff, and other departments.The primary objective of surgical notification is to facilitate seamless coordination and prevent any delays or misunderstandings that could affect the quality of patient care or the surgical timeline. It includes informing all key staff about the timing, location, and specific details of the surgery, including patient information, surgical requirements, and any special instructions.In a hospital environment, this task involves using an integrated notification system or manual communication methods to relay essential information. The surgical notification process ensures that surgeons, operating room nurses, anesthesiologists, and other involved departments are prepared with necessary supplies, equipment, and personnel. Moreover, it helps to confirm that the operating room is ready, the necessary surgical equipment is available, and that the patient has completed any required preoperative procedures.Inputs of the Task:• Surgical schedule (date, time, location, patient details)• Patient medical records (including preoperative history, allergies, and special needs)• Surgeon’s order (procedure details, requirements for special equipment or staff)• Anesthesia requirements (medications, patient sedation levels)• Operating room availability (confirmation from the operating room scheduling system)• Team availability (nurses, anesthesiologists, surgeons)• Equipment and supply inventory (availability and condition)Subtasks:1. Surgical Scheduling Confirmation:o Verify the surgery date and time with the operating room scheduling system.o Confirm the procedure, patient details, and necessary resources with the surgical team.2. Communication with Surgical Team:o Send notifications to the surgeon(s) involved, confirming the details of the surgery.o Inform the anesthesia team about the surgical requirements, medications, and patient specifics.o Notify operating room staff, including nurses and assistants, about the surgery’s timing, requirements, and special instructions.3. Coordination with Support Staff:o Inform support departments, such as laboratory, radiology, or pathology, if needed for the surgery.o Notify cleaning and sterilization teams to ensure surgical instruments and equipment are prepared.o Ensure that necessary medical supplies and medications are available and prepared in the operating room.4. Patient Preparation Notification:o Communicate with the patient and family to provide them with the timing, necessary preparations, and instructions before surgery.o Ensure that all preoperative tests and procedures are completed and documented.5. Systematic Notification Through Channels:o Send notifications via hospital communication systems (e.g., electronic health record (EHR) system, email, or pager system) to all involved parties.o Ensure the information is relayed promptly and clearly to avoid any delays.6. Emergency or Urgent Procedure Notifications:o If the surgery is urgent or emergent, notify relevant parties immediately using high-priority communication methods.o Coordinate with the emergency department or relevant teams for quick response and preparation.Outputs of the Task:• Confirmed surgical team readiness: Assurance that all surgical team members are aware of their roles, including surgeons, anesthesiologists, and operating room nurses.• Patient and family readiness confirmation: Communication confirming that the patient and family are aware of the procedure, timing, and any required pre-surgical instructions.• Operating room preparation report: Confirmation that the operating room is prepared, with all necessary equipment, instruments, and medical supplies available and sterilized.• Communication logs: Detailed records of all notifications sent, including times, recipients, and contents.• Updated surgical schedule: A revised and updated schedule reflecting any changes to surgery times or details.• Emergency readiness confirmation (if applicable): A notification confirming that urgent or emergency surgery protocols are in place, with all involved teams ready for immediate action.",
+      "duration": 18,
+      "duration_hours": 0.3,
+      "required_skills": [
+        {
+          "name": "Surgical Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265827"
+      ],
+      "order": 5,
+      "code": "HC-SC1",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "47",
+      "name": "Surgical Coordinator",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Surgical Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 25,
+      "code": "HC-SC1"
+    },
+    {
+      "id": "48",
+      "name": "Surgical Room Nurse",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Surgical Room Nurse",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 0,
+      "hourly_rate": 35,
+      "code": "HC-ORN S"
+    },
+    {
+      "id": "51",
+      "name": "Surgical Supplies Manager",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Surgical Supplies Manager",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 40,
+      "code": "HC-MSM"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265831",
+      "to": "265824"
+    },
+    {
+      "from": "265824",
+      "to": "265825"
+    },
+    {
+      "from": "265825",
+      "to": "265827"
+    },
+    {
+      "from": "265827",
+      "to": "265829"
+    }
+  ]
+}

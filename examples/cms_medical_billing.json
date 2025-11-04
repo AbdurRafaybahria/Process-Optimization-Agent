@@ -1,0 +1,149 @@
+{
+    "process_id": 3,
+    "process_code": "HC-MBIP",
+    "process_name": "Medical Billing and Insurance Process - CMS Format",
+    "process_overview": "<p data-pm-slice=\"0 0 []\">The medical billing and insurance process is a crucial financial function within healthcare organizations, ensuring accurate invoicing, claim processing, and reimbursement for medical services provided to patients.</p>",
+    "capacity_requirement_minutes": 60,
+    "company": {
+        "company_id": 10,
+        "companyCode": "MLDH",
+        "name": "Moldova Hospital"
+    },
+    "process_task": [
+        {
+            "process_id": 3,
+            "task_id": 265772,
+            "order": 1,
+            "task": {
+                "task_id": 265772,
+                "task_capacity_minutes": 5,
+                "task_code": "HC-BG",
+                "task_name": "Medical Bill Generation",
+                "task_overview": "<p data-pm-slice=\"0 0 []\">Medical bill generation is a critical task within the hospital's revenue cycle management process.</p>",
+                "jobTasks": [
+                    {
+                        "job_id": 3,
+                        "task_id": 265772,
+                        "job": {
+                            "job_id": 3,
+                            "jobCode": "HC-BE",
+                            "job_level_id": 1,
+                            "name": "Billing Executive",
+                            "hourlyRate": 18,
+                            "maxHoursPerDay": 8,
+                            "description": "The Billing Executive is responsible for generating, processing, and managing patient bills."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 3,
+            "task_id": 265773,
+            "order": 2,
+            "task": {
+                "task_id": 265773,
+                "task_capacity_minutes": 10,
+                "task_code": "HC-IVV",
+                "task_name": "Medical Insurance Verification",
+                "task_overview": "<p>Medical insurance verification ensures a patient's health insurance coverage is valid and active.</p>",
+                "jobTasks": [
+                    {
+                        "job_id": 2,
+                        "task_id": 265773,
+                        "job": {
+                            "job_id": 2,
+                            "jobCode": "HC-ILO",
+                            "job_level_id": 2,
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer manages insurance-related procedures."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 3,
+            "task_id": 265774,
+            "order": 3,
+            "task": {
+                "task_id": 265774,
+                "task_capacity_minutes": 15,
+                "task_code": "HC-CS",
+                "task_name": "Medical Claim Submission",
+                "task_overview": "<p>Medical claim submission involves sending formal requests to insurance companies for reimbursement.</p>",
+                "jobTasks": [
+                    {
+                        "job_id": 2,
+                        "task_id": 265774,
+                        "job": {
+                            "job_id": 2,
+                            "jobCode": "HC-ILO",
+                            "job_level_id": 2,
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer manages insurance-related procedures."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 3,
+            "task_id": 265775,
+            "order": 4,
+            "task": {
+                "task_id": 265775,
+                "task_capacity_minutes": 10,
+                "task_code": "HC-RK",
+                "task_name": "Medical Record Keeping",
+                "task_overview": "<p>Medical record keeping encompasses systematic documentation and management of patient health information.</p>",
+                "jobTasks": [
+                    {
+                        "job_id": 1,
+                        "task_id": 265775,
+                        "job": {
+                            "job_id": 1,
+                            "jobCode": "HC-ACC",
+                            "job_level_id": 1,
+                            "name": "Medical Accountant",
+                            "hourlyRate": 30,
+                            "maxHoursPerDay": 8,
+                            "description": "The Medical Accountant ensures financial transactions are accurately recorded."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 3,
+            "task_id": 265776,
+            "order": 5,
+            "task": {
+                "task_id": 265776,
+                "task_capacity_minutes": 20,
+                "task_code": "HC-REC",
+                "task_name": "Medical Claim Reconciliation",
+                "task_overview": "<p>Medical claim reconciliation verifies that payments from insurance companies match submitted claims.</p>",
+                "jobTasks": [
+                    {
+                        "job_id": 2,
+                        "task_id": 265776,
+                        "job": {
+                            "job_id": 2,
+                            "jobCode": "HC-ILO",
+                            "job_level_id": 2,
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer manages insurance-related procedures."
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -2,6 +2,7 @@
 Transformer to convert CMS data format to Process Optimization Agent format
 """
 
+import re
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from .models import Process, Task, Resource, Skill, SkillLevel, UserInvolvement
@@ -13,6 +14,22 @@ class CMSDataTransformer:
     
     def __init__(self):
         self.task_classifier = TaskClassifier()
+    
+    @staticmethod
+    def clean_html(text: str) -> str:
+        """Remove HTML tags and clean up text"""
+        if not text:
+            return ""
+        
+        # Remove HTML tags
+        text = re.sub(r'<[^>]+>', '', text)
+        # Remove escaped quotes and newlines
+        text = text.replace('\\n', ' ').replace('\\"', '"').replace('\\', '')
+        # Remove data-pm-slice attributes
+        text = re.sub(r'data-pm-slice="[^"]*"', '', text)
+        # Remove extra whitespace
+        text = ' '.join(text.split())
+        return text
     
     def transform_process(self, cms_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -47,7 +64,7 @@ class CMSDataTransformer:
             "process_name": process_data.get("process_name", ""),
             "process_id": int(process_id) if str(process_id).isdigit() else process_id,  # Keep as int for CMS compatibility
             "company": company_name,
-            "description": process_data.get("process_overview", ""),
+            "description": self.clean_html(process_data.get("process_overview", "")),
             "tasks": [],
             "resources": [],
             "dependencies": []
@@ -118,17 +135,22 @@ class CMSDataTransformer:
         
         # Classify user involvement
         task_name = task_data.get("task_name", "")
-        task_description = task_data.get("task_overview", "")
-        user_involvement = self.task_classifier.classify_task(task_name, task_description)
+        task_overview = self.clean_html(task_data.get("task_overview", ""))
+        user_involvement = self.task_classifier.classify_task(task_name, task_overview)
+        
+        # Get dependencies from task data
+        task_dependencies = task_data.get("dependencies", [])
+        # Ensure dependencies are strings
+        task_dependencies = [str(dep) for dep in task_dependencies] if task_dependencies else []
         
         return {
             "id": str(task_data.get("task_id", "")),
             "name": task_name,
-            "description": task_description,
+            "description": task_overview,
             "duration": task_data.get("task_capacity_minutes", 60),  # Duration in minutes
             "duration_hours": task_data.get("task_capacity_minutes", 60) / 60,  # Duration in hours
             "required_skills": required_skills,
-            "dependencies": [],  # Will be filled by dependency inference
+            "dependencies": task_dependencies,  # Use dependencies from task data
             "order": order,
             "code": task_data.get("task_code", ""),
             "user_involvement": user_involvement.value
@@ -258,6 +280,7 @@ class CMSDataTransformer:
             id=transformed_data["process_id"],
             name=transformed_data["process_name"],
             description=transformed_data["description"],
+            company=transformed_data.get("company", ""),
             tasks=tasks,
             resources=resources
         )

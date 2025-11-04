@@ -20,6 +20,7 @@ class InsuranceScenarioType(Enum):
     GOVERNMENT_INSURANCE = "government_insurance"  # Verify → Compliance → Bill → Submit (Medicare/Medicaid)
     PHARMACY_DME = "pharmacy_dme"  # Verify → Formulary → Dispense → Bill → Submit
     BUNDLED_PAYMENTS = "bundled_payments"  # Aggregate → Bundle → Submit → Risk Adjust
+    CUSTOMER_SERVICE = "customer_service"  # Inquiry → Resolution → Assistance → Feedback → Training
     UNKNOWN = "unknown"
 
 

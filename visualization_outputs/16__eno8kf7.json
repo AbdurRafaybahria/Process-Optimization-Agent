@@ -1,0 +1,216 @@
+{
+  "id": "16",
+  "name": "Medication Dispensing",
+  "process_name": "Medication Dispensing",
+  "process_id": 16,
+  "company": "Moldova Hospital",
+  "description": "Medication dispensing is a fundamental component of healthcare service delivery, ensuring that patients receive the correct medications as prescribed by healthcare professionals. This process is integral to patient safety, treatment efficacy, and overall healthcare efficiency. From an organizational standpoint, medication dispensing involves coordination among various departments, adherence to regulatory guidelines, and the implementation of robust IT systems to streamline operations.In a well-structured healthcare facility, medication dispensing is not limited to simply handing over prescribed drugs. It encompasses verification, education, documentation, and financial processing. The primary goal is to provide accurate and safe medication administration while maintaining a seamless workflow that minimizes errors and enhances patient care.Medication dispensing typically operates within a structured workflow that involves multiple stakeholders, including pharmacists, pharmacy assistants, data entry officers, and billing specialists. Each professional plays a key role in ensuring that medications are dispensed accurately, documented properly, and billed correctly.The process often begins with a healthcare provider issuing a prescription, which is then verified by a pharmacist for accuracy, potential drug interactions, and appropriateness for the patient’s condition. Once validated, medications are retrieved from inventory, dispensed, and instructions are provided to the patient. In many cases, IT systems such as electronic health records (EHRs) and pharmacy management software facilitate these steps by automating prescription verification, stock management, and patient education.Medication dispensing is a complex yet essential function within healthcare organizations, requiring a coordinated approach involving various stakeholders, regulatory compliance, and advanced technology. By leveraging IT tools, implementing stringent safety protocols, and fostering collaboration among healthcare professionals, organizations can ensure the safe, efficient, and accurate dispensing of medications. Addressing challenges such as medication errors, supply chain disruptions, and compliance issues further enhances the quality of care provided to patients. Ultimately, a well-structured medication dispensing process contributes to better healthcare outcomes, improved patient satisfaction, and a more efficient healthcare system.",
+  "tasks": [
+    {
+      "id": "265834",
+      "name": "Verify Prescription & Patient Details",
+      "description": "Verifying prescription and patient details is a critical step in the medication dispensing process to ensure patient safety and regulatory compliance. This task involves checking that the prescription provided by the healthcare provider is accurate, valid, and appropriate for the patient’s medical condition. The pharmacist must review the patient's details, including name, date of birth, medical history, known allergies, and ongoing treatments, to avoid any contraindications or adverse drug interactions.The prescription must be assessed for completeness, legibility, dosage accuracy, and compliance with legal and organizational guidelines. Any unclear or potentially harmful prescriptions require clarification from the prescribing physician. Additionally, pharmacists must verify the patient’s insurance coverage or payment method to prevent billing issues. This verification process ensures that the prescribed medication aligns with best medical practices and the patient's health profile, minimizing risks associated with medication errors.Inputs of the Task• Patient’s medical records• Prescription details (medication name, dosage, frequency, route of administration)• Patient identification and demographic details• Allergy and contraindication history• Insurance/payment detailsSub-Tasks1. Confirm Patient Identity: Verify patient details using ID, medical records, and electronic systems.2. Check Prescription Validity: Ensure the prescription is complete, signed, and within legal and regulatory guidelines.3. Assess Drug Interactions &amp; Allergies: Cross-check medication against known allergies and existing treatments.4. Clarify Doubts with the Prescriber: Contact the prescribing doctor for any inconsistencies or safety concerns.5. Validate Insurance &amp; Payment Method: Check if the medication is covered by insurance or requires out-of-pocket payment.Outputs of the Task• Verified and approved prescription ready for dispensing• Identification of potential medication errors or contraindications• Documentation of any required clarifications with the prescriber• Insurance or payment validation to facilitate smooth processing",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Pharmacist",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-VP",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265836",
+      "name": "Confirm Discharge Order from Doctor - [v0]",
+      "description": "Confirming a discharge order from the doctor is a critical step in the patient discharge process. It ensures that a patient is medically stable and ready to leave the healthcare facility without risk of complications. This step involves verifying the doctor’s approval, checking patient records for completeness, and preparing the necessary documentation to initiate the discharge process.Once a doctor assesses the patient’s condition and determines that they no longer require hospital care, they enter a formal discharge order into the hospital’s electronic medical record (EMR) system. The assigned nurse then reviews this order, cross-checking it with the patient’s progress notes, treatment history, and lab results. The nurse ensures that all prescribed medications and follow-up care instructions are documented before proceeding with discharge preparation.Confirming the discharge order also involves communicating with other hospital departments, such as pharmacy, medical records, and billing, to ensure that all aspects of the patient’s hospital stay are completed. Any outstanding medical tests, pending lab results, or unresolved treatment plans must be addressed before finalizing the discharge order. The process must be thorough to prevent premature discharges that may result in readmission or medical complications.This task plays a vital role in ensuring patient safety, maintaining hospital efficiency, and reducing unnecessary delays in patient discharge. It is the first step in a seamless transition from hospital care to home or another healthcare setting.Inputs of the Task1. Doctor’s discharge order (Electronic or paper-based)2. Patient medical records and treatment history3. Lab results and diagnostic test reports4. Medication prescriptions and follow-up care plans5. Hospital policies and discharge protocols6. Communication with relevant hospital departments (Pharmacy, Billing, Medical Records)Sub-Tasks1. Review Discharge Order - The nurse checks the doctor’s approval for discharge and verifies the patient’s health status.2. Verify Medical Records - Ensure all required treatments, procedures, and test results are documented and completed.3. Check Medication and Follow-Up Instructions - Confirm that the discharge prescription and home care instructions are available.4. Communicate with Other Departments - Coordinate with pharmacy for medication readiness, billing for financial clearance, and medical records for summary preparation.5. Confirm Patient Readiness - Assess patient’s understanding of the discharge process and ensure that they have transportation arrangements if necessary.Outputs of the Task1. Verified and approved discharge order2. Completed and updated patient records3. Confirmation of pending test results and medication prescriptions4. Communication log with relevant hospital departments5. Official discharge clearance allowing further steps in the discharge process",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Discharge Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265834"
+      ],
+      "order": 2,
+      "code": "HC-CDOD",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265837",
+      "name": "Retrieve & Dispense Medications",
+      "description": "Retrieving and dispensing medications is a fundamental process in pharmacy operations, ensuring that patients receive the correct drugs in the appropriate dosage and quantity. This task involves locating the prescribed medication from inventory, checking expiration dates, and ensuring the proper formulation (e.g., tablet, liquid, or injectable). Pharmacists and pharmacy assistants must also confirm that the medication is packaged securely and labeled correctly with dosage instructions and warnings.During this stage, additional verification is performed to ensure that the prescribed medication matches the patient’s needs. This step minimizes the risk of dispensing errors, ensuring patient safety and regulatory compliance. Special handling procedures may be required for controlled substances or temperature-sensitive medications.Proper documentation and tracking in the pharmacy management system ensure accountability and inventory management. The medication is then prepared for the patient or sent to the relevant hospital department for administration.Inputs of the Task• Verified prescription• Medication inventory data• Storage and handling guidelinesSub-Tasks1. Retrieve Medication from Inventory: Locate the prescribed medication and ensure proper packaging.2. Check Expiry Date &amp; Batch Number: Ensure the medication is safe for use and traceable.3. Label Medication Correctly: Print and attach accurate patient instructions and dosage details.4. Package Medication Securely: Ensure safe and compliant packaging for the patient.Outputs of the Task• Retrieved and properly labeled medication ready for dispensing• Updated pharmacy inventory• Compliance with medication safety protocols",
+      "duration": 25,
+      "duration_hours": 0.4166666666666667,
+      "required_skills": [
+        {
+          "name": "Pharmacy Assistant",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265836"
+      ],
+      "order": 3,
+      "code": "HC-RD",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265838",
+      "name": "Provide Medication Instructions",
+      "description": "Providing medication instructions is an essential task that ensures patients understand how to take their prescribed drugs safely and effectively. The pharmacist or medical professional educates patients on the correct dosage, frequency, possible side effects, and storage conditions of their medications.This step is particularly important for patients taking multiple medications, as it helps prevent drug interactions and ensures adherence to treatment plans. Clear and detailed instructions reduce the likelihood of incorrect medication usage, improving patient outcomes and minimizing hospital readmissions.Pharmacists may also provide written instructions, medication guides, or refer patients to educational resources for additional support. Ensuring that patients are fully informed empowers them to manage their health responsibly.Inputs of the Task• Patient’s prescription details• Drug safety guidelines and dosage instructionsSub-Tasks1. Explain Dosage and Timing: Clarify when and how the medication should be taken.2. Discuss Side Effects &amp; Warnings: Educate the patient about possible reactions and precautions.3. Provide Written Instructions: Give the patient printed medication guides or information sheets.Outputs of the Task• Informed patient aware of correct medication usage• Reduced risk of medication errors or misuse",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Pharmacist",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "265837"
+      ],
+      "order": 4,
+      "code": "HC-PMI",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "265839",
+      "name": "Update Patient Medication Records",
+      "description": "Updating patient medication records is a critical task in ensuring that all prescribed medications are accurately documented in the healthcare system. This process involves recording newly dispensed medications, modifying existing prescriptions, and ensuring that any changes to the patient's medication regimen are properly reflected. This task is essential for maintaining patient safety, preventing medication errors, and ensuring that healthcare providers have access to up-to-date medication history.Accurate medication records help doctors and pharmacists track patient adherence, prevent drug interactions, and ensure that prescriptions align with a patient's medical history. This task is primarily performed by data entry officers or pharmacists using an electronic health records (EHR) system integrated with pharmacy management software.The process also involves verifying that medication details such as dosage, frequency, and route of administration are correctly entered into the system. Additionally, updates may include recording patient-reported side effects or allergies. Proper documentation facilitates regulatory compliance and enhances overall patient care.Inputs of the Task• Prescription details from the pharmacist• Patient’s medication history• Physician’s notes on medication adjustments• System-generated alerts for drug interactionsSub-Tasks1. Data Entry: Recording newly prescribed or modified medications in the system.2. Verification: Cross-checking entered information with prescriptions and patient history.3. Updating Medication Status: Marking medications as active, completed, or discontinued.4. Final Review: Ensuring records are complete and compliant with healthcare standards.Outputs of the Task• Updated and accurate patient medication records• Prevention of medication errors and drug interactions• Compliance with healthcare regulations• Improved communication between healthcare providers",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265838"
+      ],
+      "order": 5,
+      "code": "HC-UM",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265835",
+      "name": "Collect Medication Payment",
+      "description": "The process of collecting medication payments ensures that patients settle their pharmacy bills in compliance with healthcare policies and insurance coverage. Payment collection may occur at the point of dispensing or be processed through an invoicing system, depending on the patient’s healthcare plan and financial arrangements.This task involves verifying the cost of prescribed medications, checking insurance coverage, applying discounts or co-payments, and processing transactions through multiple payment methods (cash, credit card, or digital payment systems). In some cases, patients may need to submit additional documentation for insurance claims or financial assistance.Billing specialists handle this process, ensuring that payments are correctly recorded and that patients receive detailed invoices or receipts. They also assist in resolving billing discrepancies and explaining charges to patients. Efficient payment collection supports financial stability in healthcare institutions and prevents revenue losses due to outstanding balances.Inputs of the Task• Medication cost details from the pharmacy system• Patient’s insurance information• Discount or financial assistance eligibility• Payment preferences of the patientSub-Tasks1. Billing Verification: Confirming the total medication cost, including insurance adjustments.2. Invoice Generation: Creating and issuing the patient’s bill.3. Payment Processing: Collecting and recording the payment.4. Receipt &amp; Documentation: Providing proof of payment and updating financial records.Outputs of the Task• Payment receipt issued to the patient• Accurate financial records of medication transactions• Reduced billing errors and disputes• Compliance with healthcare billing regulations",
+      "duration": 10,
+      "duration_hours": 0.16666666666666666,
+      "required_skills": [
+        {
+          "name": "Billing Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265839"
+      ],
+      "order": 6,
+      "code": "HC-CMP",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "53",
+      "name": "Pharmacist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Pharmacist",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 45,
+      "code": "HC-P"
+    },
+    {
+      "id": "52",
+      "name": "Discharge Coordinator",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Discharge Coordinator",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "DC"
+    },
+    {
+      "id": "54",
+      "name": "Pharmacy Assistant",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Pharmacy Assistant",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "HC-PA"
+    },
+    {
+      "id": "20",
+      "name": "Data Entry Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 3,
+      "hourly_rate": 30,
+      "code": "HC-DEO"
+    },
+    {
+      "id": "15",
+      "name": "Billing Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Billing Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 20,
+      "code": "HC-BS"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265834",
+      "to": "265836"
+    },
+    {
+      "from": "265836",
+      "to": "265837"
+    },
+    {
+      "from": "265837",
+      "to": "265838"
+    },
+    {
+      "from": "265838",
+      "to": "265839"
+    },
+    {
+      "from": "265839",
+      "to": "265835"
+    }
+  ]
+}

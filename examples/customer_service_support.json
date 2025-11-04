@@ -1,0 +1,193 @@
+{
+  "id": "9",
+  "name": "Customer Service and Support",
+  "process_name": "Customer Service and Support",
+  "process_id": 9,
+  "company": "AD Insurance Company",
+  "description": "Customer service and support in an insurance company is a crucial function that bridges the relationship between the organization and its policyholders and insured.",
+  "tasks": [
+    {
+      "id": "265801",
+      "name": "Inquiry Handling",
+      "description": "Receiving and responding to customer inquiries, providing accurate and helpful information about policies, claims, and other insurance-related matters.",
+      "duration": 15,
+      "duration_hours": 0.25,
+      "required_skills": [
+        {
+          "name": "Customer Service Representative",
+          "level": "expert"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "InqrHndl",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265802",
+      "name": "Issue Resolution",
+      "description": "Addressing customer complaints or problems, finding solutions, and ensuring the customer's needs are met in a timely manner.",
+      "duration": 30,
+      "duration_hours": 0.5,
+      "required_skills": [
+        {
+          "name": "Insurance Issue Resolution Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265801"
+      ],
+      "order": 2,
+      "code": "IssReslt",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265804",
+      "name": "Claims Assistance",
+      "description": "Guiding customers through the claims process, helping them understand the requirements, and assisting with documentation or follow-ups.",
+      "duration": 40,
+      "duration_hours": 0.6666666666666666,
+      "required_skills": [
+        {
+          "name": "Claims Service Representative",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265802"
+      ],
+      "order": 3,
+      "code": "ClmAsstnc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265807",
+      "name": "Feedback Collection",
+      "description": "Gathering feedback from customers about their experiences and using it to make improvements to customer service and other company processes.",
+      "duration": 25,
+      "duration_hours": 0.4166666666666667,
+      "required_skills": [
+        {
+          "name": "Customer Feedback Analyst / Experience Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265804"
+      ],
+      "order": 4,
+      "code": "FdbckCollc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265809",
+      "name": "Training and Development",
+      "description": "Providing ongoing training for customer service representatives to ensure they are knowledgeable about products, policies, and company procedures.",
+      "duration": 50,
+      "duration_hours": 0.8333333333333334,
+      "required_skills": [
+        {
+          "name": "Insurance Training and Development Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265807"
+      ],
+      "order": 5,
+      "code": "TrngDev",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "40",
+      "name": "Customer Service Representative",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Customer Service Representative",
+          "level": "expert"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 20,
+      "code": "INSCustSrvRep"
+    },
+    {
+      "id": "41",
+      "name": "Insurance Issue Resolution Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Issue Resolution Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 24,
+      "code": "INSResSpc"
+    },
+    {
+      "id": "42",
+      "name": "Claims Service Representative",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Claims Service Representative",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 26,
+      "code": "INSResSpct"
+    },
+    {
+      "id": "43",
+      "name": "Customer Feedback Analyst / Experience Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Customer Feedback Analyst / Experience Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 32,
+      "code": "INSCstFbkEpSpc"
+    },
+    {
+      "id": "44",
+      "name": "Insurance Training and Development Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Training and Development Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 38,
+      "code": "INSTrDevSpc"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265801",
+      "to": "265802"
+    },
+    {
+      "from": "265802",
+      "to": "265804"
+    },
+    {
+      "from": "265804",
+      "to": "265807"
+    },
+    {
+      "from": "265807",
+      "to": "265809"
+    }
+  ]
+}

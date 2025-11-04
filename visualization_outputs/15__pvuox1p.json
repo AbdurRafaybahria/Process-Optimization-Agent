@@ -1,0 +1,165 @@
+{
+  "id": "15",
+  "name": "Pharmacy Management Process",
+  "process_name": "Pharmacy Management Process",
+  "process_id": 15,
+  "company": "Moldova Hospital",
+  "description": "The Pharmacy Management Process encompasses the procurement, storage, and distribution of medications to ensure safe and efficient patient care. This process supports both inpatient and outpatient requirements while complying with regulatory standards. The process begins with inventory management, where stock levels are monitored, and procurement is initiated for replenishment. Medications are stored in controlled environments to maintain their efficacy, with regular checks for expiration and compliance.When a prescription is received, pharmacists verify its accuracy, ensuring appropriate dosage and checking for potential drug interactions. Medications are dispensed promptly, and patients or healthcare providers are educated on proper usage, side effects, and storage requirements. For inpatient care, the pharmacy coordinates with nursing staff to provide timely delivery of prescribed medications to wards. Emergency protocols are in place to handle urgent medication requests.In addition to dispensing, the pharmacy manages returns, waste disposal of expired drugs, and adherence to safety protocols. Regulatory audits and documentation are maintained to ensure compliance with healthcare standards. Pharmacy management software is utilized to track inventory, automate ordering, and integrate with patient records, streamlining operations and minimizing errors. This process plays a vital role in supporting treatment plans, enhancing patient safety, and ensuring the hospital's operational efficiency.",
+  "tasks": [
+    {
+      "id": "265832",
+      "name": "Medication Procurement",
+      "description": "Medication procurement is a critical process in pharmacy management that ensures the hospital or healthcare facility has a steady and reliable supply of essential drugs. It involves selecting suppliers, negotiating contracts, placing orders, and ensuring timely delivery of pharmaceutical products. To initiate procurement, pharmacists analyze current inventory levels, anticipated demand, and seasonal trends in medicine usage. They work closely with healthcare providers and suppliers to ensure the facility has the required medications at the right time while preventing stock shortages or overstocking. Procurement professionals also evaluate supplier reliability, pricing, and compliance with regulatory standards. They negotiate purchase agreements that align with hospital budgets and patient needs. Digital procurement systems often facilitate automated order placement, supplier tracking, and invoice management to enhance efficiency.Proper medication procurement ensures uninterrupted pharmacy operations, reduces costs, and prevents expired or low-quality medicines from entering the supply chain. It also enhances patient care by ensuring that the necessary drugs are available when needed.InputsDemand forecasts based on historical prescription dataBudget allocation for pharmaceutical suppliesApproved suppliers and vendor contractsSub-TasksAnalyze medication demand and forecast needsSelect reliable suppliers and negotiate contractsPlace purchase orders and track shipmentsVerify the quality and compliance of received medicationsOutputsApproved purchase orders for medicationsUpdated stock levels in the pharmacy databaseVendor invoices and financial records",
+      "duration": 35,
+      "duration_hours": 0.5833333333333334,
+      "required_skills": [
+        {
+          "name": "Medical Inventory manager",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-SM",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265830",
+      "name": "Prescription Processing",
+      "description": "Prescription processing ensures that patients receive the correct medication as prescribed by their healthcare providers. This task involves verifying prescription authenticity, checking for potential drug interactions, and ensuring dosage accuracy.Once a prescription is received, the pharmacy team reviews it for completeness and checks for possible contraindications or allergies. Advanced pharmacy systems often integrate with Electronic Health Records (EHRs) to cross-check patient history and flag any risks. Processing also involves insurance verification to determine coverage eligibility and co-payment requirements. If a prescribed drug is unavailable, the pharmacist may recommend therapeutic alternatives based on hospital policies. Accurate prescription processing reduces medical errors, enhances patient safety, and ensures compliance with medical and legal regulations.InputsPhysician-issued prescriptions (manual or digital)Patient medical history and allergy recordsInsurance details for coverage verificationSub-TasksReview prescription details for accuracyCheck for potential drug interactions and contraindicationsVerify insurance coverage and process paymentsOutputsVerified and processed prescriptionsReduced risk of medication errorsInsurance-approved medication billing",
+      "duration": 20,
+      "duration_hours": 0.3333333333333333,
+      "required_skills": [
+        {
+          "name": "Pharmacy Front Officer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265832"
+      ],
+      "order": 2,
+      "code": "HC-PP",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265828",
+      "name": "Medication Dispensing",
+      "description": "Medication dispensing involves preparing and providing the prescribed drugs to patients while ensuring accuracy, safety, and compliance with dosage guidelines. Pharmacists measure and package medications, provide proper labeling, and offer usage instructions. For controlled substances, additional security measures and documentation are required. Automated dispensing systems minimize human errors by cross-verifying patient details and prescription accuracy before releasing the medication. Proper dispensing reduces medication errors, enhances treatment effectiveness, and ensures patient adherence to prescribed therapies.InputsVerified prescription from the processing stageMedication stock from inventory recordsSub-TasksAccurately measure and package medicationsLabel medication with instructions and warningsDocument dispensing details for record-keepingOutputsCorrectly dispensed medications to patientsUpdated records of issued drugsReduced medication errors",
+      "duration": 25,
+      "duration_hours": 0.4166666666666667,
+      "required_skills": [
+        {
+          "name": "Medical Inventory manager",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265830"
+      ],
+      "order": 3,
+      "code": "HC-MDD",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265833",
+      "name": "Hospital Inventory Management Task",
+      "description": "Inventory management is essential for maintaining optimal stock levels of medications, minimizing wastage, and preventing shortages. It involves tracking incoming and outgoing drugs, monitoring expiration dates, and implementing stock rotation policies. Pharmacists use automated inventory management systems that provide real-time stock visibility. These systems generate alerts for low stock levels, track expiration dates, and help reorder medications before they run out. Effective inventory management follows the First Expiry First Out (FEFO) principle to ensure older medications are used before newer stock. Additionally, controlled substances are stored securely, with strict access policies to prevent misuse or theft. This task also includes regular audits to reconcile physical stock with digital records and ensure compliance with regulatory requirements. Proper inventory control improves operational efficiency, reduces wastage, and ensures continuous availability of medications for patients.InputsCurrent stock levels and usage reportsHospital demand patterns and anticipated needsRegulatory guidelines for drug storageSub-TasksMonitor medication levels and update stock recordsConduct regular audits and reconcile stock discrepanciesImplement stock rotation policies and prevent wastageOutputsOptimized inventory with reduced wasteUpdated stock database for accurate trackingReduced instances of medication shortages",
+      "duration": 20,
+      "duration_hours": 0.3333333333333333,
+      "required_skills": [
+        {
+          "name": "Medical Inventory manager",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265828"
+      ],
+      "order": 4,
+      "code": "HC-IM",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265826",
+      "name": "Patient Counseling",
+      "description": "Patient counseling is a vital pharmacy task that ensures patients understand how to use their medications safely and effectively. This process involves providing clear instructions on dosage, possible side effects, drug interactions, and adherence to prescribed treatments. Proper counseling helps prevent medication errors, enhances treatment effectiveness, and improves patient health outcomes. The process begins when a patient receives their medication. The Pharmacy Front Officer plays a key role by explaining basic medication usage, storage conditions, and precautions. They ensure the patient understands the importance of following the prescribed dosage schedule and warn about possible adverse reactions. If needed, they refer complex cases to the pharmacist for detailed clinical counseling.Additionally, patient counseling includes educating patients on lifestyle modifications, such as dietary restrictions, avoiding alcohol with certain medications, or recognizing symptoms that require immediate medical attention. In cases of chronic illnesses like diabetes or hypertension, pharmacists provide long-term medication management advice. In hospitals, the Pharmacy Front Officer assists doctors and nurses by counseling inpatients and outpatients about new prescriptions, post-surgery medications, or discharge medications, ensuring compliance with treatment plans. In retail or community pharmacies, the front officer provides personalized counseling, ensures patients understand OTC medication usage, and guides them on proper medication adherence, improving overall patient satisfaction and health outcomes.",
+      "duration": 20,
+      "duration_hours": 0.3333333333333333,
+      "required_skills": [
+        {
+          "name": "Care Counsellor",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "265833"
+      ],
+      "order": 5,
+      "code": "HC-PC1",
+      "user_involvement": "direct"
+    }
+  ],
+  "resources": [
+    {
+      "id": "49",
+      "name": "Medical Inventory manager",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Medical Inventory manager",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 25,
+      "code": "HC-IM"
+    },
+    {
+      "id": "50",
+      "name": "Pharmacy Front Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Pharmacy Front Officer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 25,
+      "code": "HC-PFP"
+    },
+    {
+      "id": "17",
+      "name": "Care Counsellor",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Care Counsellor",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 5,
+      "hourly_rate": 55,
+      "code": "HC-NCC"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265832",
+      "to": "265830"
+    },
+    {
+      "from": "265830",
+      "to": "265828"
+    },
+    {
+      "from": "265828",
+      "to": "265833"
+    },
+    {
+      "from": "265833",
+      "to": "265826"
+    }
+  ]
+}

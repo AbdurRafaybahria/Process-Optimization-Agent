@@ -92,7 +92,8 @@ def test_process_detection(json_file):
         process = Process(
             id=agent_data['id'],
             name=agent_data['name'],
-            description=agent_data['description']
+            description=agent_data['description'],
+            company=agent_data.get('company', '')
         )
         
         # Add tasks

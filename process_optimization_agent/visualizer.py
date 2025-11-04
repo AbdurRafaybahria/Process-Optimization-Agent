@@ -132,7 +132,7 @@ class Visualizer:
         
         # Summary Table (Bottom)
         ax2 = fig.add_subplot(gs[1])
-        self._plot_summary_table(ax2, schedule)
+        self._plot_summary_table(ax2, process, schedule)
         
         plt.tight_layout()
         
@@ -286,7 +286,7 @@ class Visualizer:
         
         # Remove the summary annotation from the timeline (will be shown in table below)
     
-    def _plot_summary_table(self, ax, schedule: Schedule):
+    def _plot_summary_table(self, ax, process: Process, schedule: Schedule):
         """Plot summary table below the timeline"""
         ax.axis('off')
         
@@ -297,22 +297,44 @@ class Visualizer:
             return
         
         # Calculate patient journey metrics
-        patient_tasks = []
+        # Use same filtering as timeline: get patient-facing tasks
+        patient_entries = []
         for entry in schedule.entries:
-            patient_tasks.append(entry)
+            task = process.get_task_by_id(entry.task_id)
+            if task and hasattr(task, 'user_involvement'):
+                if str(task.user_involvement).upper() in ['DIRECT', 'UserInvolvement.DIRECT']:
+                    patient_entries.append(entry)
         
-        if patient_tasks:
+        # If no patient-facing tasks, use all tasks
+        if not patient_entries:
+            patient_entries = list(schedule.entries)
+        
+        if patient_entries:
             # Sort by start time
-            patient_tasks.sort(key=lambda x: x.start_hour)
+            patient_entries.sort(key=lambda x: x.start_hour)
             
-            # Calculate metrics
-            total_time = max(entry.end_hour for entry in patient_tasks) - min(entry.start_hour for entry in patient_tasks)
-            total_active = sum(entry.end_hour - entry.start_hour for entry in patient_tasks)
+            # Calculate metrics - use cumulative approach for sequential processes
+            total_time = max(entry.end_hour for entry in patient_entries) - min(entry.start_hour for entry in patient_entries)
+            
+            # For sequential processes, active time = total time (no waiting between tasks)
+            # For parallel processes, active time = sum of durations
+            # Check if tasks overlap (parallel) or sequential
+            is_sequential = all(
+                patient_entries[i].start_hour >= patient_entries[i-1].end_hour 
+                for i in range(1, len(patient_entries))
+            )
+            
+            if is_sequential:
+                # Sequential: active time = total time (tasks run one after another)
+                total_active = total_time
+            else:
+                # Parallel: active time = sum of all task durations
+                total_active = sum(entry.end_hour - entry.start_hour for entry in patient_entries)
             
             # Calculate waiting time (gaps between tasks)
             total_wait = 0
-            for i in range(1, len(patient_tasks)):
-                wait = patient_tasks[i].start_hour - patient_tasks[i-1].end_hour
+            for i in range(1, len(patient_entries)):
+                wait = patient_entries[i].start_hour - patient_entries[i-1].end_hour
                 if wait > 0:
                     total_wait += wait
         else:

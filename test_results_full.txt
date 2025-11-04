@@ -3,266 +3,225 @@ INTELLIGENT PROCESS DETECTION TEST
 ======================================================================
 
 1. Loading CMS process data...
-   File: examples/medical_billing_insurance.json
-   [OK] Loaded process: Medical Billing and Insurance Process
+   File: D:\Main Process Optimization Agent\visualization_outputs\5_ia5dp84n.json
+   [OK] Loaded process: E-Commerce Platform Development
 
 2. Transforming CMS data to process model...
 
    Task Classifications from Transformer:
-     - Medical Bill Generation: admin
-     - Medical Insurance Verification: admin
-     - Medical Claim Submission: admin
-     - Medical Record Keeping: admin
-     - Medical Claim Reconciliation: admin
-   [OK] Transformed to process with 5 tasks and 3 resources
+     - Database Design and Setup: admin
+     - User Authentication: passive
+     - Product Catalog API: direct
+     - Frontend UI: direct
+     - Payment Integration: direct
+     - Testing and QA: direct
+   [OK] Transformed to process with 6 tasks and 6 resources
 
 3. Testing Process Type Detection...
 
 4. Process Overview:
-   - Process Name: Medical Billing and Insurance Process
-   - Process ID: 21
+   - Process Name: E-Commerce Platform Development
+   - Process ID: 5
 
-   TASKS (5 total):
+   TASKS (6 total):
    ==================================================================
-   1. Medical Bill Generation
-      Duration: 0.08 hours (5 minutes)
-   2. Medical Insurance Verification
-      Duration: 0.17 hours (10 minutes)
-   3. Medical Claim Submission
-      Duration: 0.25 hours (15 minutes)
-   4. Medical Record Keeping
-      Duration: 0.17 hours (10 minutes)
-   5. Medical Claim Reconciliation
-      Duration: 0.33 hours (20 minutes)
+   1. Database Design and Setup
+      Duration: 0.53 hours (32 minutes)
+   2. User Authentication
+      Duration: 0.40 hours (24 minutes)
+   3. Product Catalog API
+      Duration: 0.67 hours (40 minutes)
+   4. Frontend UI
+      Duration: 0.78 hours (47 minutes)
+   5. Payment Integration
+      Duration: 0.47 hours (28 minutes)
+   6. Testing and QA
+      Duration: 0.60 hours (36 minutes)
 
-   RESOURCES (3 total):
+   RESOURCES (6 total):
    ==================================================================
-   1. Billing Executive
-      Hourly Rate: $18.00/hour
+   1. Database Admin
+      Hourly Rate: $88.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Billing Executive (2)
-   2. Medical Insurance Liaison Officer
-      Hourly Rate: $25.00/hour
+      Skills: Database Admin (1)
+   2. Senior Backend
+      Hourly Rate: $94.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Medical Insurance Liaison Officer (2)
-   3. Medical Accountant
-      Hourly Rate: $30.00/hour
+      Skills: Senior Backend (2)
+   3. Fullstack Developer
+      Hourly Rate: $80.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Medical Accountant (2)
+      Skills: Fullstack Developer (1)
+   4. Frontend Developer
+      Hourly Rate: $85.00/hour
+      Max Hours/Day: 160.0 hours
+      Skills: Frontend Developer (1)
+   5. Payment Specialist
+      Hourly Rate: $99.00/hour
+      Max Hours/Day: 160.0 hours
+      Skills: Payment Specialist (2)
+   6. QA Engineer
+      Hourly Rate: $75.00/hour
+      Max Hours/Day: 160.0 hours
+      Skills: QA Engineer (1)
 
 5. Process Type Detection Results:
 
    DETECTION RESULTS:
    ----------------
-   [OK] Process Type: INSURANCE
-   [OK] Confidence: 95.0%
-   [OK] Strategy: insurance_workflow
+   [OK] Process Type: MANUFACTURING
+   [OK] Confidence: 98.5%
+   [OK] Strategy: parallel_production
 
    Characteristics:
      * user_centric: False
-     * sequential_flow: True
-     * parallelism_level: medium
-     * human_interaction: medium
+     * sequential_flow: False
+     * parallelism_level: high
+     * human_interaction: low
 
    Reasoning:
-     * CRITICAL RULE: 5 strong insurance indicators detected
-     * Process clearly involves medical billing and insurance workflows
+     * Process name matches manufacturing keywords
+     * Task names match manufacturing domain
+     * Task patterns match manufacturing workflows
+     * Task names contain manufacturing specific terms
+     * Resources match manufacturing roles
 
 6. Optimization Parameters for this Process Type:
-   * strategy: insurance_workflow
-   * process_type: insurance
-   * confidence: 0.95
-   * parallelize_verification_billing: True
-   * sequential_claim_flow: True
-   * optimize_bottleneck_resources: True
-   * minimize_claim_processing_time: True
-   * maximize_throughput: True
-   * balance_resource_utilization: True
-   * track_compliance: True
-   * enable_batch_processing: True
+   * strategy: parallel_production
+   * process_type: manufacturing
+   * confidence: 0.9845248819102564
+   * maximize_parallelism: True
+   * enforce_sequential: False
+   * optimize_throughput: True
+   * balance_workload: True
+   * minimize_idle_time: True
 
 7. Running Intelligent Optimization...
 
    OPTIMIZATION RESULTS:
    --------------------
 
-   INSURANCE PROCESS OPTIMIZATION RESULTS:
-   ========================================
+   PRODUCTION METRICS (Manufacturing Perspective):
+   ===============================================
+     * Cycle Time (Makespan): 0.8 hours
+     * Total Production Cost: $295.65
+     * Cost Per Task: $49.27
+     * Throughput: 7.66 tasks/hour
+     * Max Parallel Tasks: 6
+     * Parallelization: 100.0%
+     * Time Efficiency: 73.4%
+     * Resource Utilization: 0.4%
+     * Idle Time: 0.0 hours
+     * Total Tasks: 6
 
-   SCENARIO DETECTED:
-     * Type: Standard Billing
-     * Confidence: 100.0%
-     * User Involvement: NO (Administrative/Back-office only)
-     * Visualization Type: Manufacturing (Throughput & Efficiency)
+   PARALLEL EXECUTION ANALYSIS:
+   ============================
 
-   CURRENT STATE (Before Optimization):
-     * Total Process Time: 60.0 minutes (1.00 hours)
-     * Total Labor Cost: $25.25
-     * Cost Per Claim: $25.25
+   Time 0.0h - 6 tasks running in PARALLEL:
+     • User Authentication (0.4h) - Senior Backend
+     • Product Catalog API (0.7h) - Fullstack Developer
+     • Payment Integration (0.5h) - Payment Specialist
+     • Database Design and Setup (0.5h) - Database Admin
+     • Frontend UI (0.8h) - Frontend Developer
+     • Testing and QA (0.6h) - QA Engineer
 
-   RESOURCE UTILIZATION (Current):
-     * Billing Executive: 8.3%
-     * Medical Insurance Liaison Officer: 75.0%
-     * Medical Accountant: 16.7%
-
-   OPTIMIZED STATE (After Optimization):
-     * Total Process Time: 35.0 minutes (0.58 hours)
-     * Total Labor Cost: $0.00
-     * Time Saved: 25.0 minutes (41.7%)
-
-   BOTTLENECK ANALYSIS:
-     * Medical Insurance Liaison Officer:
-       - Utilization: 75.0%
-       - Workload: 45.0 minutes
-       - Impact: Medium
-       - Tasks: Medical Insurance Verification, Medical Claim Submission, Medical Claim Reconciliation
-
-   PARALLELIZATION OPPORTUNITIES:
-     * Run 5 independent tasks in parallel to save 55.0 minutes
-       - Time Saved: 55.0 minutes
-
-   OPTIMIZATION RECOMMENDATIONS:
-     1. [IMMEDIATE] Implement Parallel Processing
-        Category: Process
-        Impact: Reduce process time by 41.7%
-        Cost: $0.00
-        ROI: 0.0 months
-        Risk: Low
-     2. [SHORT_TERM] Address Medical Insurance Liaison Officer Bottleneck
-        Category: Resource
-        Impact: Increase capacity by 20-30%
-        Cost: $5000.00
-        ROI: 3.0 months
-        Risk: Medium
-
-   OPTIMIZED WORKFLOW EXECUTION:
-   ========================================
-
-   TASK-TO-RESOURCE ALLOCATIONS:
-     • Medical Bill Generation
-       → Assigned to: Billing Executive ($18/hour)
-       → Duration: 0.08 hours (5 minutes)
-       → Cost: $1.50
-     • Medical Insurance Verification
-       → Assigned to: Medical Insurance Liaison Officer ($25/hour)
-       → Duration: 0.17 hours (10 minutes)
-       → Cost: $4.17
-     • Medical Record Keeping
-       → Assigned to: Medical Accountant ($30/hour)
-       → Duration: 0.17 hours (10 minutes)
-       → Cost: $5.00
-     • Medical Claim Submission
-       → Assigned to: Medical Insurance Liaison Officer ($25/hour)
-       → Duration: 0.25 hours (15 minutes)
-       → Cost: $6.25
-     • Medical Claim Reconciliation
-       → Assigned to: Medical Accountant ($30/hour)
-       → Duration: 0.33 hours (20 minutes)
-       → Cost: $10.00
-
-   EXECUTION TIMELINE:
-   ==================================================================
-
-   ⚡ PARALLEL EXECUTION at 0.00h (0 min):
-      2 tasks running simultaneously
-      1. Medical Bill Generation
-         Resource: Billing Executive
-         Time: 0.00h - 0.08h (5 min)
-      2. Medical Insurance Verification
-         Resource: Medical Insurance Liaison Officer
-         Time: 0.00h - 0.17h (10 min)
-
-   → SEQUENTIAL at 0.08h (5 min):
-      Medical Record Keeping
-      Resource: Medical Accountant
-      Time: 0.08h - 0.25h (10 min)
-
-   → SEQUENTIAL at 0.17h (10 min):
-      Medical Claim Submission
-      Resource: Medical Insurance Liaison Officer
-      Time: 0.17h - 0.42h (15 min)
-
-   → SEQUENTIAL at 0.25h (15 min):
-      Medical Claim Reconciliation
-      Resource: Medical Accountant
-      Time: 0.25h - 0.58h (20 min)
-
-   WORKFLOW SUMMARY:
-     • Total Workflow Duration: 0.58 hours (35 minutes)
-     • Total Tasks: 5
-     • Parallel Execution Points: 1
-     • Sequential Execution Points: 3
-     • Total Labor Cost: $26.92
+   INDEPENDENT TASKS (Can run in parallel from start):
+     • Database Design and Setup (0.5h)
+     • User Authentication (0.4h)
+     • Product Catalog API (0.7h)
+     • Frontend UI (0.8h)
+     • Payment Integration (0.5h)
+     • Testing and QA (0.6h)
 
    Recommendations:
-     1. Implement Parallel Processing: Run bill generation and insurance verification simultaneously
-     2. Address Medical Insurance Liaison Officer Bottleneck: Resource utilization at 75.0% - consider staffing adjustments
+     1. Task 'User Authentication' takes 0.4h (51% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+     2. Task 'Product Catalog API' takes 0.7h (85% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
 
    ADMINISTRATIVE RESOURCE TRACKING:
    =================================
 
-   Resource: Billing Executive ($18/hour)
+   Resource: Senior Backend ($94/hour)
    Tasks Performed:
-     - Medical Bill Generation
-       Time: 0.0h - 0.1h (0.1 hours)
-       Cost: $1.50
-   Total Hours: 0.1
-   Total Cost: $1.50
-
-   Resource: Medical Insurance Liaison Officer ($25/hour)
-   Tasks Performed:
-     - Medical Insurance Verification
-       Time: 0.0h - 0.2h (0.2 hours)
-       Cost: $4.17
-     - Medical Claim Submission
-       Time: 0.2h - 0.4h (0.2 hours)
-       Cost: $6.25
+     - User Authentication
+       Time: 0.0h - 0.4h (0.4 hours)
+       Cost: $37.60
    Total Hours: 0.4
-   Total Cost: $10.42
+   Total Cost: $37.60
 
-   Resource: Medical Accountant ($30/hour)
+   Resource: Fullstack Developer ($80/hour)
    Tasks Performed:
-     - Medical Record Keeping
-       Time: 0.1h - 0.2h (0.2 hours)
-       Cost: $5.00
-     - Medical Claim Reconciliation
-       Time: 0.2h - 0.6h (0.3 hours)
-       Cost: $10.00
+     - Product Catalog API
+       Time: 0.0h - 0.7h (0.7 hours)
+       Cost: $53.33
+   Total Hours: 0.7
+   Total Cost: $53.33
+
+   Resource: Payment Specialist ($99/hour)
+   Tasks Performed:
+     - Payment Integration
+       Time: 0.0h - 0.5h (0.5 hours)
+       Cost: $46.20
    Total Hours: 0.5
-   Total Cost: $15.00
+   Total Cost: $46.20
+
+   Resource: Database Admin ($88/hour)
+   Tasks Performed:
+     - Database Design and Setup
+       Time: 0.0h - 0.5h (0.5 hours)
+       Cost: $46.93
+   Total Hours: 0.5
+   Total Cost: $46.93
+
+   Resource: Frontend Developer ($85/hour)
+   Tasks Performed:
+     - Frontend UI
+       Time: 0.0h - 0.8h (0.8 hours)
+       Cost: $66.58
+   Total Hours: 0.8
+   Total Cost: $66.58
+
+   Resource: QA Engineer ($75/hour)
+   Tasks Performed:
+     - Testing and QA
+       Time: 0.0h - 0.6h (0.6 hours)
+       Cost: $45.00
+   Total Hours: 0.6
+   Total Cost: $45.00
 
    OVERALL ADMINISTRATIVE SUMMARY:
-     Total Process Duration: 0.6 hours
-     Total Process Cost: $0.00
-     Average Resource Utilization: 0.0%
-     Number of Resources Used: 3
+     Total Process Duration: 0.8 hours
+     Total Process Cost: $295.65
+     Average Resource Utilization: 0.4%
+     Number of Resources Used: 6
 
 7a. Generating Visualizations...
-   [INFO] Insurance process - administrative only - using Manufacturing-style visualization
+   [INFO] Process type: Manufacturing
    [INFO] Creating summary page...
-   [OK] Summary page saved: visualization_outputs\insurance_summary_21.png
+   [OK] Summary page saved: visualization_outputs\manufacturing_summary_5.png
    [INFO] Creating allocation page...
-   [OK] Allocation page saved: visualization_outputs\insurance_allocation_21.png
+   [OK] Allocation page saved: visualization_outputs\manufacturing_allocation_5.png
 
-   ✓ Insurance visualizations generated successfully!
+   ✓ Manufacturing visualizations generated successfully!
    ✓ Check the 'visualization_outputs' folder for PNG files
 
    [INFO] Opening visualizations...
    ✓ Images opened successfully!
 
 8. Detection Validation:
-   [INFO] Process detected as: INSURANCE
-   [INFO] Confidence: 95.0%
+   [INFO] Process detected as: MANUFACTURING
+   [INFO] Confidence: 98.5%
 
-   General Process Indicators:
-     * Total Tasks: 5
-     * Total Resources: 3
-     * Has Dependencies: False
+   Manufacturing/Development Indicators Found:
+     * Development/Production in name: True
+     * Platform/Product in name: True
+     * Developer/Engineer resources: True
+     * Build/Design/Create tasks: True
+     * Testing/QA tasks: True
 
 9. Testing Sequential Flow Detection:
 
    [OK] Critical path identified:
-     Medical Bill Generation
+     Database Design and Setup
 
 ======================================================================
 TEST COMPLETE - SUCCESS!
