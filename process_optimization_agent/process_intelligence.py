@@ -11,6 +11,7 @@ from .models import Process, Task, Resource
 class ProcessType(Enum):
     """Process type classifications"""
     HEALTHCARE = "healthcare"
+    INSURANCE = "insurance"  # Medical billing and insurance processes
     MANUFACTURING = "manufacturing"
     BANKING = "banking"
     ACADEMIC = "academic"
@@ -19,6 +20,7 @@ class ProcessType(Enum):
 class OptimizationStrategy(Enum):
     """Optimization strategy types"""
     SEQUENTIAL_USER = "sequential_user"  # Single user journey (healthcare)
+    INSURANCE_WORKFLOW = "insurance_workflow"  # Insurance billing and claims
     PARALLEL_PRODUCTION = "parallel_production"  # Manufacturing/production
     CONDITIONAL_APPROVAL = "conditional_approval"  # Banking/approval workflows
     MIXED_ACADEMIC = "mixed_academic"  # Academic processes
@@ -282,6 +284,137 @@ class ProcessIntelligence:
                     'parallelism_level': 'medium',
                     'human_interaction': 'high'
                 }
+            },
+            
+            ProcessType.INSURANCE: {
+                'keywords': [
+                    # Core insurance terms
+                    'insurance', 'billing', 'claim', 'claims', 'reimbursement', 'payer',
+                    'coverage', 'policy', 'premium', 'deductible', 'copay', 'coinsurance',
+                    
+                    # Medical billing specific
+                    'medical billing', 'health insurance', 'medical insurance',
+                    'insurance verification', 'insurance processing', 'claim processing',
+                    'claim submission', 'claim reconciliation', 'medical claim',
+                    
+                    # Billing and coding
+                    'icd', 'cpt', 'hcpcs', 'cms', 'cms-1500', 'ub-04', 'coding',
+                    'medical coding', 'diagnosis code', 'procedure code', 'billing code',
+                    
+                    # Insurance processes
+                    'pre-authorization', 'preauthorization', 'prior authorization', 'pre-auth',
+                    'authorization', 'approval', 'eligibility', 'verification',
+                    'claim denial', 'denial', 'appeal', 'resubmission', 'rejected claim',
+                    
+                    # Payer types
+                    'medicare', 'medicaid', 'commercial insurance', 'government insurance',
+                    'workers comp', 'workers compensation', 'self-pay', 'out-of-pocket',
+                    
+                    # Financial processes
+                    'era', 'eob', 'explanation of benefits', 'remittance', 'payment posting',
+                    'reconciliation', 'accounts receivable', 'revenue cycle',
+                    
+                    # Pharmacy and DME
+                    'pharmacy', 'prescription', 'formulary', 'dme', 'durable medical equipment',
+                    'medication', 'drug coverage', 'pharmacy benefit',
+                    
+                    # Coordination and compliance
+                    'coordination of benefits', 'cob', 'primary insurance', 'secondary insurance',
+                    'compliance', 'hipaa', 'regulatory', 'audit',
+                    
+                    # Value-based care
+                    'bundled payment', 'episode of care', 'risk adjustment', 'value-based'
+                ],
+                'task_patterns': [
+                    # Bill generation
+                    'bill generation', 'billing', 'invoice', 'charge capture',
+                    'medical bill', 'itemized bill', 'statement generation',
+                    
+                    # Verification
+                    'insurance verification', 'eligibility check', 'coverage verification',
+                    'verify insurance', 'verify coverage', 'verify eligibility',
+                    'insurance check', 'policy verification', 'benefit verification',
+                    
+                    # Authorization
+                    'pre-authorization', 'preauthorization', 'prior auth', 'authorization request',
+                    'approval request', 'authorization submission', 'auth follow-up',
+                    
+                    # Claim submission
+                    'claim submission', 'submit claim', 'file claim', 'claim filing',
+                    'electronic claim', 'edi submission', 'claim transmission',
+                    'claims processing', 'claim generation',
+                    
+                    # Documentation and records
+                    'record keeping', 'medical records', 'documentation', 'chart review',
+                    'medical documentation', 'clinical documentation', 'record update',
+                    
+                    # Reconciliation and payment
+                    'claim reconciliation', 'payment reconciliation', 'reconcile payment',
+                    'payment posting', 'era processing', 'eob review', 'remittance processing',
+                    'variance analysis', 'payment verification',
+                    
+                    # Denial management
+                    'denial analysis', 'denial review', 'denial management',
+                    'appeal preparation', 'appeal submission', 'resubmission',
+                    'claim correction', 'claim adjustment',
+                    
+                    # Follow-up
+                    'claim follow-up', 'status check', 'payer follow-up',
+                    'claim tracking', 'claim status', 'follow up',
+                    
+                    # Compliance and quality
+                    'compliance check', 'audit', 'quality review', 'coding review',
+                    'medical necessity', 'documentation review',
+                    
+                    # Multi-payer coordination
+                    'coordination of benefits', 'cob determination', 'primary filing',
+                    'secondary filing', 'tertiary filing', 'multi-payer',
+                    
+                    # Pharmacy specific
+                    'formulary check', 'drug verification', 'pharmacy claim',
+                    'prescription processing', 'medication verification',
+                    
+                    # Bundled payments
+                    'bundle creation', 'episode aggregation', 'risk adjustment',
+                    'bundle pricing', 'episode billing'
+                ],
+                'resource_patterns': [
+                    # Billing roles
+                    'billing executive', 'billing specialist', 'billing clerk',
+                    'medical biller', 'billing officer', 'billing coordinator',
+                    'billing analyst', 'billing manager', 'revenue cycle specialist',
+                    
+                    # Insurance roles
+                    'insurance liaison', 'insurance officer', 'insurance coordinator',
+                    'insurance specialist', 'insurance analyst', 'insurance verifier',
+                    'authorization specialist', 'pre-auth coordinator',
+                    
+                    # Coding roles
+                    'medical coder', 'coding specialist', 'certified coder',
+                    'coding analyst', 'coder', 'coding coordinator',
+                    
+                    # Accounting and finance
+                    'medical accountant', 'accountant', 'financial analyst',
+                    'revenue cycle analyst', 'ar specialist', 'collections specialist',
+                    
+                    # Claims roles
+                    'claims specialist', 'claims analyst', 'claims processor',
+                    'claims examiner', 'claims coordinator', 'claims manager',
+                    
+                    # Compliance and audit
+                    'compliance officer', 'auditor', 'compliance specialist',
+                    'quality analyst', 'compliance coordinator',
+                    
+                    # Management
+                    'billing manager', 'revenue cycle manager', 'insurance manager',
+                    'reimbursement manager', 'finance manager'
+                ],
+                'characteristics': {
+                    'user_centric': False,
+                    'sequential_flow': True,
+                    'parallelism_level': 'medium',
+                    'human_interaction': 'medium'
+                }
             }
         }
     
@@ -295,25 +428,52 @@ class ProcessIntelligence:
         Returns:
             ProcessClassification with type, confidence, and strategy
         """
-        # CRITICAL RULE: If "patient" is mentioned anywhere, it's ALWAYS healthcare
+        # CRITICAL RULES for immediate classification
         process_text = f"{process.name} {' '.join([t.name for t in process.tasks])} {' '.join([r.name for r in process.resources])}".lower()
+        
+        # RULE 1: If "patient" is mentioned AND no strong insurance indicators, it's HEALTHCARE
         if 'patient' in process_text:
+            # Check if this is actually an insurance process (medical billing)
+            insurance_indicators = ['insurance', 'billing', 'claim', 'reimbursement', 'payer']
+            insurance_count = sum(1 for ind in insurance_indicators if ind in process_text)
+            
+            if insurance_count < 2:  # Not enough insurance indicators
+                return ProcessClassification(
+                    process_type=ProcessType.HEALTHCARE,
+                    confidence=0.99,
+                    optimization_strategy=OptimizationStrategy.SEQUENTIAL_USER,
+                    characteristics=self.patterns[ProcessType.HEALTHCARE]['characteristics'],
+                    reasoning=[
+                        "CRITICAL RULE: 'Patient' keyword detected - automatically classified as HEALTHCARE",
+                        "Patient-centric processes are always healthcare by definition"
+                    ]
+                )
+        
+        # RULE 2: Strong insurance process indicators
+        insurance_strong_indicators = [
+            'medical billing', 'insurance claim', 'claim submission', 'claim reconciliation',
+            'insurance verification', 'pre-authorization', 'claim denial', 'appeal',
+            'era', 'eob', 'cms-1500', 'ub-04', 'revenue cycle'
+        ]
+        insurance_strong_count = sum(1 for ind in insurance_strong_indicators if ind in process_text)
+        
+        if insurance_strong_count >= 2:
             return ProcessClassification(
-                process_type=ProcessType.HEALTHCARE,
-                confidence=0.99,  # Very high confidence
-                optimization_strategy=OptimizationStrategy.SEQUENTIAL_USER,
-                characteristics=self.patterns[ProcessType.HEALTHCARE]['characteristics'],
+                process_type=ProcessType.INSURANCE,
+                confidence=0.95,
+                optimization_strategy=OptimizationStrategy.INSURANCE_WORKFLOW,
+                characteristics=self.patterns[ProcessType.INSURANCE]['characteristics'],
                 reasoning=[
-                    "CRITICAL RULE: 'Patient' keyword detected - automatically classified as HEALTHCARE",
-                    "Patient-centric processes are always healthcare by definition"
+                    f"CRITICAL RULE: {insurance_strong_count} strong insurance indicators detected",
+                    "Process clearly involves medical billing and insurance workflows"
                 ]
             )
         
         scores = {}
         reasoning = {}
         
-        # ONLY evaluate Healthcare and Manufacturing (Banking and Academic disabled)
-        enabled_types = [ProcessType.HEALTHCARE, ProcessType.MANUFACTURING]
+        # Evaluate Healthcare, Insurance, and Manufacturing
+        enabled_types = [ProcessType.HEALTHCARE, ProcessType.INSURANCE, ProcessType.MANUFACTURING]
         
         for process_type in enabled_types:
             patterns = self.patterns[process_type]
@@ -419,6 +579,79 @@ class ProcessIntelligence:
                 if self._has_sequential_flow(process):
                     score += 5
                     reasons.append("Sequential flow pattern detected")
+            
+            elif process_type == ProcessType.INSURANCE:
+                # Strong insurance indicators
+                insurance_count = 0
+                process_name_lower = process.name.lower()
+                
+                # Very strong process name indicators
+                if any(term in process_name_lower for term in ['insurance', 'billing', 'claim', 'medical billing']):
+                    insurance_count += 1
+                    score += 15
+                    reasons.append("Insurance/billing keyword in process name")
+                
+                # Task-level strong indicators
+                insurance_task_terms = [
+                    'bill generation', 'insurance verification', 'claim submission',
+                    'claim reconciliation', 'pre-authorization', 'denial', 'appeal',
+                    'record keeping', 'payment posting', 'era', 'eob'
+                ]
+                task_matches = sum(1 for term in insurance_task_terms if term in task_text)
+                if task_matches >= 2:
+                    insurance_count += 1
+                    score += task_matches * 8
+                    reasons.append(f"{task_matches} insurance-specific tasks detected")
+                
+                # Resource-level indicators
+                insurance_resource_terms = [
+                    'billing executive', 'insurance liaison', 'medical accountant',
+                    'billing specialist', 'claims specialist', 'medical coder',
+                    'revenue cycle', 'insurance officer'
+                ]
+                resource_matches = sum(1 for term in insurance_resource_terms if term in resource_text)
+                if resource_matches >= 1:
+                    insurance_count += 1
+                    score += resource_matches * 10
+                    reasons.append(f"{resource_matches} insurance-specific roles detected")
+                
+                # Check for insurance workflow sequence
+                insurance_sequence_terms = ['bill', 'verify', 'submit', 'reconcile']
+                sequence_matches = sum(1 for term in insurance_sequence_terms if term in task_names_text)
+                if sequence_matches >= 3:
+                    insurance_count += 1
+                    score += 12
+                    reasons.append("Standard insurance workflow sequence detected")
+                
+                # Specific insurance scenario indicators
+                if 'pre-auth' in task_text or 'authorization' in task_text:
+                    insurance_count += 1
+                    score += 8
+                    reasons.append("Pre-authorization workflow detected")
+                
+                if 'denial' in task_text or 'appeal' in task_text:
+                    insurance_count += 1
+                    score += 8
+                    reasons.append("Denial/appeal management detected")
+                
+                if 'medicare' in process_text or 'medicaid' in process_text:
+                    insurance_count += 1
+                    score += 10
+                    reasons.append("Government insurance (Medicare/Medicaid) detected")
+                
+                if 'pharmacy' in process_text or 'formulary' in process_text:
+                    insurance_count += 1
+                    score += 8
+                    reasons.append("Pharmacy/DME insurance detected")
+                
+                if insurance_count >= 3:
+                    score += 25  # Strong boost for multiple insurance indicators
+                    reasons.append("Multiple strong insurance indicators found")
+                
+                # Insurance processes typically have sequential flow with some parallel admin tasks
+                if self._has_sequential_flow(process):
+                    score += 5
+                    reasons.append("Sequential workflow pattern detected")
             
             elif process_type == ProcessType.MANUFACTURING:
                 # Manufacturing often has parallel tasks
@@ -574,6 +807,7 @@ class ProcessIntelligence:
         """Determine the optimization strategy based on process type"""
         strategy_map = {
             ProcessType.HEALTHCARE: OptimizationStrategy.SEQUENTIAL_USER,
+            ProcessType.INSURANCE: OptimizationStrategy.INSURANCE_WORKFLOW,
             ProcessType.MANUFACTURING: OptimizationStrategy.PARALLEL_PRODUCTION,
             ProcessType.BANKING: OptimizationStrategy.CONDITIONAL_APPROVAL,
             ProcessType.ACADEMIC: OptimizationStrategy.MIXED_ACADEMIC,
@@ -611,6 +845,18 @@ class ProcessIntelligence:
                 'optimize_throughput': True,
                 'balance_workload': True,
                 'minimize_idle_time': True
+            })
+        
+        elif classification.optimization_strategy == OptimizationStrategy.INSURANCE_WORKFLOW:
+            params.update({
+                'parallelize_verification_billing': True,
+                'sequential_claim_flow': True,
+                'optimize_bottleneck_resources': True,
+                'minimize_claim_processing_time': True,
+                'maximize_throughput': True,
+                'balance_resource_utilization': True,
+                'track_compliance': True,
+                'enable_batch_processing': True
             })
         
         elif classification.optimization_strategy == OptimizationStrategy.CONDITIONAL_APPROVAL:

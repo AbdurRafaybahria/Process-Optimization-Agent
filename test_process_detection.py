@@ -140,17 +140,39 @@ def test_process_detection(json_file):
         log_print("\n4. Process Overview:")
         log_print(f"   - Process Name: {process.name}")
         log_print(f"   - Process ID: {process.id}")
-        log_print(f"   - Tasks:")
-        for task in process.tasks:
+        
+        log_print(f"\n   TASKS ({len(process.tasks)} total):")
+        log_print(f"   " + "=" * 66)
+        for i, task in enumerate(process.tasks, 1):
             # Only show user involvement for healthcare/service processes
             if classification.process_type == ProcessType.HEALTHCARE:
                 involvement_label = f"[{task.user_involvement.value.upper()}]"
-                log_print(f"     * {task.name} ({task.duration_hours:.1f} hours) {involvement_label}")
+                log_print(f"   {i}. {task.name}")
+                log_print(f"      Duration: {task.duration_hours:.2f} hours ({task.duration_hours * 60:.0f} minutes)")
+                log_print(f"      Type: {involvement_label}")
             else:
-                log_print(f"     * {task.name} ({task.duration_hours:.1f} hours)")
-        log_print(f"   - Resources:")
-        for resource in process.resources:
-            log_print(f"     * {resource.name} (${resource.hourly_rate}/hour)")
+                log_print(f"   {i}. {task.name}")
+                log_print(f"      Duration: {task.duration_hours:.2f} hours ({task.duration_hours * 60:.0f} minutes)")
+            
+            # Show dependencies if any
+            if task.dependencies:
+                dep_names = []
+                for dep_id in task.dependencies:
+                    dep_task = process.get_task_by_id(dep_id)
+                    if dep_task:
+                        dep_names.append(dep_task.name)
+                if dep_names:
+                    log_print(f"      Dependencies: {', '.join(dep_names)}")
+        
+        log_print(f"\n   RESOURCES ({len(process.resources)} total):")
+        log_print(f"   " + "=" * 66)
+        for i, resource in enumerate(process.resources, 1):
+            log_print(f"   {i}. {resource.name}")
+            log_print(f"      Hourly Rate: ${resource.hourly_rate:.2f}/hour")
+            log_print(f"      Max Hours/Day: {resource.total_available_hours:.1f} hours")
+            if resource.skills:
+                skills_str = ', '.join([f"{s.name} ({s.level.value})" for s in resource.skills])
+                log_print(f"      Skills: {skills_str}")
         
         # 5. Show detection results details
         log_print("\n5. Process Type Detection Results:")
@@ -315,6 +337,149 @@ def test_process_detection(json_file):
                         log_print(f"\n   INDEPENDENT TASKS (Can run in parallel from start):")
                         for task in independent_tasks:
                             log_print(f"     • {task.name} ({task.duration_hours:.1f}h)")
+                elif classification.process_type == ProcessType.INSURANCE:
+                    # Insurance-specific detailed metrics
+                    log_print(f"\n   INSURANCE PROCESS OPTIMIZATION RESULTS:")
+                    log_print(f"   ========================================")
+                    
+                    # Get the insurance result from schedule metadata
+                    insurance_result = result.schedule.optimization_metrics.get('insurance_result')
+                    
+                    if insurance_result:
+                        log_print(f"\n   SCENARIO DETECTED:")
+                        log_print(f"     * Type: {insurance_result.scenario_type.value.replace('_', ' ').title()}")
+                        log_print(f"     * Confidence: {insurance_result.confidence:.1%}")
+                        
+                        # Show user involvement status
+                        if hasattr(insurance_result, 'user_involved'):
+                            if insurance_result.user_involved:
+                                log_print(f"     * User Involvement: YES (Patient/Customer is directly involved)")
+                                log_print(f"     * Visualization Type: Healthcare (User Journey)")
+                            else:
+                                log_print(f"     * User Involvement: NO (Administrative/Back-office only)")
+                                log_print(f"     * Visualization Type: Manufacturing (Throughput & Efficiency)")
+                        
+                        log_print(f"\n   CURRENT STATE (Before Optimization):")
+                        log_print(f"     * Total Process Time: {insurance_result.current_metrics.total_process_time:.1f} minutes ({insurance_result.current_metrics.total_process_time/60:.2f} hours)")
+                        log_print(f"     * Total Labor Cost: ${insurance_result.current_metrics.total_labor_cost:.2f}")
+                        log_print(f"     * Cost Per Claim: ${insurance_result.current_metrics.cost_per_claim:.2f}")
+                        
+                        log_print(f"\n   RESOURCE UTILIZATION (Current):")
+                        for resource_name, utilization in insurance_result.current_metrics.resource_utilization.items():
+                            log_print(f"     * {resource_name}: {utilization:.1f}%")
+                        
+                        log_print(f"\n   OPTIMIZED STATE (After Optimization):")
+                        log_print(f"     * Total Process Time: {insurance_result.optimized_metrics.total_process_time:.1f} minutes ({insurance_result.optimized_metrics.total_process_time/60:.2f} hours)")
+                        log_print(f"     * Total Labor Cost: ${insurance_result.optimized_metrics.total_labor_cost:.2f}")
+                        log_print(f"     * Time Saved: {insurance_result.optimized_metrics.time_savings_minutes:.1f} minutes ({insurance_result.optimized_metrics.time_savings_percent:.1f}%)")
+                        
+                        log_print(f"\n   BOTTLENECK ANALYSIS:")
+                        if insurance_result.bottlenecks:
+                            for bottleneck in insurance_result.bottlenecks:
+                                log_print(f"     * {bottleneck.resource_name}:")
+                                log_print(f"       - Utilization: {bottleneck.utilization_percent:.1f}%")
+                                log_print(f"       - Workload: {bottleneck.total_workload_minutes:.1f} minutes")
+                                log_print(f"       - Impact: {bottleneck.impact_on_throughput}")
+                                log_print(f"       - Tasks: {', '.join(bottleneck.tasks_assigned)}")
+                        else:
+                            log_print(f"     * No bottlenecks detected")
+                        
+                        log_print(f"\n   PARALLELIZATION OPPORTUNITIES:")
+                        if insurance_result.parallelization_opportunities:
+                            for opp in insurance_result.parallelization_opportunities:
+                                log_print(f"     * {opp.recommendation}")
+                                log_print(f"       - Time Saved: {opp.time_saved:.1f} minutes")
+                        else:
+                            log_print(f"     * No additional parallelization opportunities found")
+                        
+                        log_print(f"\n   OPTIMIZATION RECOMMENDATIONS:")
+                        for i, rec in enumerate(insurance_result.recommendations, 1):
+                            log_print(f"     {i}. [{rec.priority}] {rec.title}")
+                            log_print(f"        Category: {rec.category}")
+                            log_print(f"        Impact: {rec.expected_impact}")
+                            log_print(f"        Cost: ${rec.implementation_cost:.2f}")
+                            log_print(f"        ROI: {rec.roi_months:.1f} months")
+                            log_print(f"        Risk: {rec.risk_level}")
+                        
+                        # Add detailed workflow section
+                        log_print(f"\n   OPTIMIZED WORKFLOW EXECUTION:")
+                        log_print(f"   ========================================")
+                        
+                        if result.schedule and result.schedule.entries:
+                            # Show task-to-resource allocations
+                            log_print(f"\n   TASK-TO-RESOURCE ALLOCATIONS:")
+                            for entry in result.schedule.entries:
+                                task = process.get_task_by_id(entry.task_id)
+                                resource = process.get_resource_by_id(entry.resource_id)
+                                if task and resource:
+                                    log_print(f"     • {task.name}")
+                                    log_print(f"       → Assigned to: {resource.name} (${resource.hourly_rate}/hour)")
+                                    log_print(f"       → Duration: {entry.end_hour - entry.start_hour:.2f} hours ({(entry.end_hour - entry.start_hour)*60:.0f} minutes)")
+                                    log_print(f"       → Cost: ${(entry.end_hour - entry.start_hour) * resource.hourly_rate:.2f}")
+                            
+                            # Show execution timeline
+                            log_print(f"\n   EXECUTION TIMELINE:")
+                            log_print(f"   " + "=" * 66)
+                            
+                            # Group tasks by start time to show parallel vs sequential
+                            time_groups = {}
+                            for entry in result.schedule.entries:
+                                start = entry.start_hour
+                                if start not in time_groups:
+                                    time_groups[start] = []
+                                task = process.get_task_by_id(entry.task_id)
+                                resource = process.get_resource_by_id(entry.resource_id)
+                                if task and resource:
+                                    time_groups[start].append({
+                                        'task': task.name,
+                                        'resource': resource.name,
+                                        'start': entry.start_hour,
+                                        'end': entry.end_hour,
+                                        'duration': entry.end_hour - entry.start_hour
+                                    })
+                            
+                            # Display timeline
+                            for start_time in sorted(time_groups.keys()):
+                                tasks = time_groups[start_time]
+                                
+                                if len(tasks) > 1:
+                                    log_print(f"\n   ⚡ PARALLEL EXECUTION at {start_time:.2f}h ({start_time*60:.0f} min):")
+                                    log_print(f"      {len(tasks)} tasks running simultaneously")
+                                    for i, t in enumerate(tasks, 1):
+                                        log_print(f"      {i}. {t['task']}")
+                                        log_print(f"         Resource: {t['resource']}")
+                                        log_print(f"         Time: {t['start']:.2f}h - {t['end']:.2f}h ({t['duration']*60:.0f} min)")
+                                else:
+                                    t = tasks[0]
+                                    log_print(f"\n   → SEQUENTIAL at {start_time:.2f}h ({start_time*60:.0f} min):")
+                                    log_print(f"      {t['task']}")
+                                    log_print(f"      Resource: {t['resource']}")
+                                    log_print(f"      Time: {t['start']:.2f}h - {t['end']:.2f}h ({t['duration']*60:.0f} min)")
+                            
+                            # Summary
+                            total_duration = max(entry.end_hour for entry in result.schedule.entries) if result.schedule.entries else 0
+                            log_print(f"\n   WORKFLOW SUMMARY:")
+                            log_print(f"     • Total Workflow Duration: {total_duration:.2f} hours ({total_duration*60:.0f} minutes)")
+                            log_print(f"     • Total Tasks: {len(result.schedule.entries)}")
+                            
+                            # Count parallel vs sequential
+                            parallel_count = sum(1 for tasks in time_groups.values() if len(tasks) > 1)
+                            sequential_count = sum(1 for tasks in time_groups.values() if len(tasks) == 1)
+                            log_print(f"     • Parallel Execution Points: {parallel_count}")
+                            log_print(f"     • Sequential Execution Points: {sequential_count}")
+                            
+                            # Calculate total cost
+                            total_cost = sum((entry.end_hour - entry.start_hour) * process.get_resource_by_id(entry.resource_id).hourly_rate 
+                                           for entry in result.schedule.entries 
+                                           if process.get_resource_by_id(entry.resource_id))
+                            log_print(f"     • Total Labor Cost: ${total_cost:.2f}")
+                        else:
+                            log_print(f"     [INFO] Detailed workflow not available - schedule has no entries")
+                    else:
+                        log_print(f"     * Total Process Duration: {result.admin_metrics.get('optimized_time', 0):.1f} minutes")
+                        log_print(f"     * Total Process Cost: ${result.admin_metrics.get('optimized_cost', 0):.2f}")
+                        log_print(f"     * Time Savings: {result.admin_metrics.get('time_savings', 0):.1f}%")
+                
                 elif classification.process_type == ProcessType.HEALTHCARE:
                     log_print(f"\n   ADMINISTRATIVE PROCESS METRICS (Management Perspective):")
                     log_print(f"   ========================================================")
@@ -593,16 +758,43 @@ def test_process_detection(json_file):
                 # Initialize visualizer
                 visualizer = Visualizer()
                 
-                # Prepare before metrics for comparison
-                before_metrics = {
-                    'duration': result.schedule.total_duration_hours * 1.5 if hasattr(result.schedule, 'total_duration_hours') else 0,
-                    'cost': result.schedule.total_cost * 1.2 if hasattr(result.schedule, 'total_cost') else 0,
-                    'resources': len(process.resources)
-                }
-                
-                # Auto-detect process type and generate appropriate visualizations
-                detected_type = visualizer._detect_process_type(process)
-                log_print(f"   [INFO] Detected process type: {detected_type}")
+                # Determine visualization type and prepare before metrics based on process classification
+                if classification.process_type.value == 'insurance':
+                    # For insurance processes, check if user is involved
+                    insurance_result = result.schedule.optimization_metrics.get('insurance_result')
+                    if insurance_result and hasattr(insurance_result, 'user_involved'):
+                        if insurance_result.user_involved:
+                            detected_type = "Healthcare"  # User-facing: use healthcare visualization
+                            log_print(f"   [INFO] Insurance process with user involvement - using Healthcare visualization")
+                        else:
+                            detected_type = "Insurance"  # Admin-only: use manufacturing-style visualization but label as Insurance
+                            log_print(f"   [INFO] Insurance process - administrative only - using Manufacturing-style visualization")
+                        
+                        # Use actual insurance metrics for before/after comparison
+                        before_metrics = {
+                            'duration': insurance_result.current_metrics.total_process_time / 60,  # Convert minutes to hours
+                            'cost': insurance_result.current_metrics.total_labor_cost,
+                            'resources': len(process.resources)
+                        }
+                    else:
+                        detected_type = visualizer._detect_process_type(process)
+                        log_print(f"   [INFO] Detected process type: {detected_type}")
+                        # Default before metrics
+                        before_metrics = {
+                            'duration': result.schedule.total_duration_hours * 1.5 if hasattr(result.schedule, 'total_duration_hours') else 0,
+                            'cost': result.schedule.total_cost * 1.2 if hasattr(result.schedule, 'total_cost') else 0,
+                            'resources': len(process.resources)
+                        }
+                else:
+                    # For non-insurance processes, use the detected type
+                    detected_type = classification.process_type.value.title()
+                    log_print(f"   [INFO] Process type: {detected_type}")
+                    # Default before metrics
+                    before_metrics = {
+                        'duration': result.schedule.total_duration_hours * 1.5 if hasattr(result.schedule, 'total_duration_hours') else 0,
+                        'cost': result.schedule.total_cost * 1.2 if hasattr(result.schedule, 'total_cost') else 0,
+                        'resources': len(process.resources)
+                    }
                 
                 # Generate Summary Page (auto-detects type)
                 summary_path = os.path.join(output_dir, f"{detected_type.lower()}_summary_{process.id}.png")

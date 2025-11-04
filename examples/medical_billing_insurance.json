@@ -1,0 +1,144 @@
+{
+    "process_id": 21,
+    "process_code": "HC-MBIP",
+    "process_name": "Medical Billing and Insurance Process",
+    "process_overview": "The medical billing and insurance process is a crucial financial function within healthcare organizations, ensuring accurate invoicing, claim processing, and reimbursement for medical services provided to patients. It serves as the link between healthcare providers, patients, and insurance companies, enabling a smooth flow of payments while maintaining compliance with healthcare regulations and policies.",
+    "capacity_requirement_minutes": 60,
+    "company": {
+        "company_id": 1,
+        "companyCode": "MLDH",
+        "name": "Maldova Hospital"
+    },
+    "process_task": [
+        {
+            "process_id": 21,
+            "task_id": 86,
+            "order": 1,
+            "task": {
+                "task_id": 86,
+                "task_code": "HC-BG",
+                "task_name": "Medical Bill Generation",
+                "task_overview": "Medical bill generation is a critical task within the hospital's revenue cycle management process. It involves converting the healthcare services provided to a patient into an itemized invoice for payment. This task ensures accurate financial representation of the care delivered, forming the basis for insurance claims or direct payments from patients.",
+                "task_capacity_minutes": 5,
+                "jobTasks": [
+                    {
+                        "job_id": 56,
+                        "task_id": 86,
+                        "job": {
+                            "job_id": 56,
+                            "jobCode": "HC-BE",
+                            "name": "Billing Executive",
+                            "hourlyRate": 18,
+                            "maxHoursPerDay": 8,
+                            "description": "The Billing Executive holds a key operational role within a hospital's administrative framework, directly contributing to the efficiency and accuracy of the Medical Billing and Finance processes. This professional is primarily responsible for generating, processing, and managing patient bills for the services rendered by the hospital."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 21,
+            "task_id": 85,
+            "order": 2,
+            "task": {
+                "task_id": 85,
+                "task_code": "HC-IVV",
+                "task_name": "Medical Insurance Verification",
+                "task_overview": "Medical insurance verification is a vital administrative task that ensures a patient's health insurance coverage is valid, active, and sufficient to cover the anticipated healthcare services. This task serves as a safeguard for both the healthcare provider and the patient by confirming the financial responsibility and avoiding unexpected out-of-pocket costs or claim rejections.",
+                "task_capacity_minutes": 10,
+                "jobTasks": [
+                    {
+                        "job_id": 57,
+                        "task_id": 85,
+                        "job": {
+                            "job_id": 57,
+                            "jobCode": "HC-ILO",
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer plays a crucial role within a hospital setting, acting as the central point of communication between the hospital, patients, and insurance companies. This professional ensures that all insurance-related procedures are efficiently managed as part of the Medical Billing and Insurance Process."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 21,
+            "task_id": 84,
+            "order": 3,
+            "task": {
+                "task_id": 84,
+                "task_code": "HC-CS",
+                "task_name": "Medical Claim Submission",
+                "task_overview": "Medical claim submission is a pivotal task in the hospital revenue cycle that involves sending formal requests to health insurance companies for reimbursement of healthcare services provided to insured patients. This task transforms clinical services into financial documentation, enabling providers to receive payments for the care delivered.",
+                "task_capacity_minutes": 15,
+                "jobTasks": [
+                    {
+                        "job_id": 57,
+                        "task_id": 84,
+                        "job": {
+                            "job_id": 57,
+                            "jobCode": "HC-ILO",
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer plays a crucial role within a hospital setting, acting as the central point of communication between the hospital, patients, and insurance companies."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 21,
+            "task_id": 83,
+            "order": 4,
+            "task": {
+                "task_id": 83,
+                "task_code": "HC-RK",
+                "task_name": "Medical Record Keeping",
+                "task_overview": "Medical record keeping is a fundamental administrative task in healthcare settings, encompassing the systematic documentation, storage, retrieval, and management of patient health information. It ensures that comprehensive, accurate, and up-to-date information is available for clinical decision-making, legal compliance, research, and quality care delivery.",
+                "task_capacity_minutes": 10,
+                "jobTasks": [
+                    {
+                        "job_id": 58,
+                        "task_id": 83,
+                        "job": {
+                            "job_id": 58,
+                            "jobCode": "HC-ACC",
+                            "name": "Medical Accountant",
+                            "hourlyRate": 30,
+                            "maxHoursPerDay": 8,
+                            "description": "The Medical Accountant plays a pivotal role within a hospital's financial and operational ecosystem, ensuring that all financial transactions related to healthcare services are accurately recorded, managed, and reported."
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 21,
+            "task_id": 82,
+            "order": 5,
+            "task": {
+                "task_id": 82,
+                "task_code": "HC-REC",
+                "task_name": "Medical Claim Reconciliation",
+                "task_overview": "Medical claim reconciliation is the financial and administrative process of verifying that payments received from insurance companies match the claims submitted by a healthcare provider. It is a key task in the healthcare revenue cycle, ensuring that the hospital or medical facility is properly reimbursed for the services delivered.",
+                "task_capacity_minutes": 20,
+                "jobTasks": [
+                    {
+                        "job_id": 57,
+                        "task_id": 82,
+                        "job": {
+                            "job_id": 57,
+                            "jobCode": "HC-ILO",
+                            "name": "Medical Insurance Liaison Officer",
+                            "hourlyRate": 25,
+                            "maxHoursPerDay": 8,
+                            "description": "The Insurance Liaison Officer plays a crucial role within a hospital setting, acting as the central point of communication between the hospital, patients, and insurance companies."
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

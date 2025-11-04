@@ -16,6 +16,7 @@ from .analyzers import DependencyDetector
 # Domain-specific optimizers
 from .healthcare_optimizer import HealthcareOptimizer
 from .manufacturing_optimizer import ManufacturingOptimizer
+from .insurance_optimizer import InsuranceProcessOptimizer
 
 @dataclass
 class IntelligentOptimizationResult:
@@ -49,6 +50,9 @@ class IntelligentOptimizer:
             enforce_continuity=True,
             optimize_critical_path=True
         )
+        
+        # Insurance workflow optimizer
+        self.optimizers[OptimizationStrategy.INSURANCE_WORKFLOW] = InsuranceProcessOptimizer()
         
         # Standard optimizer for manufacturing (parallel production)
         self.optimizers[OptimizationStrategy.PARALLEL_PRODUCTION] = ProcessOptimizer(
@@ -143,6 +147,36 @@ class IntelligentOptimizer:
             # Focus on production metrics
             admin_metrics = self._calculate_production_metrics(schedule, process)
             recommendations = self._suggest_production_improvements(schedule, process)
+        
+        elif classification.process_type == ProcessType.INSURANCE:
+            # Focus on insurance workflow metrics
+            if isinstance(optimizer, InsuranceProcessOptimizer):
+                # Insurance optimizer returns InsuranceOptimizationResult, not Schedule
+                # We need to handle this differently
+                insurance_result = schedule  # The optimize() already returned the result
+                
+                # Use the schedule from the insurance result
+                schedule = insurance_result.optimized_schedule
+                
+                # Extract metrics from insurance result
+                admin_metrics = {
+                    'scenario_type': insurance_result.scenario_type.value,
+                    'current_time': insurance_result.current_metrics.total_process_time,
+                    'optimized_time': insurance_result.optimized_metrics.total_process_time,
+                    'time_savings': insurance_result.optimized_metrics.time_savings_percent,
+                    'time_savings_minutes': insurance_result.optimized_metrics.time_savings_minutes,
+                    'current_cost': insurance_result.current_metrics.total_labor_cost,
+                    'optimized_cost': insurance_result.optimized_metrics.total_labor_cost,
+                    'bottlenecks': len(insurance_result.bottlenecks),
+                    'parallelization_opportunities': len(insurance_result.parallelization_opportunities),
+                    'resource_utilization': insurance_result.current_metrics.resource_utilization
+                }
+                recommendations = [rec.title + ": " + rec.description for rec in insurance_result.recommendations]
+                
+                # Store the full insurance result for later use
+                schedule.optimization_metrics['insurance_result'] = insurance_result
+            else:
+                admin_metrics = self._calculate_admin_metrics(schedule, process)
         
         elif classification.process_type == ProcessType.BANKING:
             # Focus on approval workflow metrics
@@ -467,8 +501,19 @@ class IntelligentOptimizer:
         
         if result.admin_metrics:
             print(f"\nAdmin Metrics:")
-            print(f"  Total Cost: ${result.admin_metrics.get('total_cost', 0):.2f}")
-            print(f"  Resource Utilization: {result.admin_metrics.get('avg_resource_utilization', 0):.1f}%")
+            # Check if this is insurance-specific metrics
+            if 'scenario_type' in result.admin_metrics:
+                print(f"  Insurance Scenario: {result.admin_metrics.get('scenario_type', 'unknown')}")
+                print(f"  Current Process Time: {result.admin_metrics.get('current_time', 0):.1f} minutes")
+                print(f"  Optimized Process Time: {result.admin_metrics.get('optimized_time', 0):.1f} minutes")
+                print(f"  Time Savings: {result.admin_metrics.get('time_savings', 0):.1f}% ({result.admin_metrics.get('time_savings_minutes', 0):.1f} minutes)")
+                print(f"  Current Cost: ${result.admin_metrics.get('current_cost', 0):.2f}")
+                print(f"  Optimized Cost: ${result.admin_metrics.get('optimized_cost', 0):.2f}")
+                print(f"  Bottlenecks Identified: {result.admin_metrics.get('bottlenecks', 0)}")
+                print(f"  Parallelization Opportunities: {result.admin_metrics.get('parallelization_opportunities', 0)}")
+            else:
+                print(f"  Total Cost: ${result.admin_metrics.get('total_cost', 0):.2f}")
+                print(f"  Resource Utilization: {result.admin_metrics.get('avg_resource_utilization', 0):.1f}%")
         
         if result.dual_metrics:
             print(f"\nDual Optimization:")

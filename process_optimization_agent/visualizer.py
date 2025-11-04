@@ -658,24 +658,34 @@ class Visualizer:
         ax.set_xticks(range(len(names)))
         ax.set_xticklabels([])  # Remove default labels
         
-        # Add resource names as text blocks below each bar (with wrapping for long names)
+        # Add resource names as text blocks below each bar (with better wrapping for long names)
         for i, name in enumerate(names):
-            # Wrap long names to prevent overlap
-            if len(name) > 15:
+            # Wrap long names to prevent overlap - more aggressive wrapping
+            if len(name) > 12:
                 words = name.split()
-                if len(words) > 1:
-                    mid = len(words) // 2
-                    name = '\n'.join([' '.join(words[:mid]), ' '.join(words[mid:])])
+                if len(words) > 2:
+                    # Split into 2-3 lines for better readability
+                    third = len(words) // 3
+                    if third > 0:
+                        name = '\n'.join([' '.join(words[:third]), ' '.join(words[third:2*third]), ' '.join(words[2*third:])])
+                    else:
+                        mid = len(words) // 2
+                        name = '\n'.join([' '.join(words[:mid]), ' '.join(words[mid:])])
+                elif len(words) == 2:
+                    name = '\n'.join(words)
+                else:
+                    # Single long word - truncate with ellipsis
+                    name = name[:10] + '...'
             
-            ax.text(i, -max(minutes) * 0.18, name, ha='center', va='top',
-                   fontsize=8, rotation=0, fontweight='normal',
-                   bbox=dict(boxstyle='round,pad=0.25', facecolor='lightblue', 
+            ax.text(i, -max(minutes) * 0.22, name, ha='center', va='top',
+                   fontsize=7, rotation=0, fontweight='normal',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', 
                             edgecolor='#2E86AB', alpha=0.8, linewidth=1))
         
         ax.set_ylabel('Minutes Assigned', fontsize=11, fontweight='bold')
         ax.set_title('Time Utilization per Resource', fontsize=13, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
-        ax.set_ylim(bottom=-max(minutes) * 0.25)  # Add space for labels
+        ax.set_ylim(bottom=-max(minutes) * 0.35)  # Add more space for wrapped labels
     
     def _plot_cost_per_resource(self, ax, process: Process, schedule: Schedule):
         """Plot cost per resource as bar chart"""
@@ -719,24 +729,34 @@ class Visualizer:
         ax.set_xticks(range(len(names)))
         ax.set_xticklabels([])  # Remove default labels
         
-        # Add resource names as text blocks below each bar (with wrapping for long names)
+        # Add resource names as text blocks below each bar (with better wrapping for long names)
         for i, name in enumerate(names):
-            # Wrap long names to prevent overlap
-            if len(name) > 15:
+            # Wrap long names to prevent overlap - more aggressive wrapping
+            if len(name) > 12:
                 words = name.split()
-                if len(words) > 1:
-                    mid = len(words) // 2
-                    name = '\n'.join([' '.join(words[:mid]), ' '.join(words[mid:])])
+                if len(words) > 2:
+                    # Split into 2-3 lines for better readability
+                    third = len(words) // 3
+                    if third > 0:
+                        name = '\n'.join([' '.join(words[:third]), ' '.join(words[third:2*third]), ' '.join(words[2*third:])])
+                    else:
+                        mid = len(words) // 2
+                        name = '\n'.join([' '.join(words[:mid]), ' '.join(words[mid:])])
+                elif len(words) == 2:
+                    name = '\n'.join(words)
+                else:
+                    # Single long word - truncate with ellipsis
+                    name = name[:10] + '...'
             
-            ax.text(i, -max(costs) * 0.18, name, ha='center', va='top',
-                   fontsize=8, rotation=0, fontweight='normal',
-                   bbox=dict(boxstyle='round,pad=0.25', facecolor='lightblue', 
+            ax.text(i, -max(costs) * 0.22, name, ha='center', va='top',
+                   fontsize=7, rotation=0, fontweight='normal',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='lightblue', 
                             edgecolor='#2E86AB', alpha=0.8, linewidth=1))
         
         ax.set_ylabel('Total Cost ($)', fontsize=11, fontweight='bold')
         ax.set_title('Cost per Resource', fontsize=13, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
-        ax.set_ylim(bottom=-max(costs) * 0.25)  # Add space for labels
+        ax.set_ylim(bottom=-max(costs) * 0.35)  # Add more space for wrapped labels
     
     def _plot_parallel_tasks(self, ax, process: Process, schedule: Schedule):
         """Plot parallel task execution visualization (similar to image 3)"""
@@ -832,8 +852,21 @@ class Visualizer:
         fig = plt.figure(figsize=(16, 12))
         gs = GridSpec(3, 2, figure=fig, hspace=0.4, wspace=0.3, height_ratios=[2, 1.5, 1.5])
         
-        # Main title
-        fig.suptitle(f'{process_type} Process - Resource Allocation: {process.name}', 
+        # Main title - show process type and process name
+        # Map generic types to more specific labels
+        type_label_map = {
+            'manufacturing': 'Manufacturing Process',
+            'healthcare': 'Healthcare Process',
+            'insurance': 'Insurance Process',
+            'banking': 'Banking Process',
+            'finance': 'Finance Process'
+        }
+        
+        # Get the appropriate label
+        process_type_lower = process_type.lower() if process_type else 'process'
+        type_label = type_label_map.get(process_type_lower, f'{process_type} Process' if process_type else 'Process')
+        
+        fig.suptitle(f'{type_label} - Resource Allocation: {process.name}', 
                     fontsize=18, fontweight='bold', y=0.98)
         
         # 1. Resource → Task Timeline (Top - spans both columns)
@@ -888,11 +921,11 @@ class Visualizer:
         
         # 3. Total Cost (Top Right)
         ax3 = fig.add_subplot(gs[0, 2])
-        self._plot_manufacturing_cost_comparison(ax3, schedule, before_metrics)
+        self._plot_manufacturing_cost_comparison(ax3, process, schedule, before_metrics)
         
         # 4. Summary Table (Bottom - spans all columns)
         ax4 = fig.add_subplot(gs[2, :])
-        self._plot_manufacturing_summary_table(ax4, schedule, before_metrics)
+        self._plot_manufacturing_summary_table(ax4, process, schedule, before_metrics)
         
         plt.tight_layout()
         
@@ -981,19 +1014,20 @@ class Visualizer:
         ax.grid(True, alpha=0.3, axis='y')
         ax.set_ylim(0, max(values) * 1.3)
     
-    def _plot_manufacturing_cost_comparison(self, ax, schedule, before_metrics):
+    def _plot_manufacturing_cost_comparison(self, ax, process, schedule, before_metrics):
         """Plot before/after total cost comparison"""
         # Calculate after cost from schedule
-        if hasattr(schedule, 'total_cost'):
+        if hasattr(schedule, 'total_cost') and schedule.total_cost > 0:
             after_cost = schedule.total_cost
         else:
-            # Fallback: calculate from entries
+            # Calculate from entries with actual resource rates
             after_cost = 0
             for entry in schedule.entries:
-                if hasattr(entry, 'cost'):
-                    after_cost += entry.cost
+                duration = entry.end_hour - entry.start_hour
+                resource = process.get_resource_by_id(entry.resource_id)
+                if resource:
+                    after_cost += duration * resource.hourly_rate
                 else:
-                    duration = entry.end_hour - entry.start_hour
                     after_cost += duration * 50  # Default rate estimate
         
         # Get before cost
@@ -1030,7 +1064,7 @@ class Visualizer:
         ax.grid(True, alpha=0.3, axis='y')
         ax.set_ylim(0, max(values) * 1.2)
     
-    def _plot_manufacturing_summary_table(self, ax, schedule, before_metrics):
+    def _plot_manufacturing_summary_table(self, ax, process, schedule, before_metrics):
         """Plot summary table for manufacturing optimization"""
         ax.axis('off')
         
@@ -1039,18 +1073,15 @@ class Visualizer:
             after_duration = max(entry.end_hour for entry in schedule.entries)
             after_resources = len(set(entry.resource_id for entry in schedule.entries))
             
-            # Use actual cost from schedule if available
-            if hasattr(schedule, 'total_cost'):
-                after_cost = schedule.total_cost
-            else:
-                # Fallback: calculate from entries
-                after_cost = 0
-                for entry in schedule.entries:
-                    if hasattr(entry, 'cost'):
-                        after_cost += entry.cost
-                    else:
-                        duration = entry.end_hour - entry.start_hour
-                        after_cost += duration * 50  # Default rate estimate
+            # Calculate actual cost from entries with resource rates
+            after_cost = 0
+            for entry in schedule.entries:
+                duration = entry.end_hour - entry.start_hour
+                resource = process.get_resource_by_id(entry.resource_id)
+                if resource:
+                    after_cost += duration * resource.hourly_rate
+                else:
+                    after_cost += duration * 50  # Default rate estimate
         else:
             after_duration = after_resources = after_cost = 0
         
