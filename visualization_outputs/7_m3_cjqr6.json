@@ -1,0 +1,193 @@
+{
+  "id": "7",
+  "name": "Outpatient Consultation",
+  "process_name": "Outpatient Consultation",
+  "process_id": 7,
+  "company": "Moldova Hospital",
+  "description": "Outpatient consultation is a fundamental component of modern healthcare systems, facilitating patient access to medical expertise without requiring hospital admission. It is designed to provide diagnostic evaluations, medical guidance, follow-up care, and treatment recommendations for patients who do not require inpatient care. This system plays a crucial role in maintaining healthcare efficiency, optimizing resource allocation, and ensuring timely medical intervention. From an organizational standpoint, outpatient consultation serves as a structured approach to delivering healthcare services efficiently. It reduces hospital overcrowding by directing non-emergency cases to dedicated outpatient facilities, ensuring that hospital resources remain available for critically ill patients. This process enhances patient satisfaction by offering streamlined access to medical professionals, minimizing waiting times, and optimizing appointment scheduling. Additionally, outpatient consultations contribute to cost-effectiveness within healthcare organizations. By managing patients in an outpatient setting, hospitals and clinics can reduce expenses associated with inpatient admissions, including bed occupancy, prolonged hospital stays, and ancillary services. Healthcare providers can allocate resources strategically, ensuring that specialized medical personnel and diagnostic tools are utilized effectively. An outpatient consultation typically follows a well-defined workflow that includes patient registration, medical evaluation, treatment planning, and documentation. The process is designed to ensure seamless coordination between healthcare professionals, administrative personnel, and patients. Healthcare organizations use structured appointment systems to manage outpatient consultations. Patients may schedule appointments through online portals, telephone services, or direct visits to healthcare facilities. The scheduling system ensures that consultations are organized based on physician availability, patient priority, and the complexity of medical cases. Outpatient consultation is a cornerstone of modern healthcare systems, offering accessible and cost-effective medical services. From an organizational perspective, its efficiency relies on structured workflows, technological integration, and effective patient engagement strategies. By optimizing appointment scheduling, medical assessments, treatment planning, and documentation, healthcare institutions can enhance the quality of outpatient care. As digital innovations continue to reshape healthcare, outpatient consultation will evolve to become more patient-centered and technologically advanced. By addressing operational challenges and leveraging cutting-edge solutions, healthcare organizations can ensure that outpatient consultation remains a vital and efficient component of medical service delivery.",
+  "tasks": [
+    {
+      "id": "265789",
+      "name": "Schedule Appointment",
+      "description": "Scheduling an appointment is a fundamental task in outpatient consultation that ensures efficient allocation of medical professionals' time and resources while minimizing patient wait times. The process involves booking a time slot for a patient to meet with a healthcare provider based on availability, urgency, and specialization requirements. A well-managed scheduling system is crucial for maintaining operational efficiency in healthcare organizations.Patients can request appointments through multiple channels, including online portals, phone calls, or in-person visits. The scheduling system must accommodate new appointments, reschedules, cancellations, and follow-ups. Proper scheduling prevents bottlenecks in patient flow and optimizes clinic capacity.Healthcare facilities utilize scheduling software integrated with electronic health records (EHRs) to streamline the process. These systems automatically check physician availability, match patient needs with the right provider, and send reminders to reduce no-shows. Additionally, scheduling must comply with healthcare regulations, ensuring prioritization of emergency cases and fair distribution of consultation times.By effectively managing appointments, healthcare providers enhance patient satisfaction, reduce administrative burdens, and optimize resource utilization.Inputs of the Task• Patient request for an appointment (via phone, online, or in person)• Physician’s availability and schedule• Patient medical history and reason for consultation• Urgency level of consultation• Insurance or payment details (if applicable)Sub-Tasks1. Appointment Request Processing: Receiving and verifying patient information.2. Physician Matching: Assigning the right provider based on specialization and availability.3. Slot Allocation: Reserving an available time slot in the scheduling system.4. Confirmation &amp; Notification: Sending confirmation details to the patient.5. Follow-up &amp; Rescheduling: Managing changes or cancellations if needed.Outputs of the Task• Confirmed appointment details (date, time, provider, location)• Updated schedule in the healthcare system• Automated patient reminders and notifications• Reports for clinic workload analysis",
+      "duration": 33.0,
+      "duration_hours": 0.55,
+      "required_skills": [
+        {
+          "name": "Scheduling Coordinator",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "HC-SA",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265790",
+      "name": "Call Patient for Consultation",
+      "description": "Calling a patient for consultation is an essential task in outpatient healthcare operations that ensures patients are informed and reminded about their scheduled medical visits. This process involves contacting patients via phone, email, or SMS to confirm their appointment details, provide instructions for preparation, and address any questions they may have. Timely communication helps in reducing no-show rates, improving patient adherence to medical recommendations, and ensuring smooth clinic operations. The call may also serve as an opportunity to verify personal information, update medical records, and confirm the patient's ability to attend their scheduled consultation. Healthcare organizations implement automated and manual calling systems to handle this task efficiently. Automated systems send reminders via SMS or emails, while manual calls allow patient interaction for better engagement and clarity. Call scripts are often used to standardize communication, ensuring that all necessary details are conveyed professionally. This task is typically handled by nurses or administrative staff, ensuring that patients are well-informed and adequately prepared for their consultation. Efficient patient communication leads to improved service quality and optimized healthcare delivery. Inputs of the Task • Patient’s scheduled appointment details • Contact information (phone number, email) • Consultation preparation requirements • Physician’s availability and changes (if any) Sub-Tasks 1. Retrieve Appointment Details: Accessing patient scheduling data. 2. Verify Patient Contact Information: Ensuring the correct phone number or email is used. 3. Make the Call or Send Notification: Contacting the patient via call, SMS, or email. 4. Confirm Attendance: Recording patient confirmation or rescheduling requests. 5. Update System Records: Noting any patient responses or required changes. Outputs of the Task • Confirmed patient attendance status • Updated scheduling records • Reduced appointment no-shows • Improved patient preparation and satisfaction",
+      "duration": 5.0,
+      "duration_hours": 0.08333333333333333,
+      "required_skills": [
+        {
+          "name": "Care Counsellor",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "265789"
+      ],
+      "order": 2,
+      "code": "HC-CPC",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265791",
+      "name": "Conduct Initial Assessment",
+      "description": "The initial assessment is a crucial step in the outpatient consultation process, where a medical professional gathers preliminary health information about the patient before a formal examination. This stage helps healthcare providers understand the patient's current health status, medical history, and symptoms, forming the basis for further diagnosis and treatment.During the assessment, the healthcare provider records vital signs such as blood pressure, heart rate, temperature, and weight. Additionally, the patient's medical history, allergies, current medications, and any recent symptoms are documented. This step helps in identifying potential health risks and ensuring that the doctor has relevant information before conducting a medical examination.The process is carried out using both digital and manual record-keeping methods, with many healthcare institutions leveraging electronic health records (EHR) for efficiency. Nurses or medical assistants are usually responsible for performing this task, ensuring that the information collected is accurate and complete.By conducting a thorough initial assessment, healthcare providers improve patient outcomes, enhance treatment planning, and streamline the consultation process.Inputs of the Task• Patient's medical history• Presenting symptoms• Vital signs• Medication historySub-Tasks1. Gather Medical History: Documenting prior conditions, medications, and allergies.2. Record Vital Signs: Measuring and logging key health indicators.3. Assess Symptoms: Documenting patient complaints and concerns.4. Prepare Records for Doctor: Ensuring all necessary data is available for the next step.Outputs of the Task• Comprehensive patient health summary• Accurate documentation for further examination• Improved diagnostic accuracy",
+      "duration": 30.0,
+      "duration_hours": 0.5,
+      "required_skills": [
+        {
+          "name": "Medical Assistant",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265790"
+      ],
+      "order": 3,
+      "code": "HC-CIA",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265792",
+      "name": "Perform Medical Examination",
+      "description": "The medical examination is the core component of an outpatient consultation, where the physician evaluates the patient's health condition based on clinical observations, diagnostic tests, and patient-reported symptoms. This step is essential for diagnosing illnesses, developing treatment plans, and recommending further medical interventions if necessary.A doctor performs a physical examination by checking various body systems, ordering lab tests or imaging if required, and discussing potential diagnoses with the patient. The examination findings are recorded electronically, ensuring accurate documentation of the patient’s health status.The process requires coordination with nurses and medical assistants, who assist with patient preparation and test administration. A well-executed medical examination helps ensure that the patient receives the most appropriate and timely care.Inputs of the Task• Initial assessment data• Patient symptoms and complaints• Previous medical history• Diagnostic test resultsSub-Tasks1. Conduct Physical Examination: Evaluating the patient's condition.2. Order Diagnostic Tests: Recommending lab work or imaging studies.3. Review Medical History: Considering past conditions and treatments.4. Document Findings: Recording examination details in the system.Outputs of the Task• Diagnosed health conditions• Recommended treatment plans• Updated patient medical records",
+      "duration": 40.0,
+      "duration_hours": 0.6666666666666666,
+      "required_skills": [
+        {
+          "name": "Doctor",
+          "level": "advanced"
+        }
+      ],
+      "dependencies": [
+        "265791"
+      ],
+      "order": 4,
+      "code": "HC-PME",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265793",
+      "name": "Document Consultation Notes",
+      "description": "Documenting consultation notes is a critical step in ensuring that patient interactions are accurately recorded for future reference. This process involves capturing detailed notes from a medical consultation, including symptoms, diagnoses, prescribed treatments, follow-up recommendations, and other relevant medical observations. These notes serve as an essential reference for future medical decisions and ensure continuity of care.﻿During the documentation process, healthcare professionals must ensure that all information is recorded clearly and comprehensively. Proper documentation not only facilitates accurate treatment but also plays a crucial role in legal compliance, insurance claims processing, and communication among medical teams.Modern healthcare organizations rely on Electronic Medical Records (EMR) systems to document and store consultation notes efficiently. EMR systems enhance accessibility, reduce paperwork, and ensure data security. The documentation process may include dictation, manual data entry, and the use of voice-to-text software integrated within the EMR system.By accurately documenting consultation notes, healthcare providers improve patient outcomes, streamline medical workflows, and maintain compliance with regulatory requirements.Inputs of the Task• Consultation details from the attending physician or medical professional• Patient’s reported symptoms and concerns• Examination findings• Diagnosis and treatment plan• Follow-up instructionsSub-Tasks1. Recording Patient Symptoms and Complaints – Entering details provided by the patient during the consultation.2. Documenting Diagnoses and Treatments – Noting the physician’s diagnosis and recommended treatment.3. Including Follow-Up Instructions – Recording any instructions for follow-up care or additional tests.4. Review and Finalization – Ensuring accuracy before saving the records in the system.Outputs of the Task• Detailed consultation notes stored in the EMR system• Accurate and up-to-date patient medical history• Improved coordination among healthcare professionals• Compliance with medical documentation standards﻿",
+      "duration": 20.0,
+      "duration_hours": 0.3333333333333333,
+      "required_skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265792"
+      ],
+      "order": 5,
+      "code": "HC-DC",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "16",
+      "name": "Scheduling Coordinator",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Scheduling Coordinator",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 23,
+      "code": "HC-SC"
+    },
+    {
+      "id": "17",
+      "name": "Care Counsellor",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Care Counsellor",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 5,
+      "hourly_rate": 55,
+      "code": "HC-NCC"
+    },
+    {
+      "id": "18",
+      "name": "Medical Assistant",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Medical Assistant",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 2,
+      "hourly_rate": 40,
+      "code": "HC-MA"
+    },
+    {
+      "id": "19",
+      "name": "Doctor",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Doctor",
+          "level": "advanced"
+        }
+      ],
+      "max_hours_per_day": 3,
+      "hourly_rate": 50,
+      "code": "HC-D"
+    },
+    {
+      "id": "20",
+      "name": "Data Entry Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Data Entry Officer",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 3,
+      "hourly_rate": 30,
+      "code": "HC-DEO"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265789",
+      "to": "265790"
+    },
+    {
+      "from": "265790",
+      "to": "265791"
+    },
+    {
+      "from": "265791",
+      "to": "265792"
+    },
+    {
+      "from": "265792",
+      "to": "265793"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+    "process_id": 10,
+    "company_id": 14,
+    "created_at": "2025-10-28T07:32:54.804Z",
+    "updated_at": "2025-10-28T07:32:54.804Z",
+    "capacity_requirement_minutes": null,
+    "parent_process_id": null,
+    "parent_task_id": null,
+    "process_code": "INSHCLPR",
+    "process_name": "Insurance Household Claims Processing",
+    "process_overview": "<p data-pm-slice=\"0 0 []\">Claims processing is a critical function in an insurance company, involving the assessment and settlement of claims which represent its main item of outflow. The process ensures that policyholders (or insured or claimant) receive compensation in accordance with their insurance policies when a covered event occurs. Claims processing involves several stages, starting with the filing of a claim, verification of the claim's legitimacy, and assessment of the extent of coverage.\n</p><p>\n</p><p>  The claims processor needs to coordinate with intermediaries and various Company's departments, such as underwriting, legal, reinsurance and finance, to ensure accurate and timely processing. It also involves interaction with third parties, like medical professionals or repair shops, to obtain the necessary documentation and estimates. Effective claims processing is crucial for maintaining customer satisfaction and trust, as delays or errors can lead to dissatisfaction and reputational damage. Additionally, claims processing includes fraud detection, ensuring that only legitimate claims are paid. Automation and technology play a significant role in modern claims processing, reducing the time required to process claims and increasing accuracy and fraud control..\n</p><p>\n</p>",
+    "company": {
+        "company_id": 14,
+        "companyCode": "ADIns",
+        "name": "AD Insurance Company",
+        "created_by": 2,
+        "created_at": "2025-10-24T21:39:54.476Z",
+        "updated_at": "2025-10-24T21:39:54.476Z",
+        "organizationTypeId": null
+    },
+    "process": null,
+    "task_process_parent_task_idTotask": null,
+    "process_task": [
+        {
+            "process_id": 10,
+            "task_id": 265800,
+            "order": 1,
+            "task": {
+                "task_id": 265800,
+                "created_at": "2025-10-28T07:32:54.036Z",
+                "updated_at": "2025-10-28T07:32:54.036Z",
+                "task_capacity_minutes": 240,
+                "task_code": "ClmSubRev",
+                "task_company_id": 14,
+                "task_name": "Claim Submission Review",
+                "task_overview": "<p style=\"margin-bottom: 8.5px;\"><span style=\"font-size: 18px;\">Reviewing the claim forms submitted by the policyholder to ensure all required information is provided and initiating the claims process.</span></p>",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 26,
+                        "task_id": 265800,
+                        "job": {
+                            "job_id": 26,
+                            "jobCode": "INSCLEX",
+                            "job_level_id": 1,
+                            "company_id": 14,
+                            "createdAt": "2025-10-28T07:32:53.084Z",
+                            "hourlyRate": 35,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-10-28T07:32:53.083Z",
+                            "name": "Claim Examiner"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 265803,
+            "order": 2,
+            "task": {
+                "task_id": 265803,
+                "created_at": "2025-10-28T07:32:54.090Z",
+                "updated_at": "2025-10-28T07:32:54.090Z",
+                "task_capacity_minutes": 360,
+                "task_code": "Vhcp",
+                "task_company_id": 14,
+                "task_name": "Verification in Household Claims Processing",
+                "task_overview": "<p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Cross-checking details against the policyholder's coverage, investigating the validity of the claim, and identifying any potential fraud.</span></p>",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 27,
+                        "task_id": 265803,
+                        "job": {
+                            "job_id": 27,
+                            "jobCode": "ClmAdjstr",
+                            "job_level_id": 1,
+                            "company_id": 14,
+                            "createdAt": "2025-10-28T07:32:53.106Z",
+                            "hourlyRate": 33,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-10-28T07:32:53.105Z",
+                            "name": "Claim Adjuster"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 265805,
+            "order": 3,
+            "task": {
+                "task_id": 265805,
+                "created_at": "2025-10-28T07:32:54.144Z",
+                "updated_at": "2025-10-28T07:32:54.144Z",
+                "task_capacity_minutes": 480,
+                "task_code": "ClmAsmnt",
+                "task_company_id": 14,
+                "task_name": "Claim Assessment in Household Claims Processing",
+                "task_overview": "<p style=\"margin-bottom: 8.5px;\"><span style=\"font-size: 18px;\">Evaluating the damage or loss claimed, often involving inspections or consultations with experts, to determine the amount of compensation due.</span></p>",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 28,
+                        "task_id": 265805,
+                        "job": {
+                            "job_id": 28,
+                            "jobCode": "ClmAssesr",
+                            "job_level_id": 1,
+                            "company_id": 14,
+                            "createdAt": "2025-10-28T07:32:53.125Z",
+                            "hourlyRate": 34,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-10-28T07:32:53.124Z",
+                            "name": "Claim Assessor"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 265806,
+            "order": 4,
+            "task": {
+                "task_id": 265806,
+                "created_at": "2025-10-28T07:32:54.168Z",
+                "updated_at": "2025-10-28T07:32:54.168Z",
+                "task_capacity_minutes": 360,
+                "task_code": "Adihcp",
+                "task_company_id": 14,
+                "task_name": "Approval/Denial in Household Claims Processing",
+                "task_overview": "<p style=\"margin-bottom: 8.5px; font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Deciding whether to approve or deny the claim based on the policy terms, conditions, and the findings of the assessment.</span></p>",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 27,
+                        "task_id": 265806,
+                        "job": {
+                            "job_id": 27,
+                            "jobCode": "ClmAdjstr",
+                            "job_level_id": 1,
+                            "company_id": 14,
+                            "createdAt": "2025-10-28T07:32:53.106Z",
+                            "hourlyRate": 33,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-10-28T07:32:53.105Z",
+                            "name": "Claim Adjuster"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "process_id": 10,
+            "task_id": 265808,
+            "order": 5,
+            "task": {
+                "task_id": 265808,
+                "created_at": "2025-10-28T07:32:54.205Z",
+                "updated_at": "2025-10-28T07:32:54.205Z",
+                "task_capacity_minutes": 480,
+                "task_code": "Spihcp",
+                "task_company_id": 14,
+                "task_name": "Settlement and Payment in Household Claims Processing",
+                "task_overview": "<div style=\"font-family: arial, sans-serif; font-size: 12px; white-space-collapse: collapse;\"><span style=\"font-size: 18px;\">Once a claim is approved, calculating the amount payable and disbursing funds to the policyholder or a third party as necessary.</span></div>",
+                "task_process_id": null,
+                "jobTasks": [
+                    {
+                        "job_id": 29,
+                        "task_id": 265808,
+                        "job": {
+                            "job_id": 29,
+                            "jobCode": "ClmPamntCrd",
+                            "job_level_id": 1,
+                            "company_id": 14,
+                            "createdAt": "2025-10-28T07:32:53.149Z",
+                            "hourlyRate": 32,
+                            "maxHoursPerDay": 8,
+                            "updatedAt": "2025-10-28T07:32:53.148Z",
+                            "name": "Claims Payment Coordinator"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

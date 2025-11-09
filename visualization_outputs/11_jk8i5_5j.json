@@ -1,0 +1,193 @@
+{
+  "id": "11",
+  "name": "Insurance Premium Collection and Billing",
+  "process_name": "Insurance Premium Collection and Billing",
+  "process_id": 11,
+  "company": "AD Insurance Company",
+  "description": "Premium collection and billing are essential processes for ensuring that an insurance company receives the revenue it is due. This process involves generating bills, collecting payments from policyholders, and managing accounts receivable. Timely and accurate billing is crucial for maintaining cash flow and financial stability within the company. The process starts with the calculation of the premium due, based on the terms of the insurance policy and the payment schedule chosen by the policyholder. Premiums can be collected on a monthly, quarterly, or annual basis. The billing department generates invoices and sends them to policyholders via mail or electronic communication. The collection process involves various payment methods, such as bank transfers, credit cards, checks or automatic withdrawals. It also includes managing late payments and coordinating with collections agencies if necessary. Premium collection and billing require close collaboration with brokers or agents, in Italy often delegated to collect premiums, and other departments, such as finance and customer service, to ensure the process runs smoothly and that any issues are promptly addressed.",
+  "tasks": [
+    {
+      "id": "265810",
+      "name": "Invoice Generation Task",
+      "description": "Preparing and sending out invoices to policyholders based on the billing schedule and payment terms outlined in the insurance policy.Invoice generation plays a crucial role in the insurance premium collection and billing process by documenting the amounts owed, detailing payment terms, and facilitating the exchange of funds between insurers and policyholders. This task revolves around transforming raw data—such as policy details, coverage parameters, rate tables, and policyholder information—into an organized invoice that accurately reflects the premiums due. Essentially, invoice generation represents the culmination of all underwriting and rating activities into a concise financial document that policyholders can understand and use for payment.Inputs for invoice generation can be numerous and varied. First, policy documents provide the foundational information regarding coverage limits, deductibles, and endorsements, all of which influence premium calculations. Second, the insured’s demographic or corporate data—such as age, address, or organizational details—provide context for applying rating factors. Third, rate tables and regulatory fee schedules determine how base premiums and any associated surcharges or taxes are calculated. Fourth, billing cycle information and payment schedules dictate when invoices should be issued, whether monthly, quarterly, annually, or according to a custom arrangement. Finally, certain triggering events, such as policy inception, renewal, endorsement changes, or mid-term adjustments, prompt the generation of new or amended invoices to capture adjustments in cost.Once these inputs are assembled, actions are taken to transform them into a finalized invoice. The insurer’s billing system retrieves the necessary data points from relevant databases, integrating policy details with current rate tables and adjusting for any applicable discounts or surcharges. Next, premium allocations are calculated, factoring in coverage segments (e.g., property, liability, or health components) and relevant fees or taxes. The billing system then consolidates these calculations into a single, itemized invoice draft, ensuring that each charge is clearly enumerated.Subsequently, the draft invoice undergoes a quality control check to confirm that the amounts align with underwriting guidelines, that the policy’s effective dates are correctly applied, and that any regulatory taxes are properly included. In cases where a policy has changed mid-term, prorated calculations are applied to reflect coverage days. If the billing system identifies discrepancies—such as an outdated rate table or missing endorsements—an alert triggers further verification or manual review by the billing specialist. The specialist may consult underwriting or policy administration systems to resolve discrepancies, adjusting amounts as needed and updating the policy record to prevent future errors.Once verified, the finalized invoice is generated in both digital and printed formats, depending on policyholder preferences and regulatory requirements. If electronic invoicing is used, the system encrypts and transmits the invoice via secure email or an online portal. Printed invoices are automatically queued for mailing, incorporating barcodes, QRcodes or remittance slips to streamline payment processing. For corporate clients, bulk invoicing options may be utilized, consolidating multiple policies or coverages into a single statement. Copy of the invoice is also sent to the agent or broker that sold the policy to the client.Outputs from invoice generation include the invoice document itself, which itemizes premium components, fees, and taxes, along with due dates and payment options. Additionally, transaction records are updated within the insurer’s billing and accounting systems, creating a digital trail that aids in reconciliation, financial reporting, and audit reviews. In some cases, the system triggers a next step, such as sending a payment reminder before the due date or updating the status if a payment is overdue.Beyond documentation, the invoice generation process also produces actionable events. For example, once an invoice is issued, the insurer’s customer service team or agent/broker might initiate follow-ups or provide clarifications to ensure on-time payment. Furthermore, if an invoice dispute arises, a separate workflow event may be triggered, prompting the review and potential amendment of the invoice. This cyclical nature means that the generation of invoices continually feeds back into the broader premium collection and billing process, fostering accuracy and maintaining transparency.In sum, invoice generation in insurance premium collection and billing takes multiple data inputs—policy documentation, rate guidelines, billing cycles, and triggered events—and transforms them into precise, compliant invoices that effectively communicate financial obligations. Through a combination of automated calculations, quality checks, and final reviews, insurers produce outputs that guide policyholders toward timely payments, maintain organizational records, and support regulatory compliance. Ultimately, this task ensures that insurers capture the correct revenue while policyholders remain well-informed about their payment responsibilities.",
+      "duration": 360.0,
+      "duration_hours": 6.0,
+      "required_skills": [
+        {
+          "name": "Insurance Billing Specialist / Analyst",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "InvGenr",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265818",
+      "name": "Payment Processing",
+      "description": "Receiving and processing payments from policyholders, ensuring they are correctly applied to their accounts.Payment processing is a pivotal step in the insurance premium collection and billing cycle, ensuring that collected funds are accurately recorded, applied to the right accounts, and reconciled within the insurer’s financial systems. It involves multiple data points, interdepartmental collaboration, involvement of the intermediaries, and adherence to regulatory requirements—elements that together create a secure, transparent, and efficient revenue stream for the insurer.Inputs for payment processing typically include invoices, remittance documents, and policyholder or corporate billing data that specify how and when payments should be allocated. Invoices clarify the amounts due, due dates, and any applicable taxes or fees, while remittance slips and digital payment confirmations contain policy reference numbers or account details. Information about payment methods (e.g., credit card, electronic funds transfer, check) also serves as an input, dictating the steps needed to facilitate authorization, verification, and posting. Events such as partial payments, payment disputes, or changes in payment method may also be triggers, prompting the finance team to intervene and evaluate special handling procedures. Policy-related documents, including endorsements, cancellations, and renewal notices, guide how payments should be allocated if coverage has changed.Once these inputs are compiled, actions are taken to transform them into verifiable financial transactions. The insurer’s billing or payment platform matches incoming payments to the relevant invoice and policy records. This might involve automated identification via account numbers, reference IDs, or scanned codes. The system then checks the payment amount against the amount due; if there is a discrepancy—such as a short or overpayment—the system flags it for manual review. Depending on internal workflows, the finance or billing team may investigate the variance, contact the policyholder or the agent/broker for clarification, or adjust the outstanding balance.Payment authorization and validation are critical steps. In the case of electronic payments, the platform communicates with payment gateways or banks to confirm the availability of funds and complete the transaction. For checks, lockbox services or banking partners may deposit funds and transmit digital records back to the insurer. Once confirmed, the system marks the invoice as paid (in full or partially, depending on the transaction), updates any outstanding balance, and prepares a journal entry for the organization’s accounting records.Following these steps, reconciliation occurs. This involves comparing bank statements or payment processor statements with the insurer’s internal records to ensure all funds have been accounted for. Discrepancies—such as uncleared checks, failed electronic transactions, or returned payments—are highlighted and resolved. Staff may reach out to policyholders to rectify incomplete payments, or they may coordinate with IT to address technical issues, such as a misapplied reference code.Once reconciliation is completed, the system typically generates outputs that confirm and document the results. Chief among these outputs is a payment confirmation or receipt, which is sent to the policyholder via email, postal mail, or an online portal. This document itemizes the amount received, the invoice number(s), and any outstanding balance remaining. Internally, the insurer’s general ledger is updated to record the payment, reflecting revenue in the appropriate accounting period. A digital audit trail is maintained, comprising transaction IDs, timestamps, user credentials, and any relevant notes or communications. Additionally, payment processing may trigger subsequent events or notifications, such as policy reinstatement if a payment was overdue, application of late fees for late payments, or an automated alert to the customer service team to confirm or clarify unusual transactions. If the premium is not paid within a certain period of time depending on the type of insurance, the policy can be suspended or even cancelled and the action has to be action notified to the policyholder and intermediary. When due, a commission can be paid to the agent or broker for the premium collection service.In the broader context of insurance premium collection and billing, payment processing closes the loop between invoicing and revenue recognition. It balances policyholder obligations with the insurer’s financial targets, ensuring that each payment is traceable, accurate, and properly allocated. By integrating multiple data sources—policy administration, underwriting, banking, and accounting—payment processing fosters an environment of financial integrity and customer satisfaction. Ultimately, effective payment processing not only aids in timely revenue capture but also upholds the trust and confidence policyholders place in their insurer’s billing practices.",
+      "duration": 45.0,
+      "duration_hours": 0.75,
+      "required_skills": [
+        {
+          "name": "Payment Processing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265810"
+      ],
+      "order": 2,
+      "code": "PayProc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265811",
+      "name": "Account Management",
+      "description": "Managing policyholders' accounts, including tracking payments, updating records, and handling any discrepancies or disputes.Account management in insurance premium collection and billing is vital for maintaining clear, current records of each policyholder’s financial standing. This task involves monitoring policyholder profiles, updating billing details, and reconciling balances. By ensuring all data is properly captured and organized, insurers and customers can navigate billing processes with confidence.Inputs: Primary inputs include policy documents, customer data, transaction histories, and billing schedules. Policy documents detail coverage, premium terms, and renewal conditions. Customer data, such as personal or corporate details and contact information, must be regularly updated to ensure accurate communication and regulatory compliance. Transaction histories consist of invoices, payments, credits, and adjustments, all feeding into the account system to reflect running balances. Billing schedules determine when payments are due and prompt statements or reminders. Events like new policy inception, mid-term endorsements, cancellations, or payment plan changes can also alter financial standings and trigger updates.Actions: Account administrators or automated systems collect policyholder information from underwriting, claims, or customer relationship management (CRM) databases. They merge these details into a central billing platform, forming a unified account profile. Whenever changes occur—address updates, adjusted coverage limits, or new riders—these are integrated so the account reflects real-time data.The system tracks financial transactions, recording payments received, adding fees or surcharges, and applying credits or refunds when needed. If anomalies arise—such as missing or duplicate payments—the system flags them. The account management team investigates and may collaborate with underwriting or customer service to correct errors. This ensures that balances remain accurate and transparent for all parties.Reconciliation is a vital action. It compares posted transactions with actual bank deposits or electronic payments, identifying any variances. Discrepancies are investigated and resolved by either adjusting the account or contacting the policyholder for clarification. Account management also entails generating statements that summarize recent transactions, outstanding balances, and due dates, helping policyholders stay informed about their obligations.Renewals and cancellations are critical aspects of account management. At renewal, the system updates premium amounts based on underwriting’s latest assessments, then sends updated schedules to the policyholder. If a policy is cancelled, the account is adjusted to reflect prorated refunds or remaining amounts due, closing out the financial obligation also regarding intermediaries remuneration.Often, account management systems interface with external platforms such as payment processors or third-party finance tools. This integration enables automated data exchange, reducing manual entry and speeding up the reconciliation process. It also ensures consistency across applications, preventing errors that might arise from duplicated records. Recently, AI tools have been introduced by Insurance Companies in order to enhance the automatic reconciliation capability of the IT systems and to speed-up the accounting process.Outputs: Once these actions are completed, several outputs emerge. The foremost is the creation of an accurate, up-to-date account record that provides both insurer and insured with a comprehensive view of premium obligations and recent transactions. Periodic account statements or summaries are distributed, giving policyholders and intermediaries (if involved) clarity on what they owe and when it’s due.For the insurer, updated ledger entries and financial reports ensure correct accounts receivable figures, supporting strategic decisions and regulatory compliance. Automated alerts or follow-up tasks may be triggered for overdue accounts, prompting a collections workflow. If a policyholder switches payment methods, account management outputs revised instructions and updates internal records, streamlining subsequent billing steps.In summary, account management serves as the cornerstone of insurance premium collection and billing. By collecting and integrating policy documents, transaction details, and billing schedules, account managers perform essential actions like data verification, transaction posting, and reconciliation. These efforts foster timely payments, maintain accurate ledgers, and build lasting trust with customers, driving efficiency and financial stability throughout the billing cycle. These processes ensure a seamless experience for policyholders and financial oversight for insurers across the industry, reinforcing confidence. They also sustain compliance with insurance regulations, promoting sound practices.",
+      "duration": 480.0,
+      "duration_hours": 8.0,
+      "required_skills": [
+        {
+          "name": "Insurance Account Management Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265818"
+      ],
+      "order": 3,
+      "code": "AccnMang",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265812",
+      "name": "Insurance Collections",
+      "description": "Initiating collections procedures for overdue accounts, which may include sending reminders, making phone calls, or referring accounts to a collections agency.Ccollection in the insurance premium lifecycle is a critical function that ensures revenue flow and policy continuity. This stage begins after invoices have been issued and payment deadlines have passed, focusing on securing overdue amounts or arranging viable payment solutions with policyholders. By incorporating specialized collection strategies, insurers can sustain financial stability while preserving positive customer relationships.Inputs&nbsp;The collection process draws on several key inputs. First, overdue invoices specify outstanding amounts, due dates, and any penalties or late fees. Payment records provide a history of partial payments, missed deadlines, or prior payment plans. Policy data—such as coverage type, term, and renewal status—shapes the approach collectors take, especially if lapses may occur. Customer communication logs serve as another input, informing how best to contact and negotiate with the policyholder. Finally, regulatory guidelines and internal protocols determine acceptable practices, potential grace periods, and boundaries for late fees or cancellations.Actions&nbsp;These inputs fuel a series of actions designed to settle unpaid obligations. The process typically begins with reminders sent by the company and/or intermediaries via automated emails, letters, or phone calls. If a policyholder does not respond, a more personalized outreach may follow, often led by the intermediary or a specialized company collections department. Collectors assess each policyholder’s situation, evaluating past payment behavior and potential hardships, and might propose alternative payment schedules or partial payment plans to keep coverage active.Throughout these efforts, all communications are tracked. If a policyholder disputes charges, collectors investigate by reviewing invoices and consulting underwriting teams. Compliance with debt collection laws remains crucial, ensuring fair and respectful treatment. Should repeated attempts fail, collectors may escalate by imposing late fees or starting policy cancellation or suspension proceedings. In some cases, unresponsive accounts move to external agencies for more rigorous collection efforts. Coordination with legal counsel may also occur if large balances or complex disputes arise.Documentation is paramount: each interaction is logged in the billing or collection system, from promises to pay to established payment plans. Internal reporting aggregates key metrics—like total overdue sums or average recovery time—to guide financial forecasting and shape future strategies. When negotiations are successful, staff finalize settlement terms and update the policy’s status, removing it from overdue listings.Outputs&nbsp;Once these actions conclude, several outputs emerge. Most importantly, outstanding balances are either paid in full or addressed through structured agreements. The insurer’s systems reflect updated account statuses, whether restored to good standing or cancelled if no payment arrangement was reached. Comprehensive documentation of interactions and settlements is stored for auditing, regulatory reviews, or future disputes. If a policy terminates or is suspended, the system triggers notices to inform the customer of cancellation and potential reinstatement options.These outcomes also enhance the insurer’s financial records. Recovered funds are recorded against corresponding ledger entries, strengthening cash flow and ensuring accurate accounts receivable figures. Decision-makers gain valuable insights from collection reports, pinpointing default trends, evaluating outreach methods, and gauging the success rate of negotiated payment plans.In essence, collection transforms overdue premiums into either paid balances or well-documented delinquencies. Inputs such as overdue invoices, payment histories, and policy details guide the process. Actions like reminders, negotiations, and escalations convert debts into resolved accounts or, if necessary, policy cancellations. The resulting outputs—closed balances, updated statuses, thorough documentation—underpin the insurer’s fiscal health while safeguarding customer relationships. By adhering to debt collection regulations and offering flexible solutions, the collection function supports consistent premium income, sustains coverage for policyholders who face temporary difficulties, and reinforces trust in the insurer’s billing process.",
+      "duration": 360.0,
+      "duration_hours": 6.0,
+      "required_skills": [
+        {
+          "name": "Collection Officer",
+          "level": "expert"
+        }
+      ],
+      "dependencies": [
+        "265811"
+      ],
+      "order": 4,
+      "code": "InsCollc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265819",
+      "name": "Financial Reporting",
+      "description": "Preparing financial reports on premium collections, accounts receivable, and any outstanding balances for management review. Financial reporting is a pivotal function in the insurance premium collection and billing cycle, ensuring accurate representation of revenues, receivables, and overall financial health. By integrating policy data, payment histories, and regulatory mandates into coherent reports, insurers can track cash flow, meet compliance obligations, and make informed decisions for sustainable growth. Inputs The financial reporting process gathers inputs from various sources. Policy documents outline coverage details, premium amounts, and billing schedules, providing the basis for revenue recognition. Payment records supply data about completed transactions, partial payments, and outstanding balances. General ledger entries capture all related credits and debits, including discounts, surcharges, and refunds. In addition, relevant regulatory guidelines and accounting standards dictate how figures should be categorized and presented. Other important inputs can include operational records, such as claim payouts or policy cancellations, which may affect net income or reserve requirements. Finally, internal and external audit findings further refine the accuracy and legitimacy of reported figures. Actions Armed with these inputs, financial reporting proceeds through a series of organized steps. First, data consolidation takes place. The insurer’s accounting software or enterprise resource planning (ERP) system retrieves policy, billing, and collection data from multiple databases, merging them into a standardized format. Next, accounting rules—such as accrual principles or statutory requirements—are applied to recognize earned and unearned premium revenue. If payments are late, the system might record receivables or bad debt reserves, ensuring that all outstanding amounts are categorized correctly. Subsequent actions involve reconciliations and validations. Accountants or automated scripts compare ledger balances with bank statements and sub-ledger data. Any discrepancies—such as a payment not posted or a misapplied discount—trigger alerts for correction. Meanwhile, specialists verify that all billing transactions align with established underwriting guidelines. They also review tax implications, ensuring that premium taxes or surcharges are calculated in compliance with state or national laws. Also reconciliations with intermediaries accounts are processed during financial reporting activity. With reconciliations complete, detailed financial statements are generated. These can include income statements showing premium revenue and expense allocations, balance sheets highlighting receivables and liabilities, and cash flow statements tracing inflows and outflows related to premiums and claims. Depending on the insurer’s structure and regulatory environment, specialized reports like statutory statements, solvency ratios, or premium trend analyses may also be required. Finally, review and distribution occur. Internal stakeholders—finance executives, department heads, and senior leadership—assess the statements for signs of growth, risk exposure, and operational efficiency. Adjustments might be made to pricing strategies, expense controls, or reinsurance arrangements based on insights gleaned from the reports. External stakeholders, including regulators and investors, may receive summarized versions to confirm the company’s compliance and financial stability. Outputs The outputs of financial reporting are multifaceted. Foremost among them are the formal reports themselves: monthly, quarterly, or annual financial statements that chronicle the organization’s performance. These statements feed into broader management reports, enabling leaders to gauge profitability, spot trends in premium collection, and identify areas for improved cost control. In many jurisdictions, regulatory filings form an essential output, confirming that the insurer upholds solvency standards and statutory guidelines. Another outcome of financial reporting is the creation of an auditable record that supports governance and transparency. Should queries arise—whether from auditors, shareholders, or policyholders—the underlying data and reconciliations provide a clear documentation trail. This fosters trust in the insurer’s billing and collection practices, reinforcing confidence among clients and partners alike. Moreover, these outputs drive strategic decisions, influencing product development, distribution channels, and risk management practices. Overall, financial reporting in insurance premium collection and billing transforms raw data on premiums, payments, and expenses into actionable insights. By properly classifying revenues, verifying reconciliations, and adhering to accounting standards, insurers gain an accurate depiction of their financial standing. This, in turn, guides both day-to-day operations and long-term strategy, helping the organization remain compliant, competitive, and capable of meeting its commitments to policyholders.",
+      "duration": 42.0,
+      "duration_hours": 0.7,
+      "required_skills": [
+        {
+          "name": "Financial Reporting Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265812"
+      ],
+      "order": 5,
+      "code": "FincReprt",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "30",
+      "name": "Insurance Billing Specialist / Analyst",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Billing Specialist / Analyst",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "InsBillSpAnl"
+    },
+    {
+      "id": "31",
+      "name": "Payment Processing Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Payment Processing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 32,
+      "code": "PmnProcSpc"
+    },
+    {
+      "id": "32",
+      "name": "Insurance Account Management Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Account Management Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 27,
+      "code": "InsAccManSpc"
+    },
+    {
+      "id": "33",
+      "name": "Collection Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Collection Officer",
+          "level": "expert"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 22,
+      "code": "CollOffc"
+    },
+    {
+      "id": "34",
+      "name": "Financial Reporting Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Financial Reporting Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "FinRepSpec"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265810",
+      "to": "265818"
+    },
+    {
+      "from": "265818",
+      "to": "265811"
+    },
+    {
+      "from": "265811",
+      "to": "265812"
+    },
+    {
+      "from": "265812",
+      "to": "265819"
+    }
+  ]
+}

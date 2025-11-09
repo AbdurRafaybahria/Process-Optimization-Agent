@@ -3,225 +3,265 @@ INTELLIGENT PROCESS DETECTION TEST
 ======================================================================
 
 1. Loading CMS process data...
-   File: D:\Main Process Optimization Agent\visualization_outputs\5_ia5dp84n.json
-   [OK] Loaded process: E-Commerce Platform Development
+   File: D:\Main Process Optimization Agent\visualization_outputs\12_kfxl220p.json
+   [OK] Loaded process: Policy Issuance and Administration
 
 2. Transforming CMS data to process model...
 
    Task Classifications from Transformer:
-     - Database Design and Setup: admin
-     - User Authentication: passive
-     - Product Catalog API: direct
-     - Frontend UI: direct
-     - Payment Integration: direct
-     - Testing and QA: direct
-   [OK] Transformed to process with 6 tasks and 6 resources
+     - Document Preparation: admin
+     - Record Maintenance: admin
+     - Policy Changes: admin
+     - Renewals and Cancellations: admin
+     - Customer Support: admin
+   [OK] Transformed to process with 5 tasks and 5 resources
 
 3. Testing Process Type Detection...
 
 4. Process Overview:
-   - Process Name: E-Commerce Platform Development
-   - Process ID: 5
+   - Process Name: Policy Issuance and Administration
+   - Process ID: 12
 
-   TASKS (6 total):
+   TASKS (5 total):
    ==================================================================
-   1. Database Design and Setup
-      Duration: 0.53 hours (32 minutes)
-   2. User Authentication
-      Duration: 0.40 hours (24 minutes)
-   3. Product Catalog API
-      Duration: 0.67 hours (40 minutes)
-   4. Frontend UI
-      Duration: 0.78 hours (47 minutes)
-   5. Payment Integration
-      Duration: 0.47 hours (28 minutes)
-   6. Testing and QA
-      Duration: 0.60 hours (36 minutes)
+   1. Document Preparation
+      Duration: 6.00 hours (360 minutes)
+   2. Record Maintenance
+      Duration: 7.00 hours (420 minutes)
+   3. Policy Changes
+      Duration: 6.00 hours (360 minutes)
+   4. Renewals and Cancellations
+      Duration: 7.00 hours (420 minutes)
+   5. Customer Support
+      Duration: 6.00 hours (360 minutes)
 
-   RESOURCES (6 total):
+   RESOURCES (5 total):
    ==================================================================
-   1. Database Admin
-      Hourly Rate: $88.00/hour
+   1. Document Preparation Specialist
+      Hourly Rate: $22.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Database Admin (1)
-   2. Senior Backend
-      Hourly Rate: $94.00/hour
+      Skills: Document Preparation Specialist (2)
+   2. Insurance Records Administrator
+      Hourly Rate: $25.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Senior Backend (2)
-   3. Fullstack Developer
-      Hourly Rate: $80.00/hour
+      Skills: Insurance Records Administrator (1)
+   3. Policy Administration Specialist
+      Hourly Rate: $28.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Fullstack Developer (1)
-   4. Frontend Developer
-      Hourly Rate: $85.00/hour
+      Skills: Policy Administration Specialist (1)
+   4. Policy Renewal and Cancellation Specialist
+      Hourly Rate: $27.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Frontend Developer (1)
-   5. Payment Specialist
-      Hourly Rate: $99.00/hour
+      Skills: Policy Renewal and Cancellation Specialist (1)
+   5. Insurance Customer Support Representative
+      Hourly Rate: $24.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Payment Specialist (2)
-   6. QA Engineer
-      Hourly Rate: $75.00/hour
-      Max Hours/Day: 160.0 hours
-      Skills: QA Engineer (1)
+      Skills: Insurance Customer Support Representative (1)
 
 5. Process Type Detection Results:
 
    DETECTION RESULTS:
    ----------------
-   [OK] Process Type: MANUFACTURING
-   [OK] Confidence: 98.5%
-   [OK] Strategy: parallel_production
+   [OK] Process Type: INSURANCE
+   [OK] Confidence: 95.0%
+   [OK] Strategy: insurance_workflow
 
    Characteristics:
      * user_centric: False
-     * sequential_flow: False
-     * parallelism_level: high
-     * human_interaction: low
+     * sequential_flow: True
+     * parallelism_level: medium
+     * human_interaction: medium
 
    Reasoning:
-     * Process name matches manufacturing keywords
-     * Task names match manufacturing domain
-     * Task patterns match manufacturing workflows
-     * Task names contain manufacturing specific terms
-     * Resources match manufacturing roles
+     * CRITICAL RULE: Company name contains 'insurance' - classified as INSURANCE
+     * Customer-facing indicators found: 3
+     * Insurance company processes are insurance by definition
 
 6. Optimization Parameters for this Process Type:
-   * strategy: parallel_production
-   * process_type: manufacturing
-   * confidence: 0.9845248819102564
-   * maximize_parallelism: True
-   * enforce_sequential: False
-   * optimize_throughput: True
-   * balance_workload: True
-   * minimize_idle_time: True
+   * strategy: insurance_workflow
+   * process_type: insurance
+   * confidence: 0.95
+   * parallelize_verification_billing: True
+   * sequential_claim_flow: True
+   * optimize_bottleneck_resources: True
+   * minimize_claim_processing_time: True
+   * maximize_throughput: True
+   * balance_resource_utilization: True
+   * track_compliance: True
+   * enable_batch_processing: True
 
 7. Running Intelligent Optimization...
 
    OPTIMIZATION RESULTS:
    --------------------
 
-   PRODUCTION METRICS (Manufacturing Perspective):
-   ===============================================
-     * Cycle Time (Makespan): 0.8 hours
-     * Total Production Cost: $295.65
-     * Cost Per Task: $49.27
-     * Throughput: 7.66 tasks/hour
-     * Max Parallel Tasks: 6
-     * Parallelization: 100.0%
-     * Time Efficiency: 73.4%
-     * Resource Utilization: 0.4%
-     * Idle Time: 0.0 hours
-     * Total Tasks: 6
+   INSURANCE PROCESS OPTIMIZATION RESULTS:
+   ========================================
 
-   PARALLEL EXECUTION ANALYSIS:
-   ============================
+   SCENARIO DETECTED:
+     * Type: Customer Service
+     * Confidence: 100.0%
+     * User Involvement: NO (Administrative/Back-office only)
+     * Visualization Type: Manufacturing (Throughput & Efficiency)
 
-   Time 0.0h - 6 tasks running in PARALLEL:
-     • User Authentication (0.4h) - Senior Backend
-     • Product Catalog API (0.7h) - Fullstack Developer
-     • Payment Integration (0.5h) - Payment Specialist
-     • Database Design and Setup (0.5h) - Database Admin
-     • Frontend UI (0.8h) - Frontend Developer
-     • Testing and QA (0.6h) - QA Engineer
+   CURRENT STATE (Before Optimization):
+     * Total Process Time: 1920.0 minutes (32.00 hours)
+     * Total Labor Cost: $0.00
+     * Cost Per Claim: $0.00
 
-   INDEPENDENT TASKS (Can run in parallel from start):
-     • Database Design and Setup (0.5h)
-     • User Authentication (0.4h)
-     • Product Catalog API (0.7h)
-     • Frontend UI (0.8h)
-     • Payment Integration (0.5h)
-     • Testing and QA (0.6h)
+   RESOURCE UTILIZATION (Current):
+
+   OPTIMIZED STATE (After Optimization):
+     * Total Process Time: 420.0 minutes (7.00 hours)
+     * Total Labor Cost: $808.00
+     * Time Saved: 0.0 minutes (0.0%)
+
+   BOTTLENECK ANALYSIS:
+     * No bottlenecks detected
+
+   PARALLELIZATION OPPORTUNITIES:
+     * Run 5 independent tasks in parallel to save 1560.0 minutes
+       - Time Saved: 1560.0 minutes
+
+   OPTIMIZATION RECOMMENDATIONS:
+     1. [IMMEDIATE] Implement Parallel Processing
+        Category: Process
+        Impact: Reduce process time by 0.0%
+        Cost: $0.00
+        ROI: 0.0 months
+        Risk: Low
+
+   OPTIMIZED WORKFLOW EXECUTION:
+   ========================================
+
+   TASK-TO-RESOURCE ALLOCATIONS:
+     • Document Preparation
+       → Assigned to: Document Preparation Specialist ($22/hour)
+       → Duration: 6.00 hours (360 minutes)
+       → Cost: $132.00
+     • Record Maintenance
+       → Assigned to: Insurance Records Administrator ($25/hour)
+       → Duration: 7.00 hours (420 minutes)
+       → Cost: $175.00
+     • Policy Changes
+       → Assigned to: Policy Administration Specialist ($28/hour)
+       → Duration: 6.00 hours (360 minutes)
+       → Cost: $168.00
+     • Renewals and Cancellations
+       → Assigned to: Policy Renewal and Cancellation Specialist ($27/hour)
+       → Duration: 7.00 hours (420 minutes)
+       → Cost: $189.00
+     • Customer Support
+       → Assigned to: Insurance Customer Support Representative ($24/hour)
+       → Duration: 6.00 hours (360 minutes)
+       → Cost: $144.00
+
+   EXECUTION TIMELINE:
+   ==================================================================
+
+   ⚡ PARALLEL EXECUTION at 0.00h (0 min):
+      5 tasks running simultaneously
+      1. Document Preparation
+         Resource: Document Preparation Specialist
+         Time: 0.00h - 6.00h (360 min)
+      2. Record Maintenance
+         Resource: Insurance Records Administrator
+         Time: 0.00h - 7.00h (420 min)
+      3. Policy Changes
+         Resource: Policy Administration Specialist
+         Time: 0.00h - 6.00h (360 min)
+      4. Renewals and Cancellations
+         Resource: Policy Renewal and Cancellation Specialist
+         Time: 0.00h - 7.00h (420 min)
+      5. Customer Support
+         Resource: Insurance Customer Support Representative
+         Time: 0.00h - 6.00h (360 min)
+
+   WORKFLOW SUMMARY:
+     • Total Workflow Duration: 7.00 hours (420 minutes)
+     • Total Tasks: 5
+     • Parallel Execution Points: 1
+     • Sequential Execution Points: 0
+     • Total Labor Cost: $808.00
 
    Recommendations:
-     1. Task 'User Authentication' takes 0.4h (51% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
-     2. Task 'Product Catalog API' takes 0.7h (85% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+     1. Implement Parallel Processing: Run bill generation and insurance verification simultaneously
 
    ADMINISTRATIVE RESOURCE TRACKING:
    =================================
 
-   Resource: Senior Backend ($94/hour)
+   Resource: Document Preparation Specialist ($22/hour)
    Tasks Performed:
-     - User Authentication
-       Time: 0.0h - 0.4h (0.4 hours)
-       Cost: $37.60
-   Total Hours: 0.4
-   Total Cost: $37.60
+     - Document Preparation
+       Time: 0.0h - 6.0h (6.0 hours)
+       Cost: $132.00
+   Total Hours: 6.0
+   Total Cost: $132.00
 
-   Resource: Fullstack Developer ($80/hour)
+   Resource: Insurance Records Administrator ($25/hour)
    Tasks Performed:
-     - Product Catalog API
-       Time: 0.0h - 0.7h (0.7 hours)
-       Cost: $53.33
-   Total Hours: 0.7
-   Total Cost: $53.33
+     - Record Maintenance
+       Time: 0.0h - 7.0h (7.0 hours)
+       Cost: $175.00
+   Total Hours: 7.0
+   Total Cost: $175.00
 
-   Resource: Payment Specialist ($99/hour)
+   Resource: Policy Administration Specialist ($28/hour)
    Tasks Performed:
-     - Payment Integration
-       Time: 0.0h - 0.5h (0.5 hours)
-       Cost: $46.20
-   Total Hours: 0.5
-   Total Cost: $46.20
+     - Policy Changes
+       Time: 0.0h - 6.0h (6.0 hours)
+       Cost: $168.00
+   Total Hours: 6.0
+   Total Cost: $168.00
 
-   Resource: Database Admin ($88/hour)
+   Resource: Policy Renewal and Cancellation Specialist ($27/hour)
    Tasks Performed:
-     - Database Design and Setup
-       Time: 0.0h - 0.5h (0.5 hours)
-       Cost: $46.93
-   Total Hours: 0.5
-   Total Cost: $46.93
+     - Renewals and Cancellations
+       Time: 0.0h - 7.0h (7.0 hours)
+       Cost: $189.00
+   Total Hours: 7.0
+   Total Cost: $189.00
 
-   Resource: Frontend Developer ($85/hour)
+   Resource: Insurance Customer Support Representative ($24/hour)
    Tasks Performed:
-     - Frontend UI
-       Time: 0.0h - 0.8h (0.8 hours)
-       Cost: $66.58
-   Total Hours: 0.8
-   Total Cost: $66.58
-
-   Resource: QA Engineer ($75/hour)
-   Tasks Performed:
-     - Testing and QA
-       Time: 0.0h - 0.6h (0.6 hours)
-       Cost: $45.00
-   Total Hours: 0.6
-   Total Cost: $45.00
+     - Customer Support
+       Time: 0.0h - 6.0h (6.0 hours)
+       Cost: $144.00
+   Total Hours: 6.0
+   Total Cost: $144.00
 
    OVERALL ADMINISTRATIVE SUMMARY:
-     Total Process Duration: 0.8 hours
-     Total Process Cost: $295.65
-     Average Resource Utilization: 0.4%
-     Number of Resources Used: 6
+     Total Process Duration: 7.0 hours
+     Total Process Cost: $0.00
+     Average Resource Utilization: 0.0%
+     Number of Resources Used: 5
 
 7a. Generating Visualizations...
-   [INFO] Process type: Manufacturing
+   [INFO] Insurance process - administrative only - using Manufacturing-style visualization
    [INFO] Creating summary page...
-   [OK] Summary page saved: visualization_outputs\manufacturing_summary_5.png
+   [OK] Summary page saved: visualization_outputs\insurance_summary_12.png
    [INFO] Creating allocation page...
-   [OK] Allocation page saved: visualization_outputs\manufacturing_allocation_5.png
+   [OK] Allocation page saved: visualization_outputs\insurance_allocation_12.png
 
-   ✓ Manufacturing visualizations generated successfully!
+   ✓ Insurance visualizations generated successfully!
    ✓ Check the 'visualization_outputs' folder for PNG files
 
    [INFO] Opening visualizations...
    ✓ Images opened successfully!
 
 8. Detection Validation:
-   [INFO] Process detected as: MANUFACTURING
-   [INFO] Confidence: 98.5%
+   [INFO] Process detected as: INSURANCE
+   [INFO] Confidence: 95.0%
 
-   Manufacturing/Development Indicators Found:
-     * Development/Production in name: True
-     * Platform/Product in name: True
-     * Developer/Engineer resources: True
-     * Build/Design/Create tasks: True
-     * Testing/QA tasks: True
+   General Process Indicators:
+     * Total Tasks: 5
+     * Total Resources: 5
+     * Has Dependencies: False
 
 9. Testing Sequential Flow Detection:
 
    [OK] Critical path identified:
-     Database Design and Setup
+     Document Preparation
 
 ======================================================================
 TEST COMPLETE - SUCCESS!

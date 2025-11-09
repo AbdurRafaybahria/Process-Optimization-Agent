@@ -1,0 +1,193 @@
+{
+  "id": "11",
+  "name": "Insurance Premium Collection and Billing",
+  "process_name": "Insurance Premium Collection and Billing",
+  "process_id": 11,
+  "company": "AD Insurance Company",
+  "description": "Premium collection and billing are essential processes for ensuring that an insurance company receives the revenue it is due.",
+  "tasks": [
+    {
+      "id": "265810",
+      "name": "Invoice Generation Task",
+      "description": "Preparing and sending out invoices to policyholders",
+      "duration": 360,
+      "duration_hours": 6,
+      "required_skills": [
+        {
+          "name": "Insurance Billing Specialist / Analyst",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "InvGenr",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265818",
+      "name": "Payment Processing",
+      "description": "Receiving and processing payments from policyholders",
+      "duration": 45,
+      "duration_hours": 0.75,
+      "required_skills": [
+        {
+          "name": "Payment Processing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "265810"
+      ],
+      "order": 2,
+      "code": "PayProc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265811",
+      "name": "Account Management",
+      "description": "Managing policyholders' accounts",
+      "duration": 480,
+      "duration_hours": 8,
+      "required_skills": [
+        {
+          "name": "Insurance Account Management Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265818"
+      ],
+      "order": 3,
+      "code": "AccnMang",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265812",
+      "name": "Insurance Collections",
+      "description": "Initiating collections procedures for overdue accounts",
+      "duration": 360,
+      "duration_hours": 6,
+      "required_skills": [
+        {
+          "name": "Collection Officer",
+          "level": "expert"
+        }
+      ],
+      "dependencies": [
+        "265811"
+      ],
+      "order": 4,
+      "code": "InsCollc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265819",
+      "name": "Financial Reporting",
+      "description": "Preparing financial reports on premium collections",
+      "duration": 42,
+      "duration_hours": 0.7,
+      "required_skills": [
+        {
+          "name": "Financial Reporting Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265812"
+      ],
+      "order": 5,
+      "code": "FincReprt",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "30",
+      "name": "Insurance Billing Specialist / Analyst",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Billing Specialist / Analyst",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "InsBillSpAnl"
+    },
+    {
+      "id": "31",
+      "name": "Payment Processing Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Payment Processing Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 32,
+      "code": "PmnProcSpc"
+    },
+    {
+      "id": "32",
+      "name": "Insurance Account Management Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Account Management Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 27,
+      "code": "InsAccManSpc"
+    },
+    {
+      "id": "33",
+      "name": "Collection Officer",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Collection Officer",
+          "level": "expert"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 22,
+      "code": "CollOffc"
+    },
+    {
+      "id": "34",
+      "name": "Financial Reporting Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Financial Reporting Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 30,
+      "code": "FinRepSpec"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265810",
+      "to": "265818"
+    },
+    {
+      "from": "265818",
+      "to": "265811"
+    },
+    {
+      "from": "265811",
+      "to": "265812"
+    },
+    {
+      "from": "265812",
+      "to": "265819"
+    }
+  ]
+}

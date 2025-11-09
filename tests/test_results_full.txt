@@ -1,0 +1,15 @@
+======================================================================
+INTELLIGENT PROCESS DETECTION TEST
+======================================================================
+
+1. Loading CMS process data...
+   File: D:\Main Process Optimization Agent\visualization_outputs\17_yjj7dlep.json
+   [OK] Loaded process: fsfsafaddddddddddd22222233
+
+2. Transforming CMS data to process model...
+
+[ERROR] Process 'fsfsafaddddddddddd22222233' has only 1 task. At least 2 tasks are required for optimization.
+
+======================================================================
+TEST COMPLETE - FAILED!
+======================================================================

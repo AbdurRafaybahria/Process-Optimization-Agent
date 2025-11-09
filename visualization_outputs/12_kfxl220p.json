@@ -1,0 +1,193 @@
+{
+  "id": "12",
+  "name": "Policy Issuance and Administration",
+  "process_name": "Policy Issuance and Administration",
+  "process_id": 12,
+  "company": "AD Insurance Company",
+  "description": "Policy issuance and administration involve creating and managing insurance policies from the moment they are approved by the underwriter to when they are terminated or renewed. This process is vital for ensuring that all policy documentation is accurate, comprehensive, and legally compliant. It begins once the underwriting process is complete and the policy terms are agreed upon. The policy administration team generates the official policy documents, including coverage details, premium information, and any endorsements or riders. These documents are then delivered to the policyholder. The administration process also involves maintaining records of all active policies, processing any changes requested by the policyholder (such as changes in coverage, beneficiaries, or personal details), and managing renewals or cancellations. Effective policy administration is crucial for maintaining a positive relationship with policyholders, as it ensures their coverage is up-to-date and reflects their current needs. The process of policy issuance and administration in an insurance company forms the backbone of customer engagement and risk management. It encompasses the entire lifecycle of an insurance policy, from the moment a customer agrees to coverage terms to the ongoing service and management of the policy throughout its duration. The process begins once a client accepts a quotation and expresses the intention to proceed with coverage. At this point, the insurer prepares formal documentation that outlines the agreed-upon terms and conditions, such as the type of coverage, limits, deductibles, premium amounts, and exclusions. These documents are carefully verified to ensure legal compliance, accuracy, and alignment with underwriting (and, in case, reisurer) decisions. Once reviewed and approved, the official policy is issued, and the customer receives a copy, often both in physical and digital formats. After issuance, the policy enters the administrative phase, where it is actively managed and maintained by the insurer. This includes regular monitoring to ensure all records remain accurate and up to date. Changes in personal details, coverage needs, or risk factors may require updates to the policy documents. The administrative function ensures these modifications are recorded properly and communicated effectively to the policyholder. Customer interaction plays a significant role throughout the life of the policy. Clients may seek clarification on coverage, request additional services, or require assistance in understanding their benefits. The administrative process ensures that these interactions are managed professionally, with all inquiries recorded and resolved in a timely manner. Internal systems track all client communications, helping insurers provide consistent and transparent service. Another crucial aspect involves coordination with other departments such as underwriting, finance, and claims. For example, policy administration systems are closely linked to billing processes, ensuring premiums are invoiced and collected according to agreed schedules. This integration ensures financial accuracy and supports the company’s revenue management efforts. Regulatory compliance is embedded throughout the process. Insurers must adhere to legal standards related to policy disclosure, data protection, consumer rights, and financial conduct. Proper documentation, recordkeeping, and audit trails are essential for demonstrating compliance and avoiding legal or reputational risks. Digital transformation has significantly reshaped this area of insurance operations. Modern insurers use policy administration platforms that automate many steps of the process, allowing for faster issuance, more accurate record-keeping, and improved customer self-service options. These platforms are often integrated with customer relationship management (CRM) tools and analytics engines to enable more personalized service and proactive engagement. The process concludes either at the natural end of the policy term, through renewal, or in the event of termination or cancellation. Even in closure, all related documentation, financial reconciliations, and customer communications are handled with the same diligence as during the active policy period. In essence, policy issuance and administration represent a continuous, detail-oriented process that ensures the correct creation, maintenance, and governance of insurance policies. It balances operational efficiency, customer service, regulatory adherence, and business continuity—ultimately shaping the insurer’s reputation and client loyalty.",
+  "tasks": [
+    {
+      "id": "265813",
+      "name": "Document Preparation",
+      "description": "Inputs:Document Preparation in the context of Policy Issuance and Administration for insurance relies on several critical inputs. These include the underwriting decision and related documents (such as application forms, risk assessment reports, and quotation summaries), customer information (identification, contact details, payment method), product and coverage details (policy terms, riders, endorsements, exclusions), and regulatory compliance templates. Additionally, digital systems may provide input through policy issuance software and document generation tools that standardize and automate the creation of insurance documents.Actions (Process):The process begins once the underwriter approves the application. The Document Preparation Specialist retrieves the required inputs from internal databases or document management systems. Based on the insurance product selected, appropriate policy templates and clauses are chosen. The specialist then enters customer-specific and policy-specific data into the system, verifying the consistency of all information provided.Next, the specialist assembles the policy schedule, terms and conditions, and annexures (such as premium tables or special conditions). If necessary, personalized cover letters and disclosure statements are also drafted. Automated systems may be used to merge data into predefined templates, but manual review and editing are often required to ensure accuracy and compliance.The draft document is reviewed for completeness and legal conformity, with coordination between underwriting, compliance, and legal teams when necessary. Once finalized, the document is stored digitally and/or printed. Copies are distributed to relevant stakeholders: the insured, agents/brokers, and internal records.Outputs:&nbsp;The outputs of this process are finalized policy documents, including:Insurance Policy Contract (including schedule and T&amp;Cs)Welcome or cover letterDisclosures and regulatory noticesDigital copies stored in the Document Management SystemConfirmation notices or transmission recordsThese outputs ensure the customer receives a clear and complete statement of coverage and that the insurer retains legally compliant documentation for administration and claim settlement purposes.",
+      "duration": 360.0,
+      "duration_hours": 6.0,
+      "required_skills": [
+        {
+          "name": "Document Preparation Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 1,
+      "code": "DocPrep",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265814",
+      "name": "Record Maintenance",
+      "description": "Inputs (Documents and Information):Record Maintenance in the insurance Policy Issuance and Administration process depends on several key inputs. These include the original insurance policy documents, endorsement records, customer master data, billing and premium records, communication logs (emails, letters, calls), and regulatory compliance documents. These inputs originate from multiple sources, such as underwriting, claims, customer service, and legal departments.Actions (Process):The process of Record Maintenance involves the systematic management and updating of policy-related records throughout the policy lifecycle. It begins with creating and storing the issued policy records in the organization’s document management system or policy administration system (PAS). As the policy undergoes changes—such as endorsements, renewals, cancellations, or reinstatements—new records are generated, and existing ones must be updated or archived according to predefined data governance and compliance rules.The specialist responsible for record maintenance reviews incoming change requests or system updates, ensures the accuracy and completeness of the documents, and performs quality control to prevent duplications or inconsistencies. They categorize and index records using metadata (policy number, client ID, effective date, etc.) for easy retrieval.Additionally, they ensure records are stored in compliance with internal retention policies and external regulations, such as GDPR or Solvency II. In some cases, older documents may be digitized or transferred to long-term archives. Regular audits may also be conducted to identify and resolve discrepancies or obsolete records.Outputs (Documents and Information):&nbsp;The main outputs of this process include:Updated policy records reflecting all changes and endorsementsArchived historical versions of policy documentsAudit logs and change historiesReports for compliance or management reviewMetadata-tagged digital documents in secure repositoriesThese outputs ensure operational continuity, reinsurance processing (if applicable), regulatory compliance, accurate claims processing, and effective customer service.",
+      "duration": 420.0,
+      "duration_hours": 7.0,
+      "required_skills": [
+        {
+          "name": "Insurance Records Administrator",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265813"
+      ],
+      "order": 2,
+      "code": "RecMaint",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265815",
+      "name": "Policy Changes",
+      "description": "The Policy Administration Specialist is responsible for executing and managing changes to insurance policies throughout their lifecycle. This role sits within the insurance operations or customer service team and supports both personal and commercial lines of business.The specialist handles policy change requests from policyholders, brokers, or internal departments. Upon receiving a request, they review all submitted documentation and validate it against underwriting rules and the existing policy terms. For changes that affect coverage, such as adding endorsements or increasing limits, the specialist may collaborate with underwriters and/or reinsurers for approval.Using policy administration systems, the specialist updates customer and policy data, recalculates premiums, and ensures that policy records remain consistent and compliant. They also generate revised documentation and send confirmations to clients and brokers. They ensure all transactions are logged properly and meet internal quality and compliance standards.The role requires communication with various stakeholders including underwriters, agents, claims personnel, and sometimes directly with customers. The Policy Administration Specialist ensures customer satisfaction by processing changes promptly and accurately, thus maintaining trust and operational efficiency.This role is essential for maintaining accurate records, enabling timely premium collection, supporting claims accuracy, and ensuring ongoing customer service quality throughout the life of the insurance contract.",
+      "duration": 360.0,
+      "duration_hours": 6.0,
+      "required_skills": [
+        {
+          "name": "Policy Administration Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265814"
+      ],
+      "order": 3,
+      "code": "PolcChang",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265816",
+      "name": "Renewals and Cancellations",
+      "description": "The Renewals and Cancellations task is a critical component of the Policy Issuance and Administration process in the insurance industry. It involves managing the continuation or termination of active insurance policies, ensuring compliance with contractual terms, regulatory requirements, and customer needs.Inputs for this task include:Existing insurance policy data (terms, conditions, premiums, duration)Customer records and communication historyClaims history and loss ratio analysisRenewal notices and automatic renewal parametersCancellation requests submitted by policyholders or agentsNon-payment records or underwriting decision inputsRegulatory guidelines and company policy rulesThe&nbsp;actions&nbsp;involved in&nbsp;renewals&nbsp;typically start with the system generating a list of policies nearing expiry. Based on underwriting guidelines and claims performance, the insurer decides whether to offer renewal, modify terms, or decline renewal. If approved, renewal offers are generated and sent to the customer, who may accept, negotiate, or reject them. In some cases, policies are set to automatically renew unless canceled by the policyholder.For&nbsp;cancellations, the process may be initiated by the insurer (e.g., due to non-payment, material misrepresentation, or policy violation) or by the customer (e.g., change in needs, dissatisfaction, duplicate coverage). The insurer reviews the request, verifies policy terms and the timing of the cancellation (e.g., mid-term or at renewal), calculates any return premium due, and updates internal systems to reflect the change. Communications are sent to the customer and relevant parties (e.g., agents, finance, regulators).Outputs of this task include:Renewed policy documents or amended certificatesCancellation confirmation lettersUpdated policy administration system recordsFinancial records for pro-rata refunds or adjustmentsCompliance reports and audit logsRenewals and cancellations play a major role in customer retention, risk management, and financial planning for insurers.",
+      "duration": 420.0,
+      "duration_hours": 7.0,
+      "required_skills": [
+        {
+          "name": "Policy Renewal and Cancellation Specialist",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265815"
+      ],
+      "order": 4,
+      "code": "RenCanc",
+      "user_involvement": "admin"
+    },
+    {
+      "id": "265817",
+      "name": "Customer Support",
+      "description": "Customer Support plays a vital role in the Policy Issuance and Administration process of an insurance company. It serves as the primary interface between the policyholder and the insurer, ensuring that inquiries, requests, and concerns are addressed throughout the policy lifecycle—from issuance to renewal or cancellation.Inputs&nbsp;to the customer support task include:Customer contact details and interaction historyPolicy documents (e.g., quotations, cover notes, schedules, endorsements)Standard operating procedures (SOPs) and policy administration guidelinesInternal records from underwriting, claims, billing, and renewal departmentsCustomer queries, complaints, or service requests (received via phone, email, web portal, or chatbot)The&nbsp;actions&nbsp;involved in customer support include:Handling inquiries: Responding to questions about coverage, policy status, premiums, or documentation.Facilitating policy updates: Assisting customers with address changes, beneficiary modifications, or endorsement requests.Coordinating with departments: Escalating technical issues or out-of-scope queries to relevant teams (e.g., underwriting, IT, or billing).Resolving complaints: Providing resolution to service-related problems, documenting cases, and following up to ensure closure.Guiding through digital tools: Helping policyholders navigate self-service portals or mobile apps.Ensuring regulatory compliance: Verifying customer identity and documenting interactions in line with KYC, GDPR, and other insurance regulations.Outputs&nbsp;of the customer support task include:Resolution records and case closure summariesUpdated customer profile or policy dataCommunication logs (calls, emails, chat transcripts)Feedback forms and service quality dataReports on customer satisfaction, issue trends, and turnaround timesCustomer support is critical to building trust, enhancing policyholder experience, and ensuring the smooth flow of information between clients and insurance operations",
+      "duration": 360.0,
+      "duration_hours": 6.0,
+      "required_skills": [
+        {
+          "name": "Insurance Customer Support Representative",
+          "level": "beginner"
+        }
+      ],
+      "dependencies": [
+        "265816"
+      ],
+      "order": 5,
+      "code": "CustSupprt",
+      "user_involvement": "admin"
+    }
+  ],
+  "resources": [
+    {
+      "id": "35",
+      "name": "Document Preparation Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Document Preparation Specialist",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 22,
+      "code": "INSDocPrepSp"
+    },
+    {
+      "id": "36",
+      "name": "Insurance Records Administrator",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Records Administrator",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 25,
+      "code": "INSRecAdm"
+    },
+    {
+      "id": "37",
+      "name": "Policy Administration Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Policy Administration Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 28,
+      "code": "InsAdmSpc"
+    },
+    {
+      "id": "38",
+      "name": "Policy Renewal and Cancellation Specialist",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Policy Renewal and Cancellation Specialist",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 27,
+      "code": "INSRenCanc"
+    },
+    {
+      "id": "39",
+      "name": "Insurance Customer Support Representative",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Insurance Customer Support Representative",
+          "level": "beginner"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 24,
+      "code": "InsCustSupRep"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "265813",
+      "to": "265814"
+    },
+    {
+      "from": "265814",
+      "to": "265815"
+    },
+    {
+      "from": "265815",
+      "to": "265816"
+    },
+    {
+      "from": "265816",
+      "to": "265817"
+    }
+  ]
+}

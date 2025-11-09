@@ -31,17 +31,17 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # Import CMS integration modules
-from process_optimization_agent.cms_client import CMSClient
-from process_optimization_agent.cms_transformer import CMSDataTransformer
-from process_optimization_agent.intelligent_optimizer import IntelligentOptimizer
+from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
 
 import webbrowser as _webbrowser
 import os as _os
 
 try:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "scripts"))
     import run_rl_optimizer as optimizer
 except Exception as e:
-    raise RuntimeError(f"Failed to import run_rl_optimizer: {e}")
+    logger.warning(f"Failed to import run_rl_optimizer: {e}. Some features may be unavailable.")
+    optimizer = None
 
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "visualization_outputs")
 
@@ -145,7 +145,8 @@ def run_optimizer_and_collect(process_json_path: str, process_id: Optional[str] 
         logger.info(f"Output directory ensured: {OUTPUTS_DIR}")
         
         # Run the test_process_detection.py as a subprocess with timeout
-        cmd = [sys.executable, "test_process_detection.py", process_json_path]
+        test_script = os.path.join(PROJECT_ROOT, "tests", "test_process_detection.py")
+        cmd = [sys.executable, test_script, process_json_path]
         logger.info(f"Running command: {' '.join(cmd)}")
         
         result = subprocess.run(
@@ -297,8 +298,18 @@ async def optimize_cms_process(process_id: int, authorization: Optional[str] = H
     if not cms_data:
         raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
     
-    # Transform to agent format
-    agent_format = transformer.transform_process(cms_data)
+    # Transform to agent format with validation
+    try:
+        agent_format = transformer.transform_process(cms_data)
+    except ProcessValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+                "process_id": process_id
+            }
+        )
     
     # Write to temp file and optimize
     meta = await asyncio.to_thread(write_temp_process_json, agent_format)
@@ -346,8 +357,18 @@ async def optimize_cms_process_alloc_png(process_id: int, authorization: Optiona
     if not cms_data:
         raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
     
-    # Transform to agent format
-    agent_format = transformer.transform_process(cms_data)
+    # Transform to agent format with validation
+    try:
+        agent_format = transformer.transform_process(cms_data)
+    except ProcessValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+                "process_id": process_id
+            }
+        )
     
     # Write to temp file and optimize
     meta = await asyncio.to_thread(write_temp_process_json, agent_format)
@@ -378,8 +399,18 @@ async def optimize_cms_process_summary_png(process_id: int, authorization: Optio
     if not cms_data:
         raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
     
-    # Transform to agent format
-    agent_format = transformer.transform_process(cms_data)
+    # Transform to agent format with validation
+    try:
+        agent_format = transformer.transform_process(cms_data)
+    except ProcessValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+                "process_id": process_id
+            }
+        )
     
     # Write to temp file and optimize
     meta = await asyncio.to_thread(write_temp_process_json, agent_format)
