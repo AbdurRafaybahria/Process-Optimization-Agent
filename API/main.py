@@ -55,7 +55,7 @@ app.add_middleware(
     allow_origins=[
         "https://fyp-cms-frontend.vercel.app",
         "http://localhost:3000",
-        "https://server-digitaltwin-enterprise-testing.up.railway.app",
+        "https://crystalsystemcms-testing-e377.up.railway.app",
         "https://crystalsystemcms-production.up.railway.app",
         "http://localhost:3001",
         "http://127.0.0.1:3000",
