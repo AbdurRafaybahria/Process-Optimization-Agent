@@ -32,6 +32,14 @@ except ImportError:
 from .models import Task, Resource, Process, Schedule, ScheduleEntry
 from typing import Tuple
 
+# Import the advanced NLP dependency analyzer
+try:
+    from .nlp_dependency_analyzer import NLPDependencyAnalyzer, TaskRelationship, DependencyType
+    NLP_ANALYZER_AVAILABLE = True
+except ImportError:
+    NLP_ANALYZER_AVAILABLE = False
+    print("Warning: NLP Dependency Analyzer not available. Using basic detection only.")
+
 
 class DependencyDetector:
     """Detects dependencies between tasks using NLP and rule-based methods"""
@@ -49,6 +57,15 @@ class DependencyDetector:
         self.process_type = process_type
         self.nlp = None
         self.vectorizer = TfidfVectorizer(stop_words='english')
+        
+        # Initialize advanced NLP analyzer if available
+        self.nlp_analyzer = None
+        if use_nlp and NLP_ANALYZER_AVAILABLE:
+            try:
+                self.nlp_analyzer = NLPDependencyAnalyzer(use_advanced_nlp=True)
+                print("Advanced NLP Dependency Analyzer initialized successfully")
+            except Exception as e:
+                print(f"Warning: Could not initialize NLP Analyzer: {e}")
         
         if use_nlp:
             try:
@@ -105,7 +122,16 @@ class DependencyDetector:
         # Initialize dependencies dictionary
         dependencies = defaultdict(set)
         
-        # Process each task
+        # Use advanced NLP analyzer if available
+        if self.nlp_analyzer is not None and tasks:
+            all_tasks = tasks if not other_tasks else tasks + other_tasks
+            nlp_dependencies = self._detect_nlp_dependencies(all_tasks)
+            
+            # Merge NLP-detected dependencies
+            for task_id, deps in nlp_dependencies.items():
+                dependencies[task_id].update(deps)
+        
+        # Process each task with traditional methods
         for task in tasks:
             # Detect dependencies for this task
             task_deps = self._detect_single_task_dependencies(task, other_tasks)
@@ -195,6 +221,53 @@ class DependencyDetector:
                                 break
         
         return dependencies
+    
+    def _detect_nlp_dependencies(self, tasks: List[Task]) -> Dict[str, Set[str]]:
+        """
+        Use advanced NLP analyzer to detect dependencies between tasks.
+        
+        Args:
+            tasks: List of tasks to analyze
+            
+        Returns:
+            Dict mapping task IDs to sets of dependent task IDs
+        """
+        if not self.nlp_analyzer or not tasks:
+            return {}
+        
+        dependencies = defaultdict(set)
+        
+        try:
+            # Prepare task data for NLP analyzer
+            task_data = []
+            for task in tasks:
+                task_data.append({
+                    'id': task.id,
+                    'name': task.name,
+                    'description': getattr(task, 'description', '')
+                })
+            
+            # Analyze all tasks and their relationships
+            analyses, relationships = self.nlp_analyzer.analyze_all_tasks(task_data)
+            
+            # Convert relationships to dependencies
+            # High confidence sequential relationships become dependencies
+            for rel in relationships:
+                if not rel.can_parallelize and rel.confidence >= 0.7:
+                    # Task 2 depends on Task 1 (Task 1 must complete before Task 2)
+                    dependencies[rel.task2_id].add(rel.task1_id)
+                    
+                    # Log the reasoning for debugging
+                    if rel.confidence >= 0.8:
+                        print(f"  [NLP] High confidence dependency: {rel.task1_id} → {rel.task2_id}")
+                        print(f"        Confidence: {rel.confidence:.2f}, Reasons: {', '.join(rel.reasons[:2])}")
+            
+        except Exception as e:
+            print(f"Warning: Error in advanced NLP dependency detection: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        return dict(dependencies)
     
     def _detect_similarity_based_parallelism(self, tasks: List[Task]) -> Dict[str, Set[str]]:
         """Detect tasks that can run in parallel based on description similarity
@@ -643,11 +716,35 @@ class DependencyDetector:
     
     def detect_parallel_opportunities(self, tasks: List[Task]) -> List[List[str]]:
         """
-        Detect tasks that can be executed in parallel
+        Detect tasks that can be executed in parallel using advanced NLP analysis
         Returns groups of task IDs that can run simultaneously
         """
         parallel_groups = []
         
+        # Use advanced NLP analyzer if available
+        if self.nlp_analyzer is not None and tasks:
+            try:
+                # Prepare task data
+                task_data = []
+                for task in tasks:
+                    task_data.append({
+                        'id': task.id,
+                        'name': task.name,
+                        'description': getattr(task, 'description', '')
+                    })
+                
+                # Get parallelization groups from NLP analyzer
+                nlp_groups = self.nlp_analyzer.get_parallelization_groups(task_data, min_confidence=0.7)
+                
+                if nlp_groups:
+                    print(f"  [NLP] Detected {len(nlp_groups)} parallelization groups")
+                    for i, group in enumerate(nlp_groups):
+                        print(f"        Group {i+1}: {len(group)} tasks can run in parallel")
+                    return nlp_groups
+            except Exception as e:
+                print(f"Warning: Error in NLP parallel detection: {e}")
+        
+        # Fallback to traditional method
         # Find tasks with no dependencies or same dependencies
         dependency_groups = defaultdict(list)
         for task in tasks:

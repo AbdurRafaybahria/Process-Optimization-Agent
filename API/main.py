@@ -436,6 +436,366 @@ async def optimize_cms_process_summary_png(process_id: int, authorization: Optio
 # Legacy name-based endpoints (/optimize/alloc_png, /optimize/summary_png, /optimize/bundle) removed.
 
 
+@app.post("/cms/optimize/{process_id}/json")
+async def optimize_cms_process_json(process_id: int, authorization: Optional[str] = Header(None)):
+    """
+    Fetch process from CMS, optimize it, and return complete optimization results in JSON format.
+    
+    Input: process_id
+    Output: Complete optimization data including:
+        - Process information
+        - Current state (before optimization)
+        - Optimized state (after optimization)  
+        - Suggestions and recommendations
+        - Task assignments
+        - Parallel execution opportunities
+        - Constraints and risks
+        - Implementation steps
+    """
+    # Use provided token or authenticate dynamically
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    # CMSClient will authenticate automatically if token is None
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    try:
+        # Fetch process from CMS
+        cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+        if not cms_data:
+            raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+        
+        # Transform to agent format with validation
+        try:
+            agent_format = transformer.transform_process(cms_data)
+        except ProcessValidationError as e:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": e.error_code,
+                    "message": e.message,
+                    "process_id": process_id
+                }
+            )
+        
+        # Run optimization using IntelligentOptimizer
+        from process_optimization_agent import ProcessIntelligence, ProcessType
+        from process_optimization_agent.Optimization.models import Process, Task, Resource, Skill, SkillLevel
+        
+        # Convert agent_format to Process object
+        process = Process(
+            id=agent_format.get("id", str(process_id)),
+            name=agent_format.get("process_name", ""),
+            description=agent_format.get("description", ""),
+            tasks=[],
+            resources=[]
+        )
+        
+        # Add tasks
+        for task_data in agent_format.get("tasks", []):
+            # Handle required_skills which can be either strings or dicts
+            required_skills = []
+            for skill in task_data.get("required_skills", []):
+                if isinstance(skill, dict):
+                    skill_name = skill.get("name", skill.get("skill_name", ""))
+                else:
+                    skill_name = str(skill)
+                if skill_name:
+                    required_skills.append(Skill(name=skill_name, level=SkillLevel.INTERMEDIATE))
+            
+            task = Task(
+                id=task_data["id"],
+                name=task_data["name"],
+                description=task_data.get("description", ""),
+                duration_hours=task_data["duration_hours"],
+                required_skills=required_skills
+            )
+            process.tasks.append(task)
+        
+        # Add resources
+        for resource_data in agent_format.get("resources", []):
+            # Handle skills which can be either strings or dicts
+            skills = []
+            for skill in resource_data.get("skills", []):
+                if isinstance(skill, dict):
+                    skill_name = skill.get("name", skill.get("skill_name", ""))
+                else:
+                    skill_name = str(skill)
+                if skill_name:
+                    skills.append(Skill(name=skill_name, level=SkillLevel.INTERMEDIATE))
+            
+            resource = Resource(
+                id=resource_data["id"],
+                name=resource_data["name"],
+                hourly_rate=resource_data.get("hourly_rate", 0),
+                skills=skills
+            )
+            process.resources.append(resource)
+        
+        # Run intelligent optimization
+        intelligent_optimizer = IntelligentOptimizer()
+        optimization_result = await asyncio.to_thread(intelligent_optimizer.optimize, process)
+        
+        # Calculate metrics
+        schedule = optimization_result.schedule
+        
+        # Calculate current state (sequential execution)
+        current_total_time = sum(task.duration_hours for task in process.tasks)
+        current_total_cost = sum(
+            task.duration_hours * (
+                next((r.hourly_rate for r in process.resources 
+                     if any(ts.name in [rs.name for rs in r.skills] 
+                           for ts in task.required_skills)), 50)
+            )
+            for task in process.tasks
+        )
+        
+        # Calculate optimized state
+        if schedule and schedule.entries:
+            optimized_total_time = max(entry.end_hour for entry in schedule.entries)
+            optimized_total_cost = sum(
+                (entry.end_hour - entry.start_hour) * 
+                next((r.hourly_rate for r in process.resources if r.id == entry.resource_id), 50)
+                for entry in schedule.entries
+            )
+        else:
+            optimized_total_time = current_total_time
+            optimized_total_cost = current_total_cost
+        
+        # Calculate time saved
+        time_saved = current_total_time - optimized_total_time
+        time_saved_percentage = (time_saved / current_total_time * 100) if current_total_time > 0 else 0
+        
+        # Build task assignments
+        task_assignments = []
+        for entry in schedule.entries if schedule else []:
+            task = next((t for t in process.tasks if t.id == entry.task_id), None)
+            resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+            if task and resource:
+                task_assignments.append({
+                    "task_name": task.name,
+                    "task_id": task.id,
+                    "resource_name": resource.name,
+                    "resource_id": resource.id,
+                    "hourly_rate": resource.hourly_rate,
+                    "duration_hours": entry.end_hour - entry.start_hour,
+                    "duration_minutes": (entry.end_hour - entry.start_hour) * 60,
+                    "start_time": entry.start_hour,
+                    "end_time": entry.end_hour,
+                    "cost": (entry.end_hour - entry.start_hour) * resource.hourly_rate
+                })
+        
+        # Identify parallel execution opportunities
+        parallel_tasks = []
+        if schedule and schedule.entries:
+            # Group tasks by start time
+            time_groups = {}
+            for entry in schedule.entries:
+                if entry.start_hour not in time_groups:
+                    time_groups[entry.start_hour] = []
+                time_groups[entry.start_hour].append(entry)
+            
+            # Find parallel execution points
+            for start_time, entries in time_groups.items():
+                if len(entries) > 1:
+                    task_names = [next((t.name for t in process.tasks if t.id == e.task_id), "") for e in entries]
+                    parallel_tasks.append({
+                        "start_time": start_time,
+                        "task_count": len(entries),
+                        "tasks": task_names
+                    })
+        
+        # Generate suggestions
+        suggestions = []
+        
+        # Suggestion 1: Parallel Processing
+        if time_saved > 0:
+            suggestions.append({
+                "id": "opt_001",
+                "title": "Implement Parallel Processing",
+                "description": f"Run {len(process.tasks)} independent tasks simultaneously instead of sequentially",
+                "type": "parallel_processing",
+                "category": "quick_win",
+                "impact": {
+                    "time_saved": f"{time_saved:.2f} hours",
+                    "time_saved_percentage": f"{time_saved_percentage:.1f}%",
+                    "cost_change": f"${optimized_total_cost - current_total_cost:.2f}",
+                    "cost_impact": "Increased" if optimized_total_cost > current_total_cost else "Reduced"
+                },
+                "implementation": {
+                    "difficulty_level": 2,
+                    "difficulty_stars": "⭐⭐",
+                    "risk_level": "LOW",
+                    "estimated_time": "2-3 weeks"
+                },
+                "details": {
+                    "what_changes": "Tasks will run simultaneously instead of sequentially",
+                    "resources_needed": [
+                        "2 hours manager time for coordination",
+                        f"{len(process.resources)} hours training (1 hour per specialist)"
+                    ],
+                    "success_metrics": [
+                        f"Process completion time < {optimized_total_time + 2} hours",
+                        "No increase in error rates",
+                        "All specialists can work independently"
+                    ],
+                    "risks": [
+                        "Coordination challenges between specialists",
+                        "Quality issues from lack of sequential verification"
+                    ],
+                    "mitigation": [
+                        "Daily 15-minute sync meetings for first month",
+                        "Quality checkpoints at 25%, 50%, 75% completion"
+                    ]
+                },
+                "implementation_steps": [
+                    {
+                        "phase": 1,
+                        "title": "Preparation",
+                        "duration": "Week 1-2",
+                        "tasks": [
+                            f"Meet with all {len(process.resources)} specialists",
+                            "Explain new parallel workflow",
+                            "Set up communication protocols"
+                        ]
+                    },
+                    {
+                        "phase": 2,
+                        "title": "Pilot Testing",
+                        "duration": "Week 3-4",
+                        "tasks": [
+                            "Run pilot with 3-5 test processes",
+                            "Monitor for issues and bottlenecks",
+                            "Collect feedback from team"
+                        ]
+                    },
+                    {
+                        "phase": 3,
+                        "title": "Full Implementation",
+                        "duration": "Week 5-6",
+                        "tasks": [
+                            "Roll out to all processes",
+                            "Intensive monitoring and support",
+                            "Document lessons learned"
+                        ]
+                    }
+                ],
+                "status": "pending",
+                "can_implement_independently": True
+            })
+        
+        # Suggestion 2: Resource Optimization (if there are cost savings opportunities)
+        if len(process.resources) > 1:
+            suggestions.append({
+                "id": "opt_002",
+                "title": "Optimize Resource Skill Matching",
+                "description": "Better match tasks to specialist skills for improved efficiency",
+                "type": "resource_optimization",
+                "category": "quick_win",
+                "impact": {
+                    "time_saved": "0 hours",
+                    "cost_impact": "Potential cost reduction through better matching",
+                    "quality_improvement": "Higher quality through specialized assignments"
+                },
+                "implementation": {
+                    "difficulty_level": 1,
+                    "difficulty_stars": "⭐",
+                    "risk_level": "LOW",
+                    "estimated_time": "1 week"
+                },
+                "status": "pending",
+                "can_implement_independently": True
+            })
+        
+        # Build the complete response
+        response = {
+            "process_id": str(process_id),
+            "process_name": process.name,
+            "company": agent_format.get("company", ""),
+            "process_type": {
+                "type": optimization_result.detected_type.name if hasattr(optimization_result, 'detected_type') else "GENERIC",
+                "confidence": getattr(optimization_result, 'confidence', 0),
+                "strategy": getattr(optimization_result, 'strategy', "")
+            },
+            "optimization_summary": {
+                "total_suggestions": len(suggestions),
+                "potential_time_saved": f"{time_saved:.2f} hours",
+                "potential_time_saved_percentage": f"{time_saved_percentage:.1f}%",
+                "cost_impact": "Increased" if optimized_total_cost > current_total_cost else "Reduced",
+                "implementation_complexity": "Medium",
+                "quick_wins_count": sum(1 for s in suggestions if s.get("category") == "quick_win"),
+                "long_term_count": sum(1 for s in suggestions if s.get("category") == "long_term")
+            },
+            "current_state": {
+                "total_time_hours": current_total_time,
+                "total_time_minutes": current_total_time * 60,
+                "total_cost": current_total_cost,
+                "resource_count": len(process.resources),
+                "task_count": len(process.tasks),
+                "execution_mode": "sequential"
+            },
+            "optimized_state": {
+                "total_time_hours": optimized_total_time,
+                "total_time_minutes": optimized_total_time * 60,
+                "total_cost": optimized_total_cost,
+                "time_saved_hours": time_saved,
+                "time_saved_minutes": time_saved * 60,
+                "time_saved_percentage": time_saved_percentage,
+                "execution_mode": "parallel" if parallel_tasks else "sequential"
+            },
+            "suggestions": suggestions,
+            "task_assignments": task_assignments,
+            "parallel_execution": {
+                "enabled": len(parallel_tasks) > 0,
+                "parallel_groups": parallel_tasks,
+                "total_parallel_tasks": sum(pt["task_count"] for pt in parallel_tasks)
+            },
+            "constraints": {
+                "dependencies": [],
+                "resource_limitations": [f"{r.name}: {r.max_hours_per_day} hours/day" for r in process.resources if hasattr(r, 'max_hours_per_day')],
+                "skill_requirements": [f"{t.name} requires {', '.join(s.name for s in t.required_skills)}" for t in process.tasks if t.required_skills]
+            },
+            "risks": [
+                {
+                    "risk": "Quality Degradation",
+                    "probability": "Medium",
+                    "impact": "High",
+                    "mitigation": "Implement quality checkpoints and random audits"
+                },
+                {
+                    "risk": "Staff Resistance to Change",
+                    "probability": "High",
+                    "impact": "Medium",
+                    "mitigation": "Involve staff in design, provide training, gradual rollout"
+                },
+                {
+                    "risk": "Coordination Failures",
+                    "probability": "Low",
+                    "impact": "High",
+                    "mitigation": "Regular sync meetings and clear communication protocols"
+                }
+            ],
+            "improvements": {
+                "time_efficiency": f"{time_saved_percentage:.1f}% faster",
+                "cost_efficiency": f"${abs(optimized_total_cost - current_total_cost):.2f} {'increase' if optimized_total_cost > current_total_cost else 'decrease'}",
+                "resource_utilization": "Improved through parallel execution",
+                "process_flexibility": "Enhanced ability to handle variable workloads"
+            }
+        }
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in optimize_cms_process_json: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Optimization failed: {str(e)}"
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("API.main:app", host="0.0.0.0", port=8000, reload=True)

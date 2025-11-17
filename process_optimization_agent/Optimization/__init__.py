@@ -31,6 +31,17 @@ from .process_intelligence import ProcessIntelligence, ProcessType, Optimization
 from .user_journey_optimizer import UserJourneyOptimizer, UserJourneyMetrics
 from .task_classifier import TaskClassifier
 
+# Import NLP dependency analyzer (optional)
+try:
+    from .nlp_dependency_analyzer import NLPDependencyAnalyzer, TaskRelationship, DependencyType, ConfidenceLevel
+    NLP_ANALYZER_AVAILABLE = True
+except ImportError:
+    NLP_ANALYZER_AVAILABLE = False
+    NLPDependencyAnalyzer = None
+    TaskRelationship = None
+    DependencyType = None
+    ConfidenceLevel = None
+
 # Domain-specific modules from scenarios
 from ..scenarios.healthcare.healthcare_optimizer import HealthcareOptimizer
 from ..scenarios.healthcare.healthcare_models import HealthcareProcess, HealthcareMetrics
@@ -51,6 +62,8 @@ __all__ = [
     'ProcessIntelligence', 'ProcessType', 'OptimizationStrategy',
     'UserJourneyOptimizer', 'UserJourneyMetrics', 'TaskClassifier',
     'Visualizer', 'VISUALIZATION_AVAILABLE',
+    # NLP components
+    'NLPDependencyAnalyzer', 'TaskRelationship', 'DependencyType', 'ConfidenceLevel', 'NLP_ANALYZER_AVAILABLE',
     # Domain-specific
     'HealthcareOptimizer', 'HealthcareProcess', 'HealthcareMetrics',
     'ManufacturingOptimizer', 'ManufacturingProcess', 'ManufacturingMetrics',
