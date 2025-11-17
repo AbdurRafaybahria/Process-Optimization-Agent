@@ -714,10 +714,19 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             "process_id": str(process_id),
             "process_name": process.name,
             "company": agent_format.get("company", ""),
+            # High-level process classification (which domain this process belongs to)
             "process_type": {
-                "type": optimization_result.detected_type.name if hasattr(optimization_result, 'detected_type') else "GENERIC",
-                "confidence": getattr(optimization_result, 'confidence', 0),
-                "strategy": getattr(optimization_result, 'strategy', "")
+                # e.g. "manufacturing", "insurance", "healthcare", etc.
+                "type": getattr(optimization_result, "process_type", None).value if getattr(optimization_result, "process_type", None) else "GENERIC",
+                # Overall confidence from the intelligent optimizer
+                "confidence": getattr(optimization_result, "confidence", 0),
+                # Optimization strategy actually used, e.g. "parallel_production", "insurance_workflow"
+                "strategy": getattr(optimization_result, "optimization_strategy", None).value if getattr(optimization_result, "optimization_strategy", None) else "",
+                # Scenario type for insurance workflows (e.g. "STANDARD_BILLING"), if available
+                "scenario_type": (optimization_result.admin_metrics.get("scenario_type")
+                                   if getattr(optimization_result, "admin_metrics", None)
+                                   and isinstance(optimization_result.admin_metrics, dict)
+                                   else None)
             },
             "optimization_summary": {
                 "total_suggestions": len(suggestions),

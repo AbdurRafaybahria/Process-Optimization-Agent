@@ -3,9 +3,10 @@
   "process_name": "Insurance Premium Collection and Billing",
   "company": "AD Insurance Company",
   "process_type": {
-    "type": "GENERIC",
+    "type": "insurance",
     "confidence": 0.8086634083438341,
-    "strategy": ""
+    "strategy": "insurance_workflow",
+    "scenario_type": "standard_billing"
   },
   "optimization_summary": {
     "total_suggestions": 2,
