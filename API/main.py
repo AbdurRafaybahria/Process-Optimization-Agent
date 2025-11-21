@@ -588,10 +588,93 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "cost": (entry.end_hour - entry.start_hour) * resource.hourly_rate
                 })
         
-        # Identify parallel execution opportunities
+        # Identify parallel execution opportunities with step-by-step flow
         parallel_tasks = []
+        parallel_execution_steps = []
+        
         if schedule and schedule.entries:
-            # Group tasks by start time
+            # Sort entries by end time to track completion order
+            sorted_by_end = sorted(schedule.entries, key=lambda e: e.end_hour)
+            
+            # Create timeline events (start and end)
+            timeline_events = []
+            for entry in schedule.entries:
+                task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                if task and resource:
+                    timeline_events.append({
+                        'time': entry.start_hour,
+                        'type': 'start',
+                        'task_id': entry.task_id,
+                        'task_name': task.name,
+                        'resource_name': resource.name,
+                        'duration': entry.end_hour - entry.start_hour,
+                        'end_time': entry.end_hour
+                    })
+                    timeline_events.append({
+                        'time': entry.end_hour,
+                        'type': 'end',
+                        'task_id': entry.task_id,
+                        'task_name': task.name,
+                        'resource_name': resource.name
+                    })
+            
+            # Sort by time, with ends before starts at the same time
+            timeline_events.sort(key=lambda e: (e['time'], 0 if e['type'] == 'end' else 1))
+            
+            # Track active tasks at each step
+            active_tasks = {}  # task_id -> task info
+            step_number = 0
+            previous_time = None
+            
+            for event in timeline_events:
+                current_time = event['time']
+                
+                # Process the event
+                if event['type'] == 'start':
+                    active_tasks[event['task_id']] = {
+                        'task_name': event['task_name'],
+                        'resource_name': event['resource_name'],
+                        'duration_hours': event['duration'],
+                        'start_time': current_time,
+                        'end_time': event['end_time']
+                    }
+                else:  # end event
+                    if event['task_id'] in active_tasks:
+                        del active_tasks[event['task_id']]
+                
+                # Create a step when the active task set changes
+                # Skip if this is the same time as previous (batch changes together)
+                if current_time != previous_time and active_tasks:
+                    step_number += 1
+                    
+                    # Sort tasks by end time (tasks finishing sooner appear first)
+                    sorted_active = sorted(
+                        active_tasks.items(),
+                        key=lambda x: x[1]['end_time']
+                    )
+                    
+                    parallel_execution_steps.append({
+                        "step": step_number,
+                        "time": current_time,
+                        "active_task_count": len(active_tasks),
+                        "active_tasks": [
+                            {
+                                "task_name": info['task_name'],
+                                "resource_name": info['resource_name'],
+                                "duration_hours": info['duration_hours'],
+                                "start_time": info['start_time'],
+                                "end_time": info['end_time'],
+                                "remaining_time": max(0, info['end_time'] - current_time)
+                            }
+                            for task_id, info in sorted_active
+                        ],
+                        "description": f"Step {step_number}: {len(active_tasks)} task(s) running in parallel at t={current_time:.2f}h"
+                    })
+                    
+                    previous_time = current_time
+            
+            # Group tasks by start time for backward compatibility
             time_groups = {}
             for entry in schedule.entries:
                 if entry.start_hour not in time_groups:
@@ -760,7 +843,9 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             "parallel_execution": {
                 "enabled": len(parallel_tasks) > 0,
                 "parallel_groups": parallel_tasks,
-                "total_parallel_tasks": sum(pt["task_count"] for pt in parallel_tasks)
+                "total_parallel_tasks": sum(pt["task_count"] for pt in parallel_tasks),
+                "execution_steps": parallel_execution_steps,
+                "total_steps": len(parallel_execution_steps)
             },
             "constraints": {
                 "dependencies": [],
