@@ -588,9 +588,16 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "cost": (entry.end_hour - entry.start_hour) * resource.hourly_rate
                 })
         
-        # Identify parallel execution opportunities with step-by-step flow
+        # Analyze execution patterns: parallel vs sequential
         parallel_tasks = []
+        sequential_tasks = []
         parallel_execution_steps = []
+        execution_pattern_analysis = {
+            "total_tasks": len(process.tasks),
+            "parallel_tasks_count": 0,
+            "sequential_tasks_count": 0,
+            "execution_mode": "unknown"
+        }
         
         if schedule and schedule.entries:
             # Sort entries by end time to track completion order
@@ -674,22 +681,202 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     
                     previous_time = current_time
             
-            # Group tasks by start time for backward compatibility
+            # Build network diagram structure for frontend
+            network_diagram = {
+                "start": {
+                    "type": "start",
+                    "label": "Start",
+                    "time": 0.0
+                },
+                "stages": [],
+                "finish": {
+                    "type": "finish",
+                    "label": "Finish",
+                    "time": 0.0
+                }
+            }
+            
+            # Track all unique time points where tasks start or end
+            time_points = set()
+            for entry in schedule.entries:
+                time_points.add(entry.start_hour)
+                time_points.add(entry.end_hour)
+            
+            # Sort time points to create stages
+            sorted_times = sorted(time_points)
+            
+            # Build stages based on active tasks at each time point
+            stage_number = 0
+            for i, current_time in enumerate(sorted_times):
+                # Find all tasks active at this time
+                active_at_time = []
+                for entry in schedule.entries:
+                    if entry.start_hour <= current_time < entry.end_hour:
+                        task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                        resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                        if task and resource:
+                            active_at_time.append({
+                                "task_id": task.id,
+                                "task_name": task.name,
+                                "resource_name": resource.name,
+                                "duration_hours": entry.end_hour - entry.start_hour,
+                                "start_time": entry.start_hour,
+                                "end_time": entry.end_hour,
+                                "progress": ((current_time - entry.start_hour) / (entry.end_hour - entry.start_hour) * 100) if entry.end_hour > entry.start_hour else 100,
+                                "has_dependencies": bool(task.dependencies) if task.dependencies else False
+                            })
+                
+                # Only create a stage if there are active tasks
+                if active_at_time:
+                    stage_number += 1
+                    
+                    # Determine execution type for this stage
+                    execution_type = "parallel" if len(active_at_time) > 1 else "sequential"
+                    
+                    network_diagram["stages"].append({
+                        "stage": stage_number,
+                        "time": current_time,
+                        "execution_type": execution_type,
+                        "active_task_count": len(active_at_time),
+                        "tasks": active_at_time,
+                        "description": f"Stage {stage_number}: {len(active_at_time)} task(s) active at t={current_time:.2f}h"
+                    })
+            
+            # Set finish time
+            if schedule.entries:
+                network_diagram["finish"]["time"] = max(entry.end_hour for entry in schedule.entries)
+            
+            # Group tasks by start time for execution pattern analysis
             time_groups = {}
             for entry in schedule.entries:
                 if entry.start_hour not in time_groups:
                     time_groups[entry.start_hour] = []
                 time_groups[entry.start_hour].append(entry)
             
-            # Find parallel execution points
-            for start_time, entries in time_groups.items():
+            # Identify parallel vs sequential execution patterns
+            # First, analyze the actual schedule to see what's happening
+            parallel_task_ids = set()
+            sequential_task_ids = set()
+            
+            # Build a map of when each task actually starts
+            task_start_times = {}
+            for entry in schedule.entries:
+                task_start_times[entry.task_id] = entry.start_hour
+            
+            # Analyze each time group
+            for start_time, entries in sorted(time_groups.items()):
+                task_info_list = []
+                for entry in entries:
+                    task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                    resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                    if task and resource:
+                        # Check if dependencies were actually respected
+                        deps_respected = True
+                        dependency_chain = []
+                        if task.dependencies:
+                            for dep_id in task.dependencies:
+                                if dep_id in task_start_times:
+                                    # Dependency should have started before this task
+                                    dep_start = task_start_times[dep_id]
+                                    if dep_start >= entry.start_hour:
+                                        deps_respected = False
+                                    dependency_chain.append(dep_id)
+                        
+                        task_info_list.append({
+                            "task_id": task.id,
+                            "task_name": task.name,
+                            "resource_name": resource.name,
+                            "duration_hours": entry.end_hour - entry.start_hour,
+                            "start_time": entry.start_hour,
+                            "end_time": entry.end_hour,
+                            "has_dependencies": bool(task.dependencies),
+                            "dependencies_respected": deps_respected,
+                            "dependency_chain": dependency_chain
+                        })
+                
                 if len(entries) > 1:
-                    task_names = [next((t.name for t in process.tasks if t.id == e.task_id), "") for e in entries]
+                    # Multiple tasks starting at same time
+                    # Check if any have dependencies - if so, they're running in parallel incorrectly
+                    has_deps = any(info["has_dependencies"] for info in task_info_list)
+                    task_names = [info["task_name"] for info in task_info_list]
+                    
                     parallel_tasks.append({
                         "start_time": start_time,
                         "task_count": len(entries),
-                        "tasks": task_names
+                        "tasks": task_names,
+                        "task_details": task_info_list,
+                        "note": "Some tasks have dependencies but are running in parallel" if has_deps else "Independent tasks running in parallel"
                     })
+                    for info in task_info_list:
+                        parallel_task_ids.add(info["task_id"])
+                else:
+                    # Single task at this time point = sequential execution
+                    info = task_info_list[0]
+                    
+                    # Determine the reason for sequential execution
+                    reason = "No parallel opportunities at this time"
+                    if info["has_dependencies"]:
+                        if info["dependencies_respected"]:
+                            dep_names = [next((t.name for t in process.tasks if t.id == dep_id), dep_id) 
+                                        for dep_id in info["dependency_chain"]]
+                            reason = f"Must wait for dependencies: {', '.join(dep_names)}"
+                        else:
+                            reason = "Has dependencies (may not be properly enforced in schedule)"
+                    
+                    sequential_tasks.append({
+                        "task_id": info["task_id"],
+                        "task_name": info["task_name"],
+                        "resource_name": info["resource_name"],
+                        "duration_hours": info["duration_hours"],
+                        "start_time": info["start_time"],
+                        "end_time": info["end_time"],
+                        "has_dependencies": info["has_dependencies"],
+                        "reason": reason
+                    })
+                    sequential_task_ids.add(info["task_id"])
+            
+            # Check if there are tasks with dependencies that weren't scheduled
+            scheduled_task_ids = {entry.task_id for entry in schedule.entries}
+            unscheduled_tasks = [t for t in process.tasks if t.id not in scheduled_task_ids]
+            
+            # Determine overall execution mode
+            execution_pattern_analysis["parallel_tasks_count"] = len(parallel_task_ids)
+            execution_pattern_analysis["sequential_tasks_count"] = len(sequential_task_ids)
+            execution_pattern_analysis["unscheduled_tasks_count"] = len(unscheduled_tasks)
+            
+            if unscheduled_tasks:
+                execution_pattern_analysis["unscheduled_tasks"] = [
+                    {
+                        "task_id": t.id,
+                        "task_name": t.name,
+                        "has_dependencies": bool(t.dependencies),
+                        "reason": "Not scheduled - may have resource or dependency issues"
+                    }
+                    for t in unscheduled_tasks
+                ]
+            
+            # Determine execution mode
+            total_scheduled = len(scheduled_task_ids)
+            if total_scheduled == 0:
+                execution_pattern_analysis["execution_mode"] = "none"
+                execution_pattern_analysis["description"] = "No tasks were successfully scheduled"
+            elif len(parallel_task_ids) == total_scheduled and len(parallel_task_ids) > 0:
+                execution_pattern_analysis["execution_mode"] = "fully_parallel"
+                execution_pattern_analysis["description"] = "All scheduled tasks run in parallel"
+            elif len(sequential_task_ids) == total_scheduled:
+                execution_pattern_analysis["execution_mode"] = "fully_sequential"
+                execution_pattern_analysis["description"] = "All tasks run sequentially (one at a time)"
+            else:
+                execution_pattern_analysis["execution_mode"] = "mixed"
+                execution_pattern_analysis["description"] = f"{len(parallel_task_ids)} tasks run in parallel, {len(sequential_task_ids)} tasks run sequentially"
+            
+            # Add warning if dependencies exist but tasks are running in parallel
+            if parallel_tasks:
+                tasks_with_deps_in_parallel = sum(1 for group in parallel_tasks 
+                                                  for task in group.get("task_details", []) 
+                                                  if task.get("has_dependencies"))
+                if tasks_with_deps_in_parallel > 0:
+                    execution_pattern_analysis["warning"] = f"{tasks_with_deps_in_parallel} tasks with dependencies are running in parallel - dependencies may not be properly enforced"
         
         # Generate suggestions
         suggestions = []
@@ -840,10 +1027,14 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             },
             "suggestions": suggestions,
             "task_assignments": task_assignments,
+            "network_diagram": network_diagram,
             "parallel_execution": {
                 "enabled": len(parallel_tasks) > 0,
+                "execution_pattern": execution_pattern_analysis,
                 "parallel_groups": parallel_tasks,
+                "sequential_tasks": sequential_tasks,
                 "total_parallel_tasks": sum(pt["task_count"] for pt in parallel_tasks),
+                "total_sequential_tasks": len(sequential_tasks),
                 "execution_steps": parallel_execution_steps,
                 "total_steps": len(parallel_execution_steps)
             },
