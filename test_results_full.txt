@@ -3,74 +3,74 @@ INTELLIGENT PROCESS DETECTION TEST
 ======================================================================
 
 1. Loading CMS process data...
-   File: D:\Main Process Optimization Agent\visualization_outputs\5_8isyznkh.json
-   [OK] Loaded process: E-Commerce Platform Development
+   File: D:\Main Process Optimization Agent\visualization_outputs\588_imui0hyi.json
+   [OK] Loaded process: Welding Car White Frame
 
 2. Transforming CMS data to process model...
 
    Task Classifications from Transformer:
-     - Database Design and Setup: admin
-     - User Authentication: passive
-     - Product Catalog API: direct
-     - Frontend UI: direct
-     - Payment Integration: direct
-     - Testing and QA: direct
+     - Picking from Molding stock Car body components: direct
+     - Welding Car Engine Compartment: direct
+     - Welding Car Underbody: direct
+     - Welding Car Body Complete: direct
+     - Welding Body Closures assembly: direct
+     - Delivery to Welding Body Car stock: direct
    [OK] Transformed to process with 6 tasks and 6 resources
 
 3. Testing Process Type Detection...
 
 4. Process Overview:
-   - Process Name: E-Commerce Platform Development
-   - Process ID: 5
+   - Process Name: Welding Car White Frame
+   - Process ID: 588
 
    TASKS (6 total):
    ==================================================================
-   1. Database Design and Setup
-      Duration: 0.53 hours (32 minutes)
-   2. User Authentication
-      Duration: 0.40 hours (24 minutes)
-   3. Product Catalog API
-      Duration: 0.67 hours (40 minutes)
-   4. Frontend UI
-      Duration: 0.78 hours (47 minutes)
-   5. Payment Integration
+   1. Picking from Molding stock Car body components
+      Duration: 0.75 hours (45 minutes)
+   2. Welding Car Engine Compartment
+      Duration: 0.82 hours (49 minutes)
+   3. Welding Car Underbody
+      Duration: 0.35 hours (21 minutes)
+   4. Welding Car Body Complete
       Duration: 0.47 hours (28 minutes)
-   6. Testing and QA
-      Duration: 0.60 hours (36 minutes)
+   5. Welding Body Closures assembly
+      Duration: 0.35 hours (21 minutes)
+   6. Delivery to Welding Body Car stock
+      Duration: 0.18 hours (11 minutes)
 
    RESOURCES (6 total):
    ==================================================================
-   1. Database Admin
-      Hourly Rate: $88.00/hour
+   1. Molding stock and transit area
+      Hourly Rate: $31.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Database Admin (1)
-   2. Senior Backend
-      Hourly Rate: $94.00/hour
+      Skills: Molding stock and transit area (2)
+   2. Station for welding Car Engine Compartment Robot
+      Hourly Rate: $33.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Senior Backend (2)
-   3. Fullstack Developer
-      Hourly Rate: $80.00/hour
+      Skills: Station for welding Car Engine Compartment Robot (2)
+   3. Station for welding Underbody Robot
+      Hourly Rate: $51.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Fullstack Developer (1)
-   4. Frontend Developer
-      Hourly Rate: $85.00/hour
+      Skills: Station for welding Underbody Robot (2)
+   4. Station for welding body complete Robot
+      Hourly Rate: $43.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Frontend Developer (1)
-   5. Payment Specialist
-      Hourly Rate: $99.00/hour
+      Skills: Station for welding body complete Robot (2)
+   5. Station for welding Closure Assembling Robot
+      Hourly Rate: $51.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: Payment Specialist (2)
-   6. QA Engineer
-      Hourly Rate: $75.00/hour
+      Skills: Station for welding Closure Assembling Robot (2)
+   6. Weding stock and transit area
+      Hourly Rate: $24.00/hour
       Max Hours/Day: 160.0 hours
-      Skills: QA Engineer (1)
+      Skills: Weding stock and transit area (2)
 
 5. Process Type Detection Results:
 
    DETECTION RESULTS:
    ----------------
    [OK] Process Type: MANUFACTURING
-   [OK] Confidence: 98.5%
+   [OK] Confidence: 100.0%
    [OK] Strategy: parallel_production
 
    Characteristics:
@@ -80,16 +80,16 @@ INTELLIGENT PROCESS DETECTION TEST
      * human_interaction: low
 
    Reasoning:
-     * Process name matches manufacturing keywords
      * Task names match manufacturing domain
      * Task patterns match manufacturing workflows
      * Task names contain manufacturing specific terms
-     * Resources match manufacturing roles
+     * Dependency structure matches manufacturing
+     * High parallelism potential detected
 
 6. Optimization Parameters for this Process Type:
    * strategy: parallel_production
    * process_type: manufacturing
-   * confidence: 0.9845248819102564
+   * confidence: 1.0
    * maximize_parallelism: True
    * enforce_sequential: False
    * optimize_throughput: True
@@ -104,13 +104,13 @@ INTELLIGENT PROCESS DETECTION TEST
    PRODUCTION METRICS (Manufacturing Perspective):
    ===============================================
      * Cycle Time (Makespan): 0.8 hours
-     * Total Production Cost: $295.65
-     * Cost Per Task: $49.27
-     * Throughput: 7.66 tasks/hour
+     * Total Production Cost: $110.37
+     * Cost Per Task: $18.39
+     * Throughput: 7.35 tasks/hour
      * Max Parallel Tasks: 6
      * Parallelization: 100.0%
-     * Time Efficiency: 73.4%
-     * Resource Utilization: 0.4%
+     * Time Efficiency: 59.5%
+     * Resource Utilization: 0.3%
      * Idle Time: 0.0 hours
      * Total Tasks: 6
 
@@ -118,88 +118,90 @@ INTELLIGENT PROCESS DETECTION TEST
    ============================
 
    Time 0.0h - 6 tasks running in PARALLEL:
-     • User Authentication (0.4h) - Senior Backend
-     • Product Catalog API (0.7h) - Fullstack Developer
-     • Payment Integration (0.5h) - Payment Specialist
-     • Database Design and Setup (0.5h) - Database Admin
-     • Frontend UI (0.8h) - Frontend Developer
-     • Testing and QA (0.6h) - QA Engineer
+     • Delivery to Welding Body Car stock (0.2h) - Weding stock and transit area
+     • Picking from Molding stock Car body components (0.8h) - Molding stock and transit area
+     • Welding Body Closures assembly (0.3h) - Station for welding Closure Assembling Robot
+     • Welding Car Body Complete (0.5h) - Station for welding body complete Robot
+     • Welding Car Engine Compartment (0.8h) - Station for welding Car Engine Compartment Robot
+     • Welding Car Underbody (0.3h) - Station for welding Underbody Robot
 
    INDEPENDENT TASKS (Can run in parallel from start):
-     • Database Design and Setup (0.5h)
-     • User Authentication (0.4h)
-     • Product Catalog API (0.7h)
-     • Frontend UI (0.8h)
-     • Payment Integration (0.5h)
-     • Testing and QA (0.6h)
+     • Picking from Molding stock Car body components (0.8h)
+     • Welding Car Engine Compartment (0.8h)
+     • Welding Car Underbody (0.3h)
+     • Welding Car Body Complete (0.5h)
+     • Welding Body Closures assembly (0.3h)
+     • Delivery to Welding Body Car stock (0.2h)
 
    Recommendations:
-     1. Task 'User Authentication' takes 0.4h (51% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
-     2. Task 'Product Catalog API' takes 0.7h (85% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+     1. Resource bottleneck detected on 'Station for welding Car Engine Compartment Robot' (0.8h vs avg 0.5h). Adding one more resource could save $10.91 and reduce cycle time by 40%.
+     2. High idle time detected (40% of available time). Consider reducing resources or increasing workload to improve cost efficiency.
+     3. Task 'Picking from Molding stock Car body components' takes 0.8h (92% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
+     4. Task 'Welding Body Closures assembly' takes 0.3h (43% of cycle time). Consider breaking it into smaller subtasks for better parallelization.
 
    ADMINISTRATIVE RESOURCE TRACKING:
    =================================
 
-   Resource: Senior Backend ($94/hour)
+   Resource: Weding stock and transit area ($24/hour)
    Tasks Performed:
-     - User Authentication
-       Time: 0.0h - 0.4h (0.4 hours)
-       Cost: $37.60
-   Total Hours: 0.4
-   Total Cost: $37.60
+     - Delivery to Welding Body Car stock
+       Time: 0.0h - 0.2h (0.2 hours)
+       Cost: $4.40
+   Total Hours: 0.2
+   Total Cost: $4.40
 
-   Resource: Fullstack Developer ($80/hour)
+   Resource: Molding stock and transit area ($31/hour)
    Tasks Performed:
-     - Product Catalog API
-       Time: 0.0h - 0.7h (0.7 hours)
-       Cost: $53.33
-   Total Hours: 0.7
-   Total Cost: $53.33
-
-   Resource: Payment Specialist ($99/hour)
-   Tasks Performed:
-     - Payment Integration
-       Time: 0.0h - 0.5h (0.5 hours)
-       Cost: $46.20
-   Total Hours: 0.5
-   Total Cost: $46.20
-
-   Resource: Database Admin ($88/hour)
-   Tasks Performed:
-     - Database Design and Setup
-       Time: 0.0h - 0.5h (0.5 hours)
-       Cost: $46.93
-   Total Hours: 0.5
-   Total Cost: $46.93
-
-   Resource: Frontend Developer ($85/hour)
-   Tasks Performed:
-     - Frontend UI
+     - Picking from Molding stock Car body components
        Time: 0.0h - 0.8h (0.8 hours)
-       Cost: $66.58
+       Cost: $23.25
    Total Hours: 0.8
-   Total Cost: $66.58
+   Total Cost: $23.25
 
-   Resource: QA Engineer ($75/hour)
+   Resource: Station for welding Closure Assembling Robot ($51/hour)
    Tasks Performed:
-     - Testing and QA
-       Time: 0.0h - 0.6h (0.6 hours)
-       Cost: $45.00
-   Total Hours: 0.6
-   Total Cost: $45.00
+     - Welding Body Closures assembly
+       Time: 0.0h - 0.3h (0.3 hours)
+       Cost: $17.85
+   Total Hours: 0.3
+   Total Cost: $17.85
+
+   Resource: Station for welding body complete Robot ($43/hour)
+   Tasks Performed:
+     - Welding Car Body Complete
+       Time: 0.0h - 0.5h (0.5 hours)
+       Cost: $20.07
+   Total Hours: 0.5
+   Total Cost: $20.07
+
+   Resource: Station for welding Car Engine Compartment Robot ($33/hour)
+   Tasks Performed:
+     - Welding Car Engine Compartment
+       Time: 0.0h - 0.8h (0.8 hours)
+       Cost: $26.95
+   Total Hours: 0.8
+   Total Cost: $26.95
+
+   Resource: Station for welding Underbody Robot ($51/hour)
+   Tasks Performed:
+     - Welding Car Underbody
+       Time: 0.0h - 0.3h (0.3 hours)
+       Cost: $17.85
+   Total Hours: 0.3
+   Total Cost: $17.85
 
    OVERALL ADMINISTRATIVE SUMMARY:
      Total Process Duration: 0.8 hours
-     Total Process Cost: $295.65
-     Average Resource Utilization: 0.4%
+     Total Process Cost: $110.37
+     Average Resource Utilization: 0.3%
      Number of Resources Used: 6
 
 7a. Generating Visualizations...
    [INFO] Process type: Manufacturing
    [INFO] Creating summary page...
-   [OK] Summary page saved: visualization_outputs\manufacturing_summary_5.png
+   [OK] Summary page saved: visualization_outputs\manufacturing_summary_588.png
    [INFO] Creating allocation page...
-   [OK] Allocation page saved: visualization_outputs\manufacturing_allocation_5.png
+   [OK] Allocation page saved: visualization_outputs\manufacturing_allocation_588.png
 
    ✓ Manufacturing visualizations generated successfully!
    ✓ Check the 'visualization_outputs' folder for PNG files
@@ -209,19 +211,19 @@ INTELLIGENT PROCESS DETECTION TEST
 
 8. Detection Validation:
    [INFO] Process detected as: MANUFACTURING
-   [INFO] Confidence: 98.5%
+   [INFO] Confidence: 100.0%
 
    Manufacturing/Development Indicators Found:
-     * Development/Production in name: True
-     * Platform/Product in name: True
-     * Developer/Engineer resources: True
-     * Build/Design/Create tasks: True
-     * Testing/QA tasks: True
+     * Development/Production in name: False
+     * Platform/Product in name: False
+     * Developer/Engineer resources: False
+     * Build/Design/Create tasks: False
+     * Testing/QA tasks: False
 
 9. Testing Sequential Flow Detection:
 
    [OK] Critical path identified:
-     Database Design and Setup
+     Picking from Molding stock Car body components
 
 ======================================================================
 TEST COMPLETE - SUCCESS!

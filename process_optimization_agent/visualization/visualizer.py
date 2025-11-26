@@ -959,20 +959,21 @@ class Visualizer:
     
     def _plot_manufacturing_duration_comparison(self, ax, schedule, before_metrics):
         """Plot before/after duration comparison for manufacturing"""
-        # Calculate after duration
+        # Calculate after duration (optimized - parallel execution)
         if schedule.entries:
             after_duration = max(entry.end_hour for entry in schedule.entries)
         else:
             after_duration = 0
         
-        # Get before duration
+        # Get before duration (current state - sequential execution)
         if before_metrics and 'duration' in before_metrics:
             before_duration = before_metrics['duration']
         else:
-            before_duration = after_duration * 1.5  # Estimate
+            # Default: estimate based on after duration
+            before_duration = after_duration * 1.5
         
         # Create bar chart
-        categories = ['Before', 'After']
+        categories = ['Before\n(Sequential)', 'After\n(Optimized)']
         values = [before_duration, after_duration]
         colors = ['#F18F01', '#2E86AB']
         
@@ -982,7 +983,7 @@ class Visualizer:
         for bar, val in zip(bars, values):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
-                   f'{val:.1f} hours',
+                   f'{val:.2f}h',
                    ha='center', va='bottom', fontsize=11, fontweight='bold')
         
         # Add time saved annotation
@@ -990,7 +991,7 @@ class Visualizer:
         improvement_pct = (time_saved / before_duration * 100) if before_duration > 0 else 0
         
         ax.text(1.5, max(values) * 0.5, 
-               f'Time Saved:\n{time_saved:.1f} hours\n({improvement_pct:.1f}%)',
+               f'Time Saved:\n{time_saved:.2f} hours\n({improvement_pct:.1f}%)',
                ha='center', va='center', fontsize=10,
                bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgreen', alpha=0.7))
         
@@ -1059,7 +1060,7 @@ class Visualizer:
             before_cost = after_cost * 1.2  # Estimate 20% higher
         
         # Create bar chart
-        categories = ['Before', 'After']
+        categories = ['Before\n(Sequential)', 'After\n(Optimized)']
         values = [before_cost, after_cost]
         colors = ['#F18F01', '#2E86AB']
         

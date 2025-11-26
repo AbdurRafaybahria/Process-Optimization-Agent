@@ -1,0 +1,230 @@
+{
+  "id": "588",
+  "name": "Welding Car White Frame",
+  "process_name": "Welding Car White Frame",
+  "process_id": 588,
+  "company": "3D Crystal Demo",
+  "description": "",
+  "tasks": [
+    {
+      "id": "268692",
+      "name": "Picking from Molding stock Car body components",
+      "description": "",
+      "duration": 45.0,
+      "duration_hours": 0.75,
+      "required_skills": [
+        {
+          "name": "Molding stock and transit area",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [],
+      "order": 0,
+      "code": "PkngMldCps",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "268965",
+      "name": "Welding Car Engine Compartment",
+      "description": "",
+      "duration": 49.0,
+      "duration_hours": 0.8166666666666667,
+      "required_skills": [
+        {
+          "name": "Station for welding Car Engine Compartment Robot",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "268692"
+      ],
+      "order": 1,
+      "code": "WldEngn",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "268966",
+      "name": "Welding Car Underbody",
+      "description": "",
+      "duration": 21.0,
+      "duration_hours": 0.35,
+      "required_skills": [
+        {
+          "name": "Station for welding Underbody Robot",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "268965"
+      ],
+      "order": 2,
+      "code": "WldUndbd",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "268964",
+      "name": "Welding Car Body Complete",
+      "description": "",
+      "duration": 28.0,
+      "duration_hours": 0.4666666666666667,
+      "required_skills": [
+        {
+          "name": "Station for welding body complete Robot",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "268966"
+      ],
+      "order": 3,
+      "code": "WldBdCmplt",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "268963",
+      "name": "Welding Body Closures assembly",
+      "description": "",
+      "duration": 21.0,
+      "duration_hours": 0.35,
+      "required_skills": [
+        {
+          "name": "Station for welding Closure Assembling Robot",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "268964"
+      ],
+      "order": 4,
+      "code": "WldClrasbl",
+      "user_involvement": "direct"
+    },
+    {
+      "id": "268394",
+      "name": "Delivery to Welding Body Car stock",
+      "description": "",
+      "duration": 11.0,
+      "duration_hours": 0.18333333333333332,
+      "required_skills": [
+        {
+          "name": "Weding stock and transit area",
+          "level": "intermediate"
+        }
+      ],
+      "dependencies": [
+        "268963"
+      ],
+      "order": 5,
+      "code": "DlvrWldWrh",
+      "user_involvement": "direct"
+    }
+  ],
+  "resources": [
+    {
+      "id": "2653",
+      "name": "Molding stock and transit area",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Molding stock and transit area",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 31,
+      "code": "MldWrh"
+    },
+    {
+      "id": "2813",
+      "name": "Station for welding Car Engine Compartment Robot",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Station for welding Car Engine Compartment Robot",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 33,
+      "code": "WldEngnRbt"
+    },
+    {
+      "id": "2815",
+      "name": "Station for welding Underbody Robot",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Station for welding Underbody Robot",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 51,
+      "code": "WldUnbdRbt"
+    },
+    {
+      "id": "2812",
+      "name": "Station for welding body complete Robot",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Station for welding body complete Robot",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 43,
+      "code": "WldBdcmtRb"
+    },
+    {
+      "id": "2814",
+      "name": "Station for welding Closure Assembling Robot",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Station for welding Closure Assembling Robot",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 51,
+      "code": "WldClAsRbt"
+    },
+    {
+      "id": "2848",
+      "name": "Weding stock and transit area",
+      "type": "human",
+      "skills": [
+        {
+          "name": "Weding stock and transit area",
+          "level": "intermediate"
+        }
+      ],
+      "max_hours_per_day": 8,
+      "hourly_rate": 24,
+      "code": "WldWrhs"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "268692",
+      "to": "268965"
+    },
+    {
+      "from": "268965",
+      "to": "268966"
+    },
+    {
+      "from": "268966",
+      "to": "268964"
+    },
+    {
+      "from": "268964",
+      "to": "268963"
+    },
+    {
+      "from": "268963",
+      "to": "268394"
+    }
+  ]
+}

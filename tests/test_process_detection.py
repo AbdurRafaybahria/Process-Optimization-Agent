@@ -779,20 +779,44 @@ def test_process_detection(json_file):
                     else:
                         detected_type = visualizer._detect_process_type(process)
                         log_print(f"   [INFO] Detected process type: {detected_type}")
-                        # Default before metrics
+                        
+                        # Calculate before metrics (current state - sequential execution)
+                        # Match JSON endpoint calculation: sum of all task durations
+                        current_total_time = sum(task.duration_hours for task in process.tasks)
+                        current_total_cost = sum(
+                            task.duration_hours * (
+                                next((r.hourly_rate for r in process.resources 
+                                     if any(ts.name in [rs.name for rs in r.skills] 
+                                           for ts in task.required_skills)), 50)
+                            )
+                            for task in process.tasks
+                        )
+                        
                         before_metrics = {
-                            'duration': result.schedule.total_duration_hours * 1.5 if hasattr(result.schedule, 'total_duration_hours') else 0,
-                            'cost': result.schedule.total_cost * 1.2 if hasattr(result.schedule, 'total_cost') else 0,
+                            'duration': current_total_time,  # Sequential total time
+                            'cost': current_total_cost,      # Sequential total cost
                             'resources': len(process.resources)
                         }
                 else:
                     # For non-insurance processes, use the detected type
                     detected_type = classification.process_type.value.title()
                     log_print(f"   [INFO] Process type: {detected_type}")
-                    # Default before metrics
+                    
+                    # Calculate before metrics (current state - sequential execution)
+                    # Match JSON endpoint calculation: sum of all task durations
+                    current_total_time = sum(task.duration_hours for task in process.tasks)
+                    current_total_cost = sum(
+                        task.duration_hours * (
+                            next((r.hourly_rate for r in process.resources 
+                                 if any(ts.name in [rs.name for rs in r.skills] 
+                                       for ts in task.required_skills)), 50)
+                        )
+                        for task in process.tasks
+                    )
+                    
                     before_metrics = {
-                        'duration': result.schedule.total_duration_hours * 1.5 if hasattr(result.schedule, 'total_duration_hours') else 0,
-                        'cost': result.schedule.total_cost * 1.2 if hasattr(result.schedule, 'total_cost') else 0,
+                        'duration': current_total_time,  # Sequential total time
+                        'cost': current_total_cost,      # Sequential total cost
                         'resources': len(process.resources)
                     }
                 
