@@ -980,6 +980,82 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                 "can_implement_independently": True
             })
         
+        # Detect process type for patient journey
+        detected_process_type = getattr(optimization_result, "process_type", None)
+        is_healthcare = detected_process_type and detected_process_type.value.lower() == "healthcare"
+        
+        # Build patient journey data for healthcare processes
+        patient_journey = None
+        if is_healthcare and schedule and schedule.entries:
+            # Extract patient-facing tasks (tasks with user involvement)
+            from process_optimization_agent.Optimization.models import UserInvolvement
+            
+            patient_steps = []
+            cumulative_time = 0.0
+            cumulative_cost = 0.0
+            
+            # Sort entries by start time to show journey progression
+            sorted_entries = sorted(schedule.entries, key=lambda e: e.start_hour)
+            
+            for entry in sorted_entries:
+                task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                
+                if task and resource:
+                    # Include all tasks in patient journey (they're all part of the process)
+                    duration = entry.end_hour - entry.start_hour
+                    cost = duration * resource.hourly_rate
+                    
+                    # Determine waiting time (gap between previous task end and current task start)
+                    waiting_time = entry.start_hour - cumulative_time if cumulative_time > 0 else 0
+                    
+                    cumulative_time = entry.end_hour
+                    cumulative_cost += cost
+                    
+                    # Determine involvement type
+                    involvement_type = getattr(task, 'user_involvement', UserInvolvement.DIRECT).value
+                    
+                    patient_steps.append({
+                        "step_number": len(patient_steps) + 1,
+                        "task_id": task.id,
+                        "task_name": task.name,
+                        "resource_id": resource.id,
+                        "resource_name": resource.name,
+                        "involvement_type": involvement_type,
+                        "start_time": entry.start_hour,
+                        "duration_hours": duration,
+                        "duration_minutes": duration * 60,
+                        "end_time": entry.end_hour,
+                        "waiting_time_hours": waiting_time,
+                        "waiting_time_minutes": waiting_time * 60,
+                        "cumulative_time_hours": cumulative_time,
+                        "cumulative_time_minutes": cumulative_time * 60,
+                        "step_cost": cost,
+                        "cumulative_cost": cumulative_cost
+                    })
+            
+            # Calculate journey metrics
+            total_active_time = sum(step["duration_hours"] for step in patient_steps)
+            total_waiting_time = sum(step["waiting_time_hours"] for step in patient_steps)
+            total_journey_time = cumulative_time
+            
+            patient_journey = {
+                "enabled": True,
+                "total_steps": len(patient_steps),
+                "total_journey_time_hours": total_journey_time,
+                "total_journey_time_minutes": total_journey_time * 60,
+                "total_active_time_hours": total_active_time,
+                "total_active_time_minutes": total_active_time * 60,
+                "total_waiting_time_hours": total_waiting_time,
+                "total_waiting_time_minutes": total_waiting_time * 60,
+                "total_cost": cumulative_cost,
+                "patient_satisfaction_score": 1.0 - min(1.0, total_waiting_time / total_journey_time) if total_journey_time > 0 else 1.0,
+                "number_of_touchpoints": len(patient_steps),
+                "number_of_resource_changes": len(set(step["resource_id"] for step in patient_steps)) - 1 if patient_steps else 0,
+                "steps": patient_steps,
+                "journey_description": f"Patient journey with {len(patient_steps)} steps over {total_journey_time:.2f} hours"
+            }
+        
         # Build the complete response
         response = {
             "process_id": str(process_id),
@@ -988,7 +1064,7 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             # High-level process classification (which domain this process belongs to)
             "process_type": {
                 # e.g. "manufacturing", "insurance", "healthcare", etc.
-                "type": getattr(optimization_result, "process_type", None).value if getattr(optimization_result, "process_type", None) else "GENERIC",
+                "type": detected_process_type.value if detected_process_type else "GENERIC",
                 # Overall confidence from the intelligent optimizer
                 "confidence": getattr(optimization_result, "confidence", 0),
                 # Optimization strategy actually used, e.g. "parallel_production", "insurance_workflow"
@@ -1070,6 +1146,10 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                 "process_flexibility": "Enhanced ability to handle variable workloads"
             }
         }
+        
+        # Add patient journey data for healthcare processes
+        if patient_journey:
+            response["patient_journey"] = patient_journey
         
         return response
         
