@@ -235,10 +235,15 @@ class ProcessOptimizer(BaseOptimizer):
         for resource in process.resources:
             # Check if resource has required skills
             if required_skills and not resource.has_all_skills(required_skills):
+                print(f"[DEBUG] Resource {resource.id} ({resource.name}) missing skills for task {task.id}")
                 continue
             
             # Check if resource has capacity
-            if resource_workload[resource.id] + task.duration_hours > resource.total_available_hours:
+            needed_capacity = resource_workload[resource.id] + task.duration_hours
+            if needed_capacity > resource.total_available_hours:
+                print(f"[DEBUG] Resource {resource.id} ({resource.name}) insufficient capacity for task {task.id}: "
+                      f"needs {task.duration_hours:.1f}h, workload={resource_workload[resource.id]:.1f}h, "
+                      f"total_available={resource.total_available_hours:.1f}h")
                 continue
                 
             # Get earliest available hour for this resource

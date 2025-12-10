@@ -525,7 +525,14 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             )
             process.tasks.append(task)
         
-        # Add resources
+        # Calculate total required hours per resource skill to set adequate capacity
+        total_hours_by_skill = {}
+        for task in process.tasks:
+            for skill in task.required_skills:
+                skill_key = skill.name.lower().strip()
+                total_hours_by_skill[skill_key] = total_hours_by_skill.get(skill_key, 0) + task.duration_hours
+        
+        # Add resources with adequate capacity
         for resource_data in agent_format.get("resources", []):
             # Handle skills which can be either strings or dicts
             skills = []
@@ -537,11 +544,19 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                 if skill_name:
                     skills.append(Skill(name=skill_name, level=SkillLevel.INTERMEDIATE))
             
+            # Calculate required capacity for this resource based on its skills
+            max_required_hours = 160.0  # Default minimum
+            for skill in skills:
+                skill_key = skill.name.lower().strip()
+                if skill_key in total_hours_by_skill:
+                    max_required_hours = max(max_required_hours, total_hours_by_skill[skill_key] * 1.2)  # 20% buffer
+            
             resource = Resource(
                 id=resource_data["id"],
                 name=resource_data["name"],
                 hourly_rate=resource_data.get("hourly_rate", 0),
-                skills=skills
+                skills=skills,
+                total_available_hours=max_required_hours  # Set adequate capacity
             )
             process.resources.append(resource)
         
