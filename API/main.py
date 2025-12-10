@@ -32,6 +32,7 @@ if PROJECT_ROOT not in sys.path:
 
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
+from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks
 
 import webbrowser as _webbrowser
 import os as _os
@@ -46,8 +47,9 @@ except Exception as e:
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "visualization_outputs")
 
 # Default CMS configuration
-# Use deployed CMS URL if available, fallback to localhost
-DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "https://fyp-cms-frontend.vercel.app")
+# Use deployed CMS URL if available, fallback to production server
+# Note: This should point to the BACKEND API, not the frontend
+DEFAULT_CMS_URL = os.getenv("REACT_APP_BASE_URL", "https://server-digitaltwin-enterprise-production.up.railway.app")
 
 app = FastAPI(title="Process Optimization API", version="1.0")
 app.add_middleware(
@@ -468,9 +470,17 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         if not cms_data:
             raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
         
-        # Transform to agent format with validation
+        # Resolve multi-job tasks BEFORE transformation
+        # This ensures 1:1 task-job relationship before optimization
+        resolver = MultiJobResolver(best_fit_threshold=0.90)
+        resolved_cms_data = resolver.resolve_process(cms_data)
+        
+        # Extract resolution details for response
+        multi_job_resolutions = resolved_cms_data.pop('_multi_job_resolutions', [])
+        
+        # Transform to agent format with validation (using resolved data)
         try:
-            agent_format = transformer.transform_process(cms_data)
+            agent_format = transformer.transform_process(resolved_cms_data)
         except ProcessValidationError as e:
             raise HTTPException(
                 status_code=400,
@@ -1150,6 +1160,46 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         # Add patient journey data for healthcare processes
         if patient_journey:
             response["patient_journey"] = patient_journey
+        
+        # Add multi-job resolution data
+        # This shows how tasks with multiple jobs were resolved to 1:1 relationships
+        if multi_job_resolutions:
+            # Calculate summary statistics
+            best_fit_count = sum(1 for r in multi_job_resolutions if r.get('resolution') == 'best_fit')
+            split_count = sum(1 for r in multi_job_resolutions if r.get('resolution') == 'split')
+            single_job_count = sum(1 for r in multi_job_resolutions if r.get('resolution') == 'single_job')
+            total_sub_tasks = sum(len(r.get('sub_tasks', [])) for r in multi_job_resolutions)
+            total_removed_jobs = sum(len(r.get('removed_jobs', [])) for r in multi_job_resolutions)
+            
+            response["job_resolution"] = {
+                "enabled": True,
+                "description": "Multi-job tasks have been resolved to maintain 1:1 task-job relationship",
+                "summary": {
+                    "total_tasks_analyzed": len(multi_job_resolutions),
+                    "single_job_tasks": single_job_count,
+                    "best_fit_resolved": best_fit_count,
+                    "split_into_subtasks": split_count,
+                    "total_sub_tasks_created": total_sub_tasks,
+                    "total_jobs_removed": total_removed_jobs,
+                    "best_fit_threshold": "90%"
+                },
+                "resolutions": multi_job_resolutions
+            }
+        else:
+            response["job_resolution"] = {
+                "enabled": True,
+                "description": "No multi-job tasks found - all tasks already have 1:1 job relationship",
+                "summary": {
+                    "total_tasks_analyzed": 0,
+                    "single_job_tasks": 0,
+                    "best_fit_resolved": 0,
+                    "split_into_subtasks": 0,
+                    "total_sub_tasks_created": 0,
+                    "total_jobs_removed": 0,
+                    "best_fit_threshold": "90%"
+                },
+                "resolutions": []
+            }
         
         return response
         

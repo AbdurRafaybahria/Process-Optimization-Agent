@@ -24,7 +24,7 @@ class CMSClient:
             use_cookies: Whether to use HttpOnly cookie authentication (default: True)
         """
         import os
-        self.base_url = base_url or os.getenv("REACT_APP_BASE_URL", "http://localhost:3000")
+        self.base_url = base_url or os.getenv("REACT_APP_BASE_URL", "https://server-digitaltwin-enterprise-production.up.railway.app")
         self.use_cookies = use_cookies
         
         # Create a session to maintain cookies across requests
