@@ -470,9 +470,26 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         if not cms_data:
             raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
         
+        # Fetch jobs with their real skills from CMS
+        # This provides actual job skills for better job resolution
+        # Use get_jobs_for_process to filter only jobs assigned to this process
+        jobs_with_skills = {}
+        try:
+            jobs_with_skills = await asyncio.to_thread(client.get_jobs_for_process, cms_data)
+            if jobs_with_skills:
+                print(f"[INFO] Fetched {len(jobs_with_skills)} jobs with skills for process {process_id}")
+                # Debug: Print skills found for each job
+                for job_id, job_data in jobs_with_skills.items():
+                    skills = job_data.get('skills', [])
+                    skill_names = [s.get('name') for s in skills]
+                    print(f"[DEBUG] Job {job_data.get('name')} (ID:{job_id}) has skills: {skill_names}")
+        except Exception as e:
+            print(f"[WARNING] Could not fetch jobs with skills: {e}")
+        
         # Resolve multi-job tasks BEFORE transformation
         # This ensures 1:1 task-job relationship before optimization
-        resolver = MultiJobResolver(best_fit_threshold=0.90)
+        # Pass real job skills data for accurate job matching
+        resolver = MultiJobResolver(best_fit_threshold=0.90, jobs_with_skills=jobs_with_skills)
         resolved_cms_data = resolver.resolve_process(cms_data)
         
         # Extract resolution details for response

@@ -7,6 +7,11 @@ import requests
 from typing import Dict, Any, Optional, List
 import json
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class CMSClient:
@@ -60,11 +65,16 @@ class CMSClient:
             True if authentication successful, False otherwise
         """
         try:
+            import os
             auth_url = f"{self.base_url}/auth/login"
             auth_data = {
-                "email": "superadmin@example.com",
-                "password": "ChangeMe123!"
+                "email": os.getenv("CMS_AUTH_EMAIL", ""),
+                "password": os.getenv("CMS_AUTH_PASSWORD", "")
             }
+            
+            if not auth_data["email"] or not auth_data["password"]:
+                print("Warning: CMS_AUTH_EMAIL or CMS_AUTH_PASSWORD not set in environment variables")
+                return False
             
             # Use session to maintain cookies
             response = self.session.post(auth_url, json=auth_data, timeout=10)
@@ -104,11 +114,16 @@ class CMSClient:
             Access token string or None if authentication fails
         """
         try:
+            import os
             auth_url = f"{self.base_url}/auth/login"
             auth_data = {
-                "email": "superadmin@example.com",
-                "password": "ChangeMe123!"
+                "email": os.getenv("CMS_AUTH_EMAIL", ""),
+                "password": os.getenv("CMS_AUTH_PASSWORD", "")
             }
+            
+            if not auth_data["email"] or not auth_data["password"]:
+                print("Warning: CMS_AUTH_EMAIL or CMS_AUTH_PASSWORD not set in environment variables")
+                return None
             
             response = self.session.post(auth_url, json=auth_data, timeout=10)
             response.raise_for_status()
@@ -238,4 +253,92 @@ class CMSClient:
         except requests.exceptions.RequestException as e:
             print(f"Session verification failed: {e}")
             return None
+
+    def get_all_jobs_with_relations(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        Fetch all jobs with their skills and relations from the CMS
+        
+        Returns:
+            List of job dictionaries with skills, or None if error
+        """
+        try:
+            url = f"{self.base_url}/job/with-relations"
+            response = self.session.get(url)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching jobs with relations: {e}")
+            # Try re-authenticating and retry once
+            if "401" in str(e) or "Unauthorized" in str(e):
+                print("Session expired, re-authenticating...")
+                if self._authenticate_with_cookies():
+                    try:
+                        response = self.session.get(url)
+                        response.raise_for_status()
+                        return response.json()
+                    except:
+                        pass
+            return None
+
+    def get_jobs_for_process(self, process_data: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
+        """
+        Get all jobs with their skills that are used in a specific process
+        
+        Args:
+            process_data: Process data containing process_task array
+            
+        Returns:
+            Dictionary mapping job_id to job data with skills
+        """
+        # Extract all job IDs from the process
+        job_ids_in_process = set()
+        for pt in process_data.get("process_task", []):
+            task = pt.get("task", {})
+            for jt in task.get("jobTasks", []):
+                job_id = jt.get("job_id") or jt.get("job", {}).get("job_id")
+                if job_id:
+                    job_ids_in_process.add(int(job_id))
+        
+        if not job_ids_in_process:
+            print("No jobs found in process")
+            return {}
+        
+        # Fetch all jobs with relations
+        all_jobs = self.get_all_jobs_with_relations()
+        if not all_jobs:
+            print("Failed to fetch jobs with relations")
+            return {}
+        
+        # Filter to only jobs in the process
+        jobs_map = {}
+        for job in all_jobs:
+            job_id = job.get("job_id")
+            if job_id in job_ids_in_process:
+                # Extract skills in a standardized format
+                skills = []
+                for job_skill in job.get("jobSkills", []):
+                    skill_data = job_skill.get("skill", {})
+                    skill_level = job_skill.get("skill_level", {})
+                    skills.append({
+                        "skill_id": skill_data.get("skill_id"),
+                        "name": skill_data.get("name", ""),
+                        "description": skill_data.get("description"),
+                        "level_id": skill_level.get("id"),
+                        "level_name": skill_level.get("level_name", "INTERMEDIATE"),
+                        "level_rank": skill_level.get("level_rank", 3)
+                    })
+                
+                jobs_map[job_id] = {
+                    "job_id": job_id,
+                    "name": job.get("name", ""),
+                    "description": job.get("description", ""),
+                    "jobCode": job.get("jobCode", ""),
+                    "hourlyRate": job.get("hourlyRate", 0),
+                    "maxHoursPerDay": job.get("maxHoursPerDay", 8),
+                    "job_level": job.get("job_level", {}),
+                    "skills": skills
+                }
+        
+        print(f"Found {len(jobs_map)} jobs with skills for process")
+        return jobs_map
 

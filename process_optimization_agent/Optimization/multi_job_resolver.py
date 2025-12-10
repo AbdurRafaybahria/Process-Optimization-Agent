@@ -64,21 +64,23 @@ class MultiJobResolver:
     Resolves tasks with multiple jobs to maintain 1:1 task-job relationship.
     
     Strategy:
-    1. Extract required skills from task description
+    1. Extract required skills from task description OR use real skills from CMS
     2. Match each job's capabilities against required skills
     3. If one job has ≥90% match → Keep that job, remove others
     4. If no best fit → Split task into sub-tasks based on skill groups
     5. Each sub-task gets exactly one job assigned
     """
     
-    def __init__(self, best_fit_threshold: float = 0.90):
+    def __init__(self, best_fit_threshold: float = 0.90, jobs_with_skills: Dict[int, Dict[str, Any]] = None):
         """
         Initialize the resolver.
         
         Args:
             best_fit_threshold: Minimum match percentage to consider a job as "best fit" (default 90%)
+            jobs_with_skills: Dictionary mapping job_id to job data with real skills from CMS
         """
         self.best_fit_threshold = best_fit_threshold
+        self.jobs_with_skills = jobs_with_skills or {}
         self._init_skill_patterns()
     
     def _init_skill_patterns(self):
@@ -409,10 +411,57 @@ class MultiJobResolver:
             if re.search(pattern, text):
                 skills.add(skill)
         
+        # Additional FYP/Academic specific skill extraction
+        academic_patterns = {
+            'research': 'research_skills',
+            'thesis': 'technical_writing',
+            'proposal': 'technical_writing',
+            'draft': 'technical_writing',
+            'idea': 'research_skills',
+            'formulate': 'research_skills',
+            'gap': 'research_skills',
+            'presentation': 'presentation_skills',
+            'demo': 'presentation_skills',
+            'review': 'review_evaluation',
+            'evaluate': 'review_evaluation',
+            'supervisor': 'mentoring',
+            'consultation': 'communication',
+            'coordinate': 'management',
+            'aggregate': 'data_management',
+            'score': 'evaluation',
+            'lab': 'resource_allocation',
+            'environment': 'resource_allocation',
+            'booking': 'resource_allocation',
+        }
+        
+        for keyword, skill in academic_patterns.items():
+            if keyword in text:
+                skills.add(skill)
+        
         return list(skills)
     
     def _get_job_capabilities(self, job: Dict[str, Any]) -> List[str]:
-        """Get capabilities of a job based on its name and description"""
+        """Get capabilities of a job based on its real skills from CMS or fallback to text patterns"""
+        job_id = job.get('job_id')
+        
+        # First, try to get real skills from CMS data
+        if job_id and int(job_id) in self.jobs_with_skills:
+            cms_job = self.jobs_with_skills[int(job_id)]
+            real_skills = cms_job.get('skills', [])
+            if real_skills:
+                # Return actual skill names from CMS
+                capabilities = []
+                for skill in real_skills:
+                    skill_name = skill.get('name', '').lower().strip()
+                    if skill_name:
+                        capabilities.append(skill_name)
+                        # Also add normalized versions
+                        capabilities.append(skill_name.replace(' ', '_'))
+                if capabilities:
+                    print(f"[DEBUG] Job {job.get('name')} using CMS skills: {capabilities}")
+                    return list(set(capabilities))
+        
+        # Fallback: Extract from job name and description using patterns
         job_name = (job.get('name', '') or '').lower()
         job_description = (job.get('description', '') or '').lower()
         
@@ -434,12 +483,77 @@ class MultiJobResolver:
         
         return list(capabilities)
     
+    def _normalize_skill(self, skill: str) -> str:
+        """Normalize a skill name for matching"""
+        return skill.lower().strip().replace('_', ' ').replace('-', ' ')
+    
+    def _skill_similarity(self, skill1: str, skill2: str) -> float:
+        """
+        Calculate similarity between two skills using keyword matching.
+        Returns a score between 0 and 1.
+        """
+        s1 = self._normalize_skill(skill1)
+        s2 = self._normalize_skill(skill2)
+        
+        # Exact match
+        if s1 == s2:
+            return 1.0
+        
+        # Check if one contains the other
+        if s1 in s2 or s2 in s1:
+            return 0.8
+        
+        # Word overlap matching
+        words1 = set(s1.split())
+        words2 = set(s2.split())
+        
+        if words1 & words2:  # Any common words
+            overlap = len(words1 & words2)
+            total = len(words1 | words2)
+            return overlap / total * 0.7  # Max 0.7 for partial matches
+        
+        # Keyword-based semantic matching
+        skill_synonyms = {
+            'research': ['research', 'analysis', 'investigation', 'study', 'formulate'],
+            'writing': ['writing', 'documentation', 'document', 'technical', 'thesis', 'draft'],
+            'review': ['review', 'verification', 'check', 'evaluate', 'assessment'],
+            'management': ['management', 'coordination', 'process', 'administrative', 'organization'],
+            'presentation': ['presentation', 'demo', 'demonstrate', 'present'],
+            'evaluation': ['evaluation', 'assessment', 'grading', 'judgment', 'auditing'],
+            'mentoring': ['mentoring', 'guidance', 'supervision', 'oversight'],
+            'development': ['development', 'software', 'creation', 'build', 'produce'],
+            'communication': ['communication', 'feedback', 'consultation'],
+            'planning': ['planning', 'strategic', 'scheduling'],
+            'leadership': ['leadership', 'decision', 'head', 'director'],
+            'allocation': ['allocation', 'resource', 'booking', 'lab', 'environment'],
+        }
+        
+        for category, keywords in skill_synonyms.items():
+            s1_match = any(kw in s1 for kw in keywords)
+            s2_match = any(kw in s2 for kw in keywords)
+            if s1_match and s2_match:
+                return 0.6  # Semantic similarity through category
+        
+        return 0.0
+    
     def _calculate_skill_match(self, job: Dict[str, Any], required_skills: List[str]) -> SkillMatch:
-        """Calculate how well a job matches the required skills"""
+        """Calculate how well a job matches the required skills using fuzzy matching"""
         job_capabilities = self._get_job_capabilities(job)
         
-        matched = [s for s in required_skills if s in job_capabilities]
-        unmatched = [s for s in required_skills if s not in job_capabilities]
+        matched = []
+        unmatched = []
+        
+        for req_skill in required_skills:
+            # Find best matching capability
+            best_similarity = 0.0
+            for cap in job_capabilities:
+                sim = self._skill_similarity(req_skill, cap)
+                best_similarity = max(best_similarity, sim)
+            
+            if best_similarity >= 0.5:  # Threshold for considering a match
+                matched.append(req_skill)
+            else:
+                unmatched.append(req_skill)
         
         match_pct = len(matched) / len(required_skills) if required_skills else 0.0
         
