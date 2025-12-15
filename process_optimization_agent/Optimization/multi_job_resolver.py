@@ -242,19 +242,37 @@ class MultiJobResolver:
         resolved_tasks = []
         resolutions = []
         
+        # Track total costs for summary
+        total_before_cost = 0.0
+        total_after_cost = 0.0
+        
         for pt in process_tasks:
             task = pt.get('task', {})
             job_tasks = task.get('jobTasks', [])
+            task_duration_minutes = task.get('task_capacity_minutes', 0) or 60
+            task_duration_hours = task_duration_minutes / 60
             
             if len(job_tasks) <= 1:
                 # Single job or no job - keep as-is
                 resolved_tasks.append(pt)
                 if len(job_tasks) == 1:
+                    job = job_tasks[0].get('job', {})
+                    hourly_rate = job.get('hourlyRate', 0) or 0
+                    task_cost = hourly_rate * task_duration_hours
+                    total_before_cost += task_cost
+                    total_after_cost += task_cost
+                    
                     resolutions.append({
                         'task_id': task.get('task_id'),
                         'task_name': task.get('task_name'),
                         'resolution': 'single_job',
-                        'reason': 'Task already has single job assigned'
+                        'reason': 'Task already has single job assigned',
+                        'cost_analysis': {
+                            'before_cost': round(task_cost, 2),
+                            'after_cost': round(task_cost, 2),
+                            'savings': 0,
+                            'task_duration_hours': round(task_duration_hours, 4)
+                        }
                     })
             else:
                 # Multiple jobs - resolve
@@ -272,21 +290,69 @@ class MultiJobResolver:
                     # No match - keep original with warning
                     resolved_tasks.append(pt)
                 
+                # Calculate BEFORE cost: sum of ALL assigned jobs' hourly rates × task duration
+                # (Assumption: all jobs work in parallel on the task)
+                before_cost = 0.0
+                for jt in job_tasks:
+                    job = jt.get('job', {})
+                    hourly_rate = job.get('hourlyRate', 0) or 0
+                    before_cost += hourly_rate * task_duration_hours
+                
+                # Calculate AFTER cost: single kept job's hourly rate × task duration
+                after_cost = 0.0
+                if resolution.kept_jobs:
+                    # For BEST_FIT: single job
+                    # For SPLIT: sum of kept jobs for sub-tasks (duration is split proportionally)
+                    if resolution.resolution_type == ResolutionType.SPLIT and resolution.sub_tasks:
+                        # Sub-tasks get their own durations
+                        for st in resolution.sub_tasks:
+                            st_hourly = st.assigned_job.get('hourlyRate', 0) or 0
+                            after_cost += st_hourly * st.duration_hours
+                    else:
+                        # BEST_FIT - single job
+                        kept_job = resolution.kept_jobs[0]
+                        kept_rate = kept_job.get('hourlyRate', 0) or 0
+                        after_cost = kept_rate * task_duration_hours
+                
+                task_savings = before_cost - after_cost
+                total_before_cost += before_cost
+                total_after_cost += after_cost
+                
                 resolutions.append({
                     'task_id': str(task.get('task_id')),
                     'task_name': task.get('task_name'),
                     'resolution': resolution.resolution_type.value,
                     'reason': resolution.reason,
-                    'kept_jobs': [{'job_id': j.get('job_id'), 'name': j.get('name')} for j in resolution.kept_jobs],
-                    'removed_jobs': [{'job_id': j.get('job_id'), 'name': j.get('name'), 'reason': 'Low skill match'} for j in resolution.removed_jobs],
-                    'sub_tasks': [{'id': st.id, 'name': st.name, 'job': st.assigned_job.get('name')} for st in resolution.sub_tasks] if resolution.sub_tasks else [],
-                    'skill_analysis': resolution.skill_analysis
+                    'kept_jobs': [{'job_id': j.get('job_id'), 'name': j.get('name'), 'hourlyRate': j.get('hourlyRate', 0)} for j in resolution.kept_jobs],
+                    'removed_jobs': [{'job_id': j.get('job_id'), 'name': j.get('name'), 'hourlyRate': j.get('hourlyRate', 0), 'reason': 'Low skill match'} for j in resolution.removed_jobs],
+                    'sub_tasks': [{'id': st.id, 'name': st.name, 'job': st.assigned_job.get('name'), 'hourlyRate': st.assigned_job.get('hourlyRate', 0), 'duration_hours': st.duration_hours} for st in resolution.sub_tasks] if resolution.sub_tasks else [],
+                    'skill_analysis': resolution.skill_analysis,
+                    'cost_analysis': {
+                        'before_cost': round(before_cost, 2),
+                        'after_cost': round(after_cost, 2),
+                        'savings': round(task_savings, 2),
+                        'task_duration_hours': round(task_duration_hours, 4),
+                        'jobs_before': len(job_tasks),
+                        'jobs_after': len(resolution.kept_jobs) if resolution.resolution_type != ResolutionType.SPLIT else len(resolution.sub_tasks)
+                    }
                 })
+        
+        # Calculate totals
+        total_savings = total_before_cost - total_after_cost
+        savings_percentage = (total_savings / total_before_cost * 100) if total_before_cost > 0 else 0
         
         # Update process data
         result = process_data.copy()
         result['process_task'] = resolved_tasks
         result['_multi_job_resolutions'] = resolutions
+        result['_job_resolution_cost_summary'] = {
+            'total_before_cost': round(total_before_cost, 2),
+            'total_after_cost': round(total_after_cost, 2),
+            'total_savings': round(total_savings, 2),
+            'savings_percentage': round(savings_percentage, 2)
+        }
+        
+        print(f"[JOB-RESOLUTION] Cost Analysis: Before=${total_before_cost:.2f}, After=${total_after_cost:.2f}, Savings=${total_savings:.2f} ({savings_percentage:.1f}%)")
         
         return result
     
@@ -833,3 +899,376 @@ def resolve_multi_job_tasks(process_data: Dict[str, Any], threshold: float = 0.9
     """
     resolver = MultiJobResolver(best_fit_threshold=threshold)
     return resolver.resolve_process(process_data)
+
+
+# =============================================================================
+# COST OPTIMIZER
+# =============================================================================
+
+@dataclass
+class JobReplacement:
+    """Represents a job replacement for cost optimization"""
+    task_id: str
+    task_name: str
+    original_job_id: int
+    original_job_name: str
+    original_hourly_rate: float
+    new_job_id: int
+    new_job_name: str
+    new_hourly_rate: float
+    task_duration_hours: float
+    cost_savings_per_task: float
+    reason: str
+
+
+@dataclass
+class CostOptimizationResult:
+    """Result of cost optimization"""
+    original_total_cost: float
+    optimized_total_cost: float
+    total_savings: float
+    savings_percentage: float
+    replacements: List[JobReplacement]
+    tasks_analyzed: int
+    tasks_optimized: int
+
+
+class CostOptimizer:
+    """
+    Optimizes process cost by finding cheaper qualified jobs for each task.
+    
+    Strategy:
+    1. For each task, get the currently assigned job and its hourly rate
+    2. Get the task's required skills
+    3. Find ALL jobs from CMS that have those required skills (≥90% match)
+    4. Check skill levels (candidate skill level ≥ required level)
+    5. If a qualified job has lower hourly rate → Replace
+    6. Report total savings
+    """
+    
+    def __init__(self, all_jobs_map: Dict[int, Dict[str, Any]], skill_match_threshold: float = 0.90):
+        """
+        Initialize the cost optimizer.
+        
+        Args:
+            all_jobs_map: Dictionary of ALL jobs from CMS (job_id -> job_data with skills)
+            skill_match_threshold: Minimum skill match percentage (default 90%)
+        """
+        self.all_jobs_map = all_jobs_map
+        self.skill_match_threshold = skill_match_threshold
+    
+    def optimize_process(self, process_data: Dict[str, Any]) -> Tuple[Dict[str, Any], CostOptimizationResult]:
+        """
+        Optimize job assignments in a process for minimum cost.
+        
+        Args:
+            process_data: CMS process data (after multi-job resolution)
+            
+        Returns:
+            Tuple of (modified_process_data, CostOptimizationResult)
+        """
+        process_tasks = process_data.get('process_task', [])
+        replacements = []
+        original_total_cost = 0.0
+        optimized_total_cost = 0.0
+        tasks_analyzed = 0
+        tasks_optimized = 0
+        
+        for pt in process_tasks:
+            task = pt.get('task', {})
+            task_id = str(task.get('task_id', ''))
+            task_name = task.get('task_name', '')
+            task_duration_minutes = task.get('task_capacity_minutes', 0) or task.get('duration', 60)
+            task_duration_hours = task_duration_minutes / 60
+            
+            job_tasks = task.get('jobTasks', [])
+            if not job_tasks:
+                continue
+            
+            tasks_analyzed += 1
+            
+            # Get currently assigned job
+            current_jt = job_tasks[0]
+            current_job = current_jt.get('job', {})
+            current_job_id = current_job.get('job_id')
+            current_job_name = current_job.get('name', '')
+            current_hourly_rate = current_job.get('hourlyRate', 0) or 0
+            
+            # Calculate original cost for this task
+            task_original_cost = current_hourly_rate * task_duration_hours
+            original_total_cost += task_original_cost
+            
+            # Extract required skills from task
+            required_skills = self._extract_task_required_skills(task)
+            
+            if not required_skills:
+                # No skills to match, keep current job
+                optimized_total_cost += task_original_cost
+                continue
+            
+            # Find cheapest qualified job
+            cheapest_job = self._find_cheapest_qualified_job(
+                required_skills, 
+                current_job_id, 
+                current_hourly_rate
+            )
+            
+            if cheapest_job:
+                # Replace with cheaper job
+                new_job_id = cheapest_job['job_id']
+                new_job_name = cheapest_job['name']
+                new_hourly_rate = cheapest_job['hourlyRate']
+                task_new_cost = new_hourly_rate * task_duration_hours
+                savings = task_original_cost - task_new_cost
+                
+                # Update the job assignment in process_data
+                self._replace_job_in_task(pt, cheapest_job)
+                
+                replacement = JobReplacement(
+                    task_id=task_id,
+                    task_name=task_name,
+                    original_job_id=current_job_id,
+                    original_job_name=current_job_name,
+                    original_hourly_rate=current_hourly_rate,
+                    new_job_id=new_job_id,
+                    new_job_name=new_job_name,
+                    new_hourly_rate=new_hourly_rate,
+                    task_duration_hours=task_duration_hours,
+                    cost_savings_per_task=savings,
+                    reason=f"Found cheaper qualified job: ${new_hourly_rate}/hr vs ${current_hourly_rate}/hr"
+                )
+                replacements.append(replacement)
+                optimized_total_cost += task_new_cost
+                tasks_optimized += 1
+                
+                print(f"[COST-OPT] Task '{task_name}': Replaced '{current_job_name}' (${current_hourly_rate}/hr) "
+                      f"with '{new_job_name}' (${new_hourly_rate}/hr) - Saving ${savings:.2f}")
+            else:
+                # Keep current job
+                optimized_total_cost += task_original_cost
+        
+        total_savings = original_total_cost - optimized_total_cost
+        savings_percentage = (total_savings / original_total_cost * 100) if original_total_cost > 0 else 0
+        
+        result = CostOptimizationResult(
+            original_total_cost=round(original_total_cost, 2),
+            optimized_total_cost=round(optimized_total_cost, 2),
+            total_savings=round(total_savings, 2),
+            savings_percentage=round(savings_percentage, 2),
+            replacements=replacements,
+            tasks_analyzed=tasks_analyzed,
+            tasks_optimized=tasks_optimized
+        )
+        
+        # Store optimization results in process_data for later retrieval
+        process_data['_cost_optimization'] = {
+            'original_total_cost': result.original_total_cost,
+            'optimized_total_cost': result.optimized_total_cost,
+            'total_savings': result.total_savings,
+            'savings_percentage': result.savings_percentage,
+            'tasks_analyzed': result.tasks_analyzed,
+            'tasks_optimized': result.tasks_optimized,
+            'replacements': [
+                {
+                    'task_id': r.task_id,
+                    'task_name': r.task_name,
+                    'original_job': {
+                        'job_id': r.original_job_id,
+                        'name': r.original_job_name,
+                        'hourlyRate': r.original_hourly_rate
+                    },
+                    'new_job': {
+                        'job_id': r.new_job_id,
+                        'name': r.new_job_name,
+                        'hourlyRate': r.new_hourly_rate
+                    },
+                    'task_duration_hours': r.task_duration_hours,
+                    'cost_savings': r.cost_savings_per_task,
+                    'reason': r.reason
+                }
+                for r in replacements
+            ]
+        }
+        
+        print(f"[COST-OPT] Summary: Analyzed {tasks_analyzed} tasks, optimized {tasks_optimized}")
+        print(f"[COST-OPT] Original cost: ${original_total_cost:.2f}, Optimized: ${optimized_total_cost:.2f}")
+        print(f"[COST-OPT] Total savings: ${total_savings:.2f} ({savings_percentage:.1f}%)")
+        
+        return process_data, result
+    
+    def _extract_task_required_skills(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract required skills from task's assigned job"""
+        job_tasks = task.get('jobTasks', [])
+        if not job_tasks:
+            return []
+        
+        # Get skills from the currently assigned job
+        current_job = job_tasks[0].get('job', {})
+        current_job_id = current_job.get('job_id')
+        
+        # Try to get skills from all_jobs_map (more complete)
+        if current_job_id and int(current_job_id) in self.all_jobs_map:
+            job_from_map = self.all_jobs_map[int(current_job_id)]
+            return job_from_map.get('skills', [])
+        
+        # Fallback: check if job has jobSkills in the task data
+        return current_job.get('jobSkills', [])
+    
+    def _find_cheapest_qualified_job(
+        self, 
+        required_skills: List[Dict[str, Any]], 
+        current_job_id: int,
+        current_hourly_rate: float
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Find the cheapest job that meets the skill requirements.
+        
+        Args:
+            required_skills: List of required skill dicts
+            current_job_id: ID of currently assigned job (to exclude)
+            current_hourly_rate: Current job's hourly rate (must be cheaper)
+            
+        Returns:
+            Cheapest qualified job dict, or None if no cheaper option
+        """
+        cheapest_job = None
+        cheapest_rate = current_hourly_rate  # Must be cheaper than current
+        
+        required_skill_names = set()
+        required_skill_levels = {}
+        
+        for skill in required_skills:
+            skill_name = (skill.get('name', '') or '').lower().strip()
+            if skill_name:
+                required_skill_names.add(skill_name)
+                # Store required level (default to 3 = INTERMEDIATE)
+                level_rank = skill.get('level_rank', 3) or 3
+                required_skill_levels[skill_name] = level_rank
+        
+        if not required_skill_names:
+            return None
+        
+        for job_id, job_data in self.all_jobs_map.items():
+            # Skip current job
+            if job_id == current_job_id:
+                continue
+            
+            job_hourly_rate = job_data.get('hourlyRate', 0) or 0
+            
+            # Skip if not cheaper
+            if job_hourly_rate >= cheapest_rate:
+                continue
+            
+            # Check if job has required skills with adequate levels
+            job_skills = job_data.get('skills', [])
+            job_skill_map = {}
+            for js in job_skills:
+                js_name = (js.get('name', '') or '').lower().strip()
+                js_level = js.get('level_rank', 3) or 3
+                if js_name:
+                    job_skill_map[js_name] = js_level
+            
+            # Calculate skill match
+            matched_skills = 0
+            level_ok = True
+            
+            for req_skill in required_skill_names:
+                if req_skill in job_skill_map:
+                    matched_skills += 1
+                    # Check level requirement
+                    if job_skill_map[req_skill] < required_skill_levels.get(req_skill, 3):
+                        level_ok = False
+                        break
+                else:
+                    # Try fuzzy match
+                    fuzzy_matched = False
+                    for job_skill_name, job_skill_level in job_skill_map.items():
+                        if self._fuzzy_skill_match(req_skill, job_skill_name):
+                            matched_skills += 1
+                            if job_skill_level < required_skill_levels.get(req_skill, 3):
+                                level_ok = False
+                            fuzzy_matched = True
+                            break
+                    if not fuzzy_matched:
+                        pass  # Skill not matched
+            
+            if not level_ok:
+                continue
+            
+            # Check if match percentage meets threshold
+            match_percentage = matched_skills / len(required_skill_names) if required_skill_names else 0
+            
+            if match_percentage >= self.skill_match_threshold:
+                # This job qualifies and is cheaper
+                cheapest_job = job_data
+                cheapest_rate = job_hourly_rate
+        
+        return cheapest_job
+    
+    def _fuzzy_skill_match(self, skill1: str, skill2: str) -> bool:
+        """Check if two skill names are similar enough to match"""
+        s1 = skill1.lower().strip().replace('_', ' ').replace('-', ' ')
+        s2 = skill2.lower().strip().replace('_', ' ').replace('-', ' ')
+        
+        # Exact match
+        if s1 == s2:
+            return True
+        
+        # Containment
+        if s1 in s2 or s2 in s1:
+            return True
+        
+        # Word overlap
+        words1 = set(s1.split())
+        words2 = set(s2.split())
+        if words1 & words2:
+            overlap = len(words1 & words2)
+            total = max(len(words1), len(words2))
+            if overlap / total >= 0.5:
+                return True
+        
+        return False
+    
+    def _replace_job_in_task(self, process_task: Dict[str, Any], new_job: Dict[str, Any]) -> None:
+        """Replace the job assignment in a process_task"""
+        task = process_task.get('task', {})
+        job_tasks = task.get('jobTasks', [])
+        
+        if job_tasks:
+            # Store original job info for reference
+            original_job = job_tasks[0].get('job', {})
+            
+            # Replace with new job
+            job_tasks[0]['job'] = new_job
+            job_tasks[0]['job_id'] = new_job.get('job_id')
+            
+            # Add cost optimization metadata
+            task['_cost_optimized'] = {
+                'original_job_id': original_job.get('job_id'),
+                'original_job_name': original_job.get('name'),
+                'original_hourly_rate': original_job.get('hourlyRate'),
+                'new_job_id': new_job.get('job_id'),
+                'new_job_name': new_job.get('name'),
+                'new_hourly_rate': new_job.get('hourlyRate')
+            }
+
+
+def optimize_process_cost(
+    process_data: Dict[str, Any], 
+    all_jobs_map: Dict[int, Dict[str, Any]],
+    skill_match_threshold: float = 0.90
+) -> Tuple[Dict[str, Any], CostOptimizationResult]:
+    """
+    Convenience function to optimize process cost.
+    
+    Args:
+        process_data: CMS process data (after multi-job resolution)
+        all_jobs_map: All jobs from CMS
+        skill_match_threshold: Minimum skill match (default 90%)
+        
+    Returns:
+        Tuple of (modified_process_data, CostOptimizationResult)
+    """
+    optimizer = CostOptimizer(all_jobs_map, skill_match_threshold)
+    return optimizer.optimize_process(process_data)
+

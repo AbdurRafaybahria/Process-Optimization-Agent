@@ -342,3 +342,54 @@ class CMSClient:
         print(f"Found {len(jobs_map)} jobs with skills for process")
         return jobs_map
 
+    def get_all_jobs_map_with_skills(self) -> Dict[int, Dict[str, Any]]:
+        """
+        Fetch ALL jobs from CMS and return as a dictionary mapping job_id to job data.
+        Used for cost optimization to find cheaper qualified jobs.
+        
+        Returns:
+            Dictionary mapping job_id to job data with skills
+        """
+        all_jobs = self.get_all_jobs_with_relations()
+        if not all_jobs:
+            print("Failed to fetch all jobs with relations")
+            return {}
+        
+        jobs_map = {}
+        for job in all_jobs:
+            job_id = job.get("job_id")
+            if job_id is None:
+                continue
+            
+            try:
+                job_id_int = int(job_id)
+            except (TypeError, ValueError):
+                continue
+            
+            # Extract skills in a standardized format
+            skills = []
+            for job_skill in job.get("jobSkills", []) or []:
+                skill_data = job_skill.get("skill", {}) or {}
+                skill_level = job_skill.get("skill_level", {}) or {}
+                skills.append({
+                    "skill_id": skill_data.get("skill_id"),
+                    "name": skill_data.get("name", ""),
+                    "description": skill_data.get("description"),
+                    "level_id": skill_level.get("id"),
+                    "level_name": skill_level.get("level_name", "INTERMEDIATE"),
+                    "level_rank": skill_level.get("level_rank", 3)
+                })
+            
+            jobs_map[job_id_int] = {
+                "job_id": job_id_int,
+                "name": job.get("name", ""),
+                "description": job.get("description", ""),
+                "jobCode": job.get("jobCode", ""),
+                "hourlyRate": job.get("hourlyRate", 0),
+                "maxHoursPerDay": job.get("maxHoursPerDay", 8),
+                "job_level": job.get("job_level", {}),
+                "skills": skills
+            }
+        
+        print(f"Fetched {len(jobs_map)} total jobs from CMS for cost optimization")
+        return jobs_map

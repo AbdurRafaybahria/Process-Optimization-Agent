@@ -32,7 +32,7 @@ if PROJECT_ROOT not in sys.path:
 
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
-from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks
+from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost
 
 import webbrowser as _webbrowser
 import os as _os
@@ -71,6 +71,161 @@ app.add_middleware(
 
 
 # Only CMS process ID endpoints are supported. Payload endpoints have been removed.
+
+
+def _build_improvements_section(
+    time_saved_percentage: float,
+    current_total_cost: float,
+    optimized_total_cost: float,
+    job_resolution_cost_summary: Optional[Dict[str, Any]],
+    multi_job_resolutions: list,
+    cost_optimization_result: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Build a comprehensive improvements section that includes:
+    - Time efficiency from parallel processing
+    - Cost savings from job resolution (removing redundant jobs)
+    - Cost savings from job replacement (finding cheaper alternatives)
+    - Detailed breakdown of optimizations per task
+    """
+    
+    # Time improvement
+    time_improvement = {
+        "description": f"{time_saved_percentage:.1f}% faster through parallel task execution",
+        "method": "Running independent tasks simultaneously instead of sequentially"
+    }
+    
+    # Cost improvements - Job Resolution (removing redundant parallel jobs)
+    job_resolution_savings = 0.0
+    job_resolution_details = []
+    
+    if job_resolution_cost_summary:
+        job_resolution_savings = job_resolution_cost_summary.get('total_savings', 0)
+        savings_pct = job_resolution_cost_summary.get('savings_percentage', 0)
+        
+        # Build details from resolutions
+        for resolution in multi_job_resolutions:
+            cost_analysis = resolution.get('cost_analysis', {})
+            task_savings = cost_analysis.get('savings', 0)
+            
+            if task_savings > 0:
+                detail = {
+                    "task_id": str(resolution.get('task_id', '')),
+                    "task_name": resolution.get('task_name', ''),
+                    "optimization_type": resolution.get('resolution', ''),
+                    "savings": round(task_savings, 2),
+                    "explanation": ""
+                }
+                
+                if resolution.get('resolution') == 'best_fit':
+                    # Best fit - removed redundant jobs
+                    kept = resolution.get('kept_jobs', [])
+                    removed = resolution.get('removed_jobs', [])
+                    kept_names = [j.get('name', '') for j in kept]
+                    removed_names = [f"{j.get('name', '')} (${j.get('hourlyRate', 0)}/hr)" for j in removed]
+                    detail["explanation"] = f"Kept '{', '.join(kept_names)}' as best fit. Removed redundant jobs: {', '.join(removed_names)}"
+                    detail["kept_job"] = kept[0].get('name', '') if kept else ''
+                    detail["removed_jobs"] = [j.get('name', '') for j in removed]
+                    
+                elif resolution.get('resolution') == 'split':
+                    # Split - task divided into sub-tasks with specific jobs
+                    sub_tasks = resolution.get('sub_tasks', [])
+                    removed = resolution.get('removed_jobs', [])
+                    sub_task_info = [f"{st.get('name', '')} → {st.get('job', '')} (${st.get('hourlyRate', 0)}/hr)" for st in sub_tasks]
+                    removed_names = [f"{j.get('name', '')} (${j.get('hourlyRate', 0)}/hr)" for j in removed if j.get('name') not in [st.get('job') for st in sub_tasks]]
+                    detail["explanation"] = f"Task split into specialized sub-tasks: {'; '.join(sub_task_info)}. Removed: {', '.join(removed_names) if removed_names else 'None'}"
+                    detail["sub_tasks"] = [{"name": st.get('name'), "assigned_to": st.get('job')} for st in sub_tasks]
+                
+                job_resolution_details.append(detail)
+    
+    # Cost improvements - Job Replacement (finding cheaper alternatives)
+    job_replacement_savings = 0.0
+    job_replacement_details = []
+    
+    if cost_optimization_result:
+        job_replacement_savings = cost_optimization_result.get('total_savings', 0)
+        replacements = cost_optimization_result.get('replacements', [])
+        
+        for replacement in replacements:
+            original_job = replacement.get('original_job', {})
+            new_job = replacement.get('new_job', {})
+            task_savings = replacement.get('cost_savings', 0)
+            
+            detail = {
+                "task_id": str(replacement.get('task_id', '')),
+                "task_name": replacement.get('task_name', ''),
+                "optimization_type": "job_replacement",
+                "savings": round(task_savings, 2),
+                "original_job": original_job.get('name', ''),
+                "original_rate": original_job.get('hourlyRate', 0),
+                "new_job": new_job.get('name', ''),
+                "new_rate": new_job.get('hourlyRate', 0),
+                "explanation": f"Replaced '{original_job.get('name', '')}' (${original_job.get('hourlyRate', 0)}/hr) with cheaper qualified job '{new_job.get('name', '')}' (${new_job.get('hourlyRate', 0)}/hr)"
+            }
+            job_replacement_details.append(detail)
+    
+    # Total cost savings
+    total_cost_savings = job_resolution_savings + job_replacement_savings
+    
+    # Build the improvements object
+    improvements = {
+        "time_efficiency": {
+            "improvement": f"{time_saved_percentage:.1f}% faster",
+            "method": "Parallel task execution",
+            "description": "Running independent tasks simultaneously instead of sequentially reduces total process time"
+        },
+        "cost_efficiency": {
+            "total_savings": round(total_cost_savings, 2),
+            "total_savings_formatted": f"${total_cost_savings:.2f}",
+            "breakdown": {
+                "job_resolution_savings": {
+                    "amount": round(job_resolution_savings, 2),
+                    "amount_formatted": f"${job_resolution_savings:.2f}",
+                    "percentage": round(job_resolution_cost_summary.get('savings_percentage', 0), 2) if job_resolution_cost_summary else 0,
+                    "method": "Removing redundant parallel job assignments",
+                    "description": "When multiple jobs were assigned to a single task (working in parallel), we kept only the best-fit job(s) and removed redundant ones",
+                    "tasks_optimized": len(job_resolution_details),
+                    "details": job_resolution_details
+                },
+                "job_replacement_savings": {
+                    "amount": round(job_replacement_savings, 2),
+                    "amount_formatted": f"${job_replacement_savings:.2f}",
+                    "percentage": round(cost_optimization_result.get('savings_percentage', 0), 2) if cost_optimization_result else 0,
+                    "method": "Replacing jobs with cheaper qualified alternatives",
+                    "description": "Finding jobs with lower hourly rates that still meet the required skill threshold (≥90% match)",
+                    "tasks_optimized": len(job_replacement_details),
+                    "details": job_replacement_details
+                }
+            }
+        },
+        "resource_utilization": {
+            "improvement": "Improved",
+            "method": "Parallel execution and skill-based assignment",
+            "description": "Resources are utilized more efficiently through parallel task execution and matching tasks to specialists with the best skill fit"
+        },
+        "process_flexibility": {
+            "improvement": "Enhanced",
+            "method": "1:1 task-job relationship",
+            "description": "Clear accountability with each task assigned to exactly one qualified job, making the process easier to manage and scale"
+        },
+        "summary": {
+            "time_saved": f"{time_saved_percentage:.1f}%",
+            "cost_saved": f"${total_cost_savings:.2f}",
+            "optimization_methods": []
+        }
+    }
+    
+    # Build summary of optimization methods used
+    if time_saved_percentage > 0:
+        improvements["summary"]["optimization_methods"].append("Parallel task execution")
+    if job_resolution_savings > 0:
+        improvements["summary"]["optimization_methods"].append(f"Job resolution: removed redundant jobs (${job_resolution_savings:.2f} saved)")
+    if job_replacement_savings > 0:
+        improvements["summary"]["optimization_methods"].append(f"Job replacement: found cheaper alternatives (${job_replacement_savings:.2f} saved)")
+    if not improvements["summary"]["optimization_methods"]:
+        improvements["summary"]["optimization_methods"].append("Process already optimized - no further improvements found")
+    
+    return improvements
 
 
 def detect_data_format(payload: Dict[str, Any]) -> str:
@@ -474,6 +629,7 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         # This provides actual job skills for better job resolution
         # Use get_jobs_for_process to filter only jobs assigned to this process
         jobs_with_skills = {}
+        all_jobs_map = {}  # ALL jobs from CMS for cost optimization
         try:
             jobs_with_skills = await asyncio.to_thread(client.get_jobs_for_process, cms_data)
             if jobs_with_skills:
@@ -483,6 +639,10 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     skills = job_data.get('skills', [])
                     skill_names = [s.get('name') for s in skills]
                     print(f"[DEBUG] Job {job_data.get('name')} (ID:{job_id}) has skills: {skill_names}")
+            
+            # Fetch ALL jobs from CMS for cost optimization comparison
+            all_jobs_map = await asyncio.to_thread(client.get_all_jobs_map_with_skills)
+            print(f"[INFO] Fetched {len(all_jobs_map)} total jobs from CMS for cost optimization")
         except Exception as e:
             print(f"[WARNING] Could not fetch jobs with skills: {e}")
         
@@ -494,6 +654,22 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         
         # Extract resolution details for response
         multi_job_resolutions = resolved_cms_data.pop('_multi_job_resolutions', [])
+        job_resolution_cost_summary = resolved_cms_data.pop('_job_resolution_cost_summary', None)
+        
+        # COST OPTIMIZATION: Find cheaper qualified jobs
+        cost_optimization_result = None
+        if all_jobs_map:
+            try:
+                resolved_cms_data, cost_opt_result = optimize_process_cost(
+                    resolved_cms_data, 
+                    all_jobs_map, 
+                    skill_match_threshold=0.90
+                )
+                cost_optimization_result = resolved_cms_data.pop('_cost_optimization', None)
+                print(f"[INFO] Cost optimization complete: ${cost_opt_result.total_savings:.2f} savings")
+            except Exception as e:
+                print(f"[WARNING] Cost optimization failed: {e}")
+                cost_optimization_result = None
         
         # Transform to agent format with validation (using resolved data)
         try:
@@ -1181,12 +1357,14 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "mitigation": "Regular sync meetings and clear communication protocols"
                 }
             ],
-            "improvements": {
-                "time_efficiency": f"{time_saved_percentage:.1f}% faster",
-                "cost_efficiency": f"${abs(optimized_total_cost - current_total_cost):.2f} {'increase' if optimized_total_cost > current_total_cost else 'decrease'}",
-                "resource_utilization": "Improved through parallel execution",
-                "process_flexibility": "Enhanced ability to handle variable workloads"
-            }
+            "improvements": _build_improvements_section(
+                time_saved_percentage=time_saved_percentage,
+                current_total_cost=current_total_cost,
+                optimized_total_cost=optimized_total_cost,
+                job_resolution_cost_summary=job_resolution_cost_summary,
+                multi_job_resolutions=multi_job_resolutions,
+                cost_optimization_result=cost_optimization_result
+            )
         }
         
         # Add patient journey data for healthcare processes
@@ -1203,6 +1381,12 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             total_sub_tasks = sum(len(r.get('sub_tasks', [])) for r in multi_job_resolutions)
             total_removed_jobs = sum(len(r.get('removed_jobs', [])) for r in multi_job_resolutions)
             
+            # Calculate cost savings from job resolution (removing redundant parallel jobs)
+            cost_before = job_resolution_cost_summary.get('total_before_cost', 0) if job_resolution_cost_summary else 0
+            cost_after = job_resolution_cost_summary.get('total_after_cost', 0) if job_resolution_cost_summary else 0
+            cost_savings = job_resolution_cost_summary.get('total_savings', 0) if job_resolution_cost_summary else 0
+            savings_pct = job_resolution_cost_summary.get('savings_percentage', 0) if job_resolution_cost_summary else 0
+            
             response["job_resolution"] = {
                 "enabled": True,
                 "description": "Multi-job tasks have been resolved to maintain 1:1 task-job relationship",
@@ -1214,6 +1398,13 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "total_sub_tasks_created": total_sub_tasks,
                     "total_jobs_removed": total_removed_jobs,
                     "best_fit_threshold": "90%"
+                },
+                "cost_savings": {
+                    "before_resolution_cost": cost_before,
+                    "after_resolution_cost": cost_after,
+                    "total_savings": cost_savings,
+                    "savings_percentage": savings_pct,
+                    "calculation_method": "Sum of (all assigned jobs hourly rates × task duration) vs (kept job hourly rate × task duration)"
                 },
                 "resolutions": multi_job_resolutions
             }
@@ -1230,7 +1421,47 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "total_jobs_removed": 0,
                     "best_fit_threshold": "90%"
                 },
+                "cost_savings": {
+                    "before_resolution_cost": 0,
+                    "after_resolution_cost": 0,
+                    "total_savings": 0,
+                    "savings_percentage": 0,
+                    "calculation_method": "Sum of (all assigned jobs hourly rates × task duration) vs (kept job hourly rate × task duration)"
+                },
                 "resolutions": []
+            }
+        
+        # Add cost optimization results
+        # Shows jobs replaced with cheaper alternatives that have the same skills
+        if cost_optimization_result:
+            response["cost_optimization"] = {
+                "enabled": True,
+                "description": "Jobs have been replaced with cheaper alternatives that meet skill requirements",
+                "summary": {
+                    "original_total_cost": cost_optimization_result.get("original_total_cost", 0),
+                    "optimized_total_cost": cost_optimization_result.get("optimized_total_cost", 0),
+                    "total_savings": cost_optimization_result.get("total_savings", 0),
+                    "savings_percentage": cost_optimization_result.get("savings_percentage", 0),
+                    "tasks_analyzed": cost_optimization_result.get("tasks_analyzed", 0),
+                    "tasks_optimized": cost_optimization_result.get("tasks_optimized", 0),
+                    "skill_match_threshold": "90%"
+                },
+                "replacements": cost_optimization_result.get("replacements", [])
+            }
+        else:
+            response["cost_optimization"] = {
+                "enabled": True,
+                "description": "No cheaper job alternatives found - current assignments are already optimal",
+                "summary": {
+                    "original_total_cost": 0,
+                    "optimized_total_cost": 0,
+                    "total_savings": 0,
+                    "savings_percentage": 0,
+                    "tasks_analyzed": 0,
+                    "tasks_optimized": 0,
+                    "skill_match_threshold": "90%"
+                },
+                "replacements": []
             }
         
         return response
