@@ -625,6 +625,11 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         if not cms_data:
             raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
         
+        # CALCULATE ORIGINAL COST BEFORE JOB RESOLUTION
+        # We'll calculate this after job resolution by adding back the savings
+        # This is more accurate than trying to parse raw CMS data
+        original_total_cost = 0.0  # Will be calculated after we know the resolution savings
+        
         # Fetch jobs with their real skills from CMS
         # This provides actual job skills for better job resolution
         # Use get_jobs_for_process to filter only jobs assigned to this process
@@ -656,8 +661,19 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         multi_job_resolutions = resolved_cms_data.pop('_multi_job_resolutions', [])
         job_resolution_cost_summary = resolved_cms_data.pop('_job_resolution_cost_summary', None)
         
+        # NOW calculate original cost using job resolution savings
+        # Original cost = cost after resolution + resolution savings
+        # This is more accurate than trying to parse raw CMS data
+        if job_resolution_cost_summary and 'total_savings' in job_resolution_cost_summary:
+            job_resolution_savings = job_resolution_cost_summary['total_savings']
+            # We'll add this to the optimized cost later when we have it
+            print(f"[COST] Job resolution savings: ${job_resolution_savings:.2f}")
+        else:
+            job_resolution_savings = 0.0
+        
         # COST OPTIMIZATION: Find cheaper qualified jobs
         cost_optimization_result = None
+        cost_optimization_savings = 0.0
         if all_jobs_map:
             try:
                 resolved_cms_data, cost_opt_result = optimize_process_cost(
@@ -666,10 +682,12 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     skill_match_threshold=0.90
                 )
                 cost_optimization_result = resolved_cms_data.pop('_cost_optimization', None)
-                print(f"[INFO] Cost optimization complete: ${cost_opt_result.total_savings:.2f} savings")
+                cost_optimization_savings = cost_opt_result.total_savings if cost_opt_result else 0.0
+                print(f"[INFO] Cost optimization complete: ${cost_optimization_savings:.2f} savings")
             except Exception as e:
                 print(f"[WARNING] Cost optimization failed: {e}")
                 cost_optimization_result = None
+                cost_optimization_savings = 0.0
         
         # Transform to agent format with validation (using resolved data)
         try:
@@ -761,19 +779,14 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         schedule = optimization_result.schedule
         
         # Calculate current state (sequential execution)
+        # Original cost will be calculated after we have optimized cost
         current_total_time = sum(task.duration_hours for task in process.tasks)
-        current_total_cost = sum(
-            task.duration_hours * (
-                next((r.hourly_rate for r in process.resources 
-                     if any(ts.name in [rs.name for rs in r.skills] 
-                           for ts in task.required_skills)), 50)
-            )
-            for task in process.tasks
-        )
         
-        # Calculate optimized state
+        # Calculate optimized state from actual task assignments
+        # This reflects cost AFTER job resolution and cost optimization
         if schedule and schedule.entries:
             optimized_total_time = max(entry.end_hour for entry in schedule.entries)
+            # Calculate from actual assignments (already includes job resolution savings)
             optimized_total_cost = sum(
                 (entry.end_hour - entry.start_hour) * 
                 next((r.hourly_rate for r in process.resources if r.id == entry.resource_id), 50)
@@ -781,7 +794,20 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             )
         else:
             optimized_total_time = current_total_time
-            optimized_total_cost = current_total_cost
+            optimized_total_cost = 0.0
+        
+        # NOW calculate original cost: optimized cost + ALL savings
+        # This represents the TRUE original cost before any optimizations
+        # Must include BOTH job resolution savings AND cost optimization savings
+        total_savings = job_resolution_savings + cost_optimization_savings
+        original_total_cost = optimized_total_cost + total_savings
+        current_total_cost = original_total_cost
+        
+        print(f"[COST] Job resolution savings: ${job_resolution_savings:.2f}")
+        print(f"[COST] Cost optimization savings: ${cost_optimization_savings:.2f}")
+        print(f"[COST] Original cost BEFORE all optimizations: ${original_total_cost:.2f}")
+        print(f"[COST] Optimized cost AFTER all optimizations: ${optimized_total_cost:.2f}")
+        print(f"[COST] Total savings: ${total_savings:.2f}")
         
         # Calculate time saved
         time_saved = current_total_time - optimized_total_time
