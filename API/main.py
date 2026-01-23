@@ -33,6 +33,7 @@ if PROJECT_ROOT not in sys.path:
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
 from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost
+from process_optimization_agent.Optimization.gateways import ParallelGatewayDetector, ExclusiveGatewayDetector
 
 import webbrowser as _webbrowser
 import os as _os
@@ -625,6 +626,24 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         if not cms_data:
             raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
         
+        # PARALLEL GATEWAY DETECTION
+        # Analyze the process to detect opportunities for parallel execution
+        # This happens BEFORE any optimization to identify structural improvements
+        gateway_detector = ParallelGatewayDetector(min_confidence=0.7)
+        gateway_suggestions = gateway_detector.analyze_process(cms_data)
+        gateway_analysis = gateway_detector.format_suggestions_for_api(gateway_suggestions, cms_data)
+        print(f"[GATEWAY] Found {len(gateway_suggestions)} parallel gateway opportunities")
+        
+        # EXCLUSIVE GATEWAY (XOR) DETECTION
+        # Analyze the process to detect decision points for exclusive routing
+        # This identifies approval/rejection, validation, and conditional branching opportunities
+        xor_detector = ExclusiveGatewayDetector(min_confidence=0.7)
+        xor_suggestions = xor_detector.analyze_process(cms_data)
+        process_id_int = int(process_id) if process_id else 0
+        process_name = cms_data.get('name', 'Unknown Process')
+        xor_analysis = xor_detector.format_suggestions_for_api(xor_suggestions, process_id_int, process_name)
+        print(f"[GATEWAY] Found {len(xor_suggestions)} exclusive (XOR) gateway opportunities")
+        
         # CALCULATE ORIGINAL COST BEFORE JOB RESOLUTION
         # We'll calculate this after job resolution by adding back the savings
         # This is more accurate than trying to parse raw CMS data
@@ -771,8 +790,8 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
             )
             process.resources.append(resource)
         
-        # Run intelligent optimization
-        intelligent_optimizer = IntelligentOptimizer()
+        # Run intelligent optimization (pass original CMS data for fallback assignments)
+        intelligent_optimizer = IntelligentOptimizer(cms_data=cms_data)
         optimization_result = await asyncio.to_thread(intelligent_optimizer.optimize, process)
         
         # Calculate metrics
@@ -1490,6 +1509,9 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                 "replacements": []
             }
         
+        # Gateway suggestions moved to dedicated BPMN endpoint: /bpmn/gateways/{process_id}
+        # This keeps the optimization endpoint focused on performance metrics
+        
         return response
         
     except Exception as e:
@@ -1644,8 +1666,8 @@ async def get_whatif_analysis_data(process_id: int, authorization: Optional[str]
             )
             process.resources.append(resource)
         
-        # Run intelligent optimization
-        intelligent_optimizer = IntelligentOptimizer()
+        # Run intelligent optimization (pass original CMS data for fallback assignments)
+        intelligent_optimizer = IntelligentOptimizer(cms_data=cms_data)
         optimization_result = await asyncio.to_thread(intelligent_optimizer.optimize, process)
         
         # Calculate metrics
@@ -1793,6 +1815,207 @@ async def get_whatif_analysis_data(process_id: int, authorization: Optional[str]
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch what-if analysis data: {str(e)}"
+        )
+
+
+@app.get("/bpmn/gateways/{process_id}")
+async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[str] = Header(None)):
+    """
+    Get gateway suggestions in BPMN-compatible format for visualization.
+    
+    Returns gateway configurations that can be directly used with the BPMN module:
+    - Exclusive (XOR) gateways for decision points
+    - Parallel (AND) gateways for concurrent execution
+    
+    Format matches the BPMN module's GatewayDto structure.
+    """
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    try:
+        # Fetch process from CMS
+        cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+        if not cms_data:
+            raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+        
+        process_name = cms_data.get('process_name', cms_data.get('name', 'Unknown Process'))
+        
+        # Transform and optimize to get task_assignments with start_time for parallel detection
+        print(f"[BPMN-DEBUG] Transforming process {process_id} for optimization...")
+        process = transformer.create_process_object(cms_data)
+        optimizer = IntelligentOptimizer(cms_data=cms_data)
+        optimization_result = optimizer.optimize(process)
+        
+        # Build optimized data structure with task_assignments
+        optimized_cms_data = cms_data.copy()
+        optimized_cms_data['task_assignments'] = []
+        
+        if optimization_result.schedule:
+            for entry in optimization_result.schedule.entries:
+                task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                
+                if task and resource:
+                    optimized_cms_data['task_assignments'].append({
+                        'task_id': entry.task_id,
+                        'task_name': task.name,
+                        'resource_id': entry.resource_id,
+                        'resource_name': resource.name,
+                        'hourly_rate': resource.hourly_rate,
+                        'duration_hours': entry.end_hour - entry.start_hour,
+                        'duration_minutes': (entry.end_hour - entry.start_hour) * 60,
+                        'start_time': entry.start_hour,
+                        'end_time': entry.end_hour,
+                        'cost': (entry.end_hour - entry.start_hour) * resource.hourly_rate
+                    })
+        
+        print(f"[BPMN-DEBUG] Created {len(optimized_cms_data['task_assignments'])} task assignments")
+        if optimized_cms_data['task_assignments']:
+            print(f"[BPMN-DEBUG] Tasks starting at time 0:")
+            start_tasks = [ta for ta in optimized_cms_data['task_assignments'] if ta['start_time'] == 0]
+            for task in start_tasks:
+                print(f"[BPMN-DEBUG]   - Task {task['task_id']}: {task['task_name']}")
+        
+        # Detect exclusive (XOR) gateways FIRST using original CMS data
+        xor_detector = ExclusiveGatewayDetector(min_confidence=0.7)
+        xor_suggestions = xor_detector.analyze_process(cms_data)
+        
+        # Collect all tasks that are XOR branch targets (these should NOT be in parallel gateways)
+        xor_target_tasks = set()
+        for xor_suggestion in xor_suggestions:
+            for branch in xor_suggestion.branches:
+                if branch.target_task_id is not None:
+                    xor_target_tasks.add(branch.target_task_id)
+        
+        print(f"[BPMN-DEBUG] XOR targets to exclude from parallel: {xor_target_tasks}")
+        
+        # Filter task_assignments - only exclude XOR targets
+        # DO NOT exclude based on 'order' field - task_assignments.start_time tells us the actual schedule
+        original_count = len(optimized_cms_data['task_assignments'])
+        
+        # Debug: Check task ID types
+        if optimized_cms_data['task_assignments']:
+            sample_ta_id = optimized_cms_data['task_assignments'][0]['task_id']
+            sample_excluded_id = next(iter(xor_target_tasks)) if xor_target_tasks else None
+            print(f"[BPMN-DEBUG] Sample task_assignment ID: {sample_ta_id} (type: {type(sample_ta_id).__name__})")
+            if sample_excluded_id:
+                print(f"[BPMN-DEBUG] Sample excluded ID: {sample_excluded_id} (type: {type(sample_excluded_id).__name__})")
+        
+        filtered_task_assignments = []
+        for ta in optimized_cms_data['task_assignments']:
+            task_id = ta['task_id']
+            # Convert to int for comparison (task_assignments use strings, exclusion set uses ints)
+            task_id_int = int(task_id) if isinstance(task_id, str) else task_id
+            if task_id_int not in xor_target_tasks:
+                filtered_task_assignments.append(ta)
+                print(f"[BPMN-DEBUG]   ✓ Keeping task {task_id} for parallel detection")
+            else:
+                print(f"[BPMN-DEBUG]   ✗ Excluding task {task_id} (XOR branch target)")
+        
+        optimized_cms_data['task_assignments'] = filtered_task_assignments
+        print(f"[BPMN-DEBUG] Filtered task assignments: {len(filtered_task_assignments)} kept, {original_count - len(filtered_task_assignments)} removed")
+        
+        # Detect parallel gateways using filtered data
+        parallel_detector = ParallelGatewayDetector(min_confidence=0.7)
+        parallel_suggestions = parallel_detector.analyze_process(optimized_cms_data)
+        
+        # Convert to BPMN-compatible format
+        bpmn_gateways = []
+        
+        # Convert Exclusive (XOR) Gateway suggestions
+        for xor_suggestion in xor_suggestions:
+            branches = []
+            for branch in xor_suggestion.branches:
+                bpmn_branch = {
+                    "condition": branch.condition or branch.description,
+                    "isDefault": branch.is_default
+                }
+                
+                # Handle end events (termination branches)
+                if branch.end_event_name:
+                    bpmn_branch["endEventName"] = branch.end_event_name
+                    bpmn_branch["targetTaskId"] = None
+                # Handle target tasks
+                elif branch.target_task_id:
+                    # Only include numeric task IDs (skip placeholder IDs like "123_rejected")
+                    if isinstance(branch.target_task_id, int):
+                        bpmn_branch["targetTaskId"] = branch.target_task_id
+                    elif isinstance(branch.target_task_id, str) and branch.target_task_id.isdigit():
+                        bpmn_branch["targetTaskId"] = int(branch.target_task_id)
+                    else:
+                        # Placeholder/inferred task - mark as pending implementation
+                        bpmn_branch["targetTaskId"] = None
+                        bpmn_branch["taskName"] = branch.task_name
+                        bpmn_branch["isInferred"] = True
+                
+                branches.append(bpmn_branch)
+            
+            # Extract decision type from justification
+            decision_type = xor_suggestion.justification.get('decision_type', 'decision')
+            
+            bpmn_gateway = {
+                "type": "EXCLUSIVE",
+                "name": f"{xor_suggestion.after_task_name} Decision",
+                "afterTaskId": int(xor_suggestion.after_task_id) if xor_suggestion.after_task_id is not None else None,
+                "branches": branches,
+                "metadata": {
+                    "confidence": xor_suggestion.confidence_score,
+                    "decision_type": decision_type,
+                    "justification": xor_suggestion.justification
+                }
+            }
+            bpmn_gateways.append(bpmn_gateway)
+        
+        # Convert Parallel (AND) Gateway suggestions
+        for parallel_suggestion in parallel_suggestions:
+            branches = []
+            for branch in parallel_suggestion.branches:
+                bpmn_branch = {
+                    "targetTaskId": int(branch.target_task_id) if branch.target_task_id is not None else None
+                }
+                branches.append(bpmn_branch)
+            
+            bpmn_gateway = {
+                "type": "PARALLEL",
+                "name": f"{parallel_suggestion.after_task_name} - Parallel Execution",
+                "afterTaskId": int(parallel_suggestion.after_task_id) if parallel_suggestion.after_task_id else None,
+                "branches": branches,
+                "metadata": {
+                    "confidence": parallel_suggestion.confidence_score,
+                    "benefits": parallel_suggestion.benefits
+                }
+            }
+            bpmn_gateways.append(bpmn_gateway)
+        
+        # Build response
+        response = {
+            "processId": process_id,
+            "processName": process_name,
+            "gateways": bpmn_gateways,
+            "summary": {
+                "total_gateways": len(bpmn_gateways),
+                "exclusive_gateways": len(xor_suggestions),
+                "parallel_gateways": len(parallel_suggestions),
+                "decision_points_detected": len([g for g in bpmn_gateways if g["type"] == "EXCLUSIVE"])
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        logger.info(f"[BPMN] Generated {len(bpmn_gateways)} gateway suggestions for process {process_id}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_bpmn_gateway_suggestions: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate gateway suggestions: {str(e)}"
         )
 
 

@@ -37,9 +37,10 @@ class IntelligentOptimizer:
     and applies appropriate optimization strategies
     """
     
-    def __init__(self):
+    def __init__(self, cms_data: Optional[Dict[str, Any]] = None):
         self.process_intelligence = ProcessIntelligence()
         self.optimizers = {}
+        self.cms_data = cms_data
         self._initialize_optimizers()
     
     def _initialize_optimizers(self):
@@ -56,22 +57,26 @@ class IntelligentOptimizer:
         
         # Standard optimizer for manufacturing (parallel production)
         self.optimizers[OptimizationStrategy.PARALLEL_PRODUCTION] = ProcessOptimizer(
-            optimization_strategy="time"  # Focus on minimizing time through parallelization
+            optimization_strategy="time",  # Focus on minimizing time through parallelization
+            cms_data=self.cms_data  # Pass CMS data for fallback assignments
         )
         
         # Balanced optimizer for banking (conditional approval)
         self.optimizers[OptimizationStrategy.CONDITIONAL_APPROVAL] = ProcessOptimizer(
-            optimization_strategy="balanced"  # Balance time and cost
+            optimization_strategy="balanced",  # Balance time and cost
+            cms_data=self.cms_data  # Pass CMS data for fallback assignments
         )
         
         # Mixed optimizer for academic processes
         self.optimizers[OptimizationStrategy.MIXED_ACADEMIC] = ProcessOptimizer(
-            optimization_strategy="cost"  # Often cost-sensitive
+            optimization_strategy="cost",  # Often cost-sensitive
+            cms_data=self.cms_data  # Pass CMS data for fallback assignments
         )
         
         # Default balanced optimizer
         self.optimizers[OptimizationStrategy.BALANCED] = ProcessOptimizer(
-            optimization_strategy="balanced"
+            optimization_strategy="balanced",
+            cms_data=self.cms_data  # Pass CMS data for fallback assignments
         )
     
     def optimize(self, process: Process, 

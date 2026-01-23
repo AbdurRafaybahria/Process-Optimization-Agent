@@ -51,7 +51,7 @@ class BaseOptimizer(ABC):
 class ProcessOptimizer(BaseOptimizer):
     """Greedy rule-based optimizer for baseline scheduling"""
     
-    def __init__(self, optimization_strategy: str = "balanced"):
+    def __init__(self, optimization_strategy: str = "balanced", cms_data: Optional[Dict[str, Any]] = None):
         """
         Initialize optimizer with strategy
         
@@ -59,9 +59,45 @@ class ProcessOptimizer(BaseOptimizer):
         - "time": Minimize total duration
         - "cost": Minimize total cost  
         - "balanced": Balance time and cost
+        
+        Args:
+            optimization_strategy: Optimization strategy to use
+            cms_data: Original CMS data for fallback assignments
         """
         super().__init__()
         self.strategy = optimization_strategy
+        self.cms_data = cms_data
+        self._original_assignments = self._extract_original_assignments(cms_data) if cms_data else {}
+    
+    def _extract_original_assignments(self, cms_data: Dict[str, Any]) -> Dict[str, str]:
+        """Extract original task-to-resource assignments from CMS data
+        
+        Args:
+            cms_data: Original CMS process data
+            
+        Returns:
+            Dict mapping task_id to resource_id from original CMS assignments
+        """
+        assignments = {}
+        
+        # Extract from process_task array
+        process_tasks = cms_data.get('process_task', [])
+        for pt_wrapper in process_tasks:
+            task_data = pt_wrapper.get('task', {})
+            task_id = task_data.get('task_id')
+            
+            # Get assigned jobs from task_job array
+            task_jobs = task_data.get('task_job', [])
+            if task_jobs and task_id:
+                # Use the first assigned job as the default
+                first_job = task_jobs[0]
+                job_data = first_job.get('job', {})
+                job_id = job_data.get('job_id')
+                if job_id:
+                    assignments[str(task_id)] = str(job_id)
+                    print(f"[FALLBACK] Stored original assignment: Task {task_id} -> Resource {job_id}")
+        
+        return assignments
     
     def optimize(self, process: Process, max_retries: int = 3) -> Schedule:
         """
@@ -271,6 +307,21 @@ class ProcessOptimizer(BaseOptimizer):
                     best_resource = resource
                     best_start_hour = available_hour
                     best_score = score
+        
+        # FALLBACK: If no resource found with matching skills, use original CMS assignment
+        if best_resource is None and self._original_assignments:
+            original_resource_id = self._original_assignments.get(str(task.id))
+            if original_resource_id:
+                fallback_resource = next((r for r in process.resources if str(r.id) == str(original_resource_id)), None)
+                if fallback_resource:
+                    # Check capacity only
+                    needed_capacity = resource_workload[fallback_resource.id] + task.duration_hours
+                    if needed_capacity <= fallback_resource.total_available_hours:
+                        available_hour = resource_next_available.get(fallback_resource.id, 0.0)
+                        print(f"[FALLBACK] Using original CMS assignment for task {task.id}: Resource {fallback_resource.id} ({fallback_resource.name})")
+                        return fallback_resource, available_hour
+                    else:
+                        print(f"[FALLBACK] Original resource {fallback_resource.id} has insufficient capacity for task {task.id}")
         
         return best_resource, best_start_hour if best_resource else None
     

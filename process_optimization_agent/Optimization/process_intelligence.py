@@ -47,13 +47,13 @@ class ProcessIntelligence:
         self.patterns = {
             ProcessType.HEALTHCARE: {
                 'keywords': [
-                    # Core healthcare terms
+                    # Core healthcare terms - STRICT, specific to medical domain
                     'patient', 'doctor', 'nurse', 'physician', 'medical', 'health', 'healthcare',
                     'clinical', 'clinic', 'hospital', 'medicine', 'nursing',
                     
                     # Medical procedures and services
                     'treatment', 'consultation', 'examination', 'diagnosis', 'therapy',
-                    'surgery', 'operation', 'procedure', 'intervention', 'care',
+                    'surgery', 'operation', 'intervention',
                     'screening', 'checkup', 'followup', 'appointment',
                     
                     # Medical specialties
@@ -67,13 +67,12 @@ class ProcessIntelligence:
                     # Medical documentation and processes
                     'prescription', 'medication', 'drug', 'vaccine', 'immunization',
                     'vital signs', 'blood pressure', 'temperature', 'pulse',
-                    'symptom', 'complaint', 'illness', 'disease', 'condition',
+                    'symptom', 'complaint', 'illness', 'disease',
                     'injury', 'wound', 'pain', 'fever',
                     
                     # Healthcare administration
                     'admission', 'discharge', 'transfer', 'referral', 'triage',
-                    'medical records', 'health records', 'chart', 'ehr', 'emr',
-                    'insurance', 'billing', 'claim', 'copay'
+                    'medical records', 'health records', 'ehr', 'emr'
                 ],
                 'task_patterns': [
                     # Patient intake and registration
@@ -82,23 +81,22 @@ class ProcessIntelligence:
                     'insurance verification', 'medical history',
                     
                     # Medical assessments
-                    'examination', 'assessment', 'evaluation', 'diagnosis',
+                    'medical examination', 'medical assessment', 'medical evaluation', 'diagnosis',
                     'vital signs', 'physical exam', 'initial assessment',
                     'triage', 'screening', 'consultation',
                     
                     # Medical procedures
-                    'treatment', 'therapy', 'procedure', 'surgery', 'operation',
+                    'treatment', 'therapy', 'surgery', 'operation',
                     'intervention', 'medication administration', 'injection',
                     'blood draw', 'specimen collection', 'imaging', 'x-ray', 'scan',
                     
                     # Documentation and follow-up
                     'prescription', 'discharge', 'follow-up', 'referral',
-                    'medical records', 'documentation', 'charting', 'notes',
-                    'test results', 'lab results', 'report',
+                    'medical records', 'charting', 'notes',
+                    'test results', 'lab results',
                     
                     # Administrative tasks
-                    'scheduling', 'appointment', 'billing', 'payment',
-                    'insurance processing', 'claim submission', 'authorization'
+                    'scheduling', 'appointment', 'insurance processing', 'authorization'
                 ],
                 'resource_patterns': [
                     # Medical professionals
@@ -110,13 +108,13 @@ class ProcessIntelligence:
                     'nursing assistant', 'cna', 'charge nurse',
                     
                     # Allied health professionals
-                    'pharmacist', 'therapist', 'technician', 'radiologist',
+                    'pharmacist', 'therapist', 'radiologist',
                     'lab technician', 'medical technician', 'phlebotomist',
                     'respiratory therapist', 'physical therapist',
                     
                     # Administrative and support staff
-                    'receptionist', 'medical receptionist', 'scheduler',
-                    'medical records', 'billing specialist', 'coder',
+                    'medical receptionist', 'scheduler',
+                    'medical records', 'billing specialist', 'medical coder',
                     'registration clerk', 'admissions', 'coordinator',
                     'medical assistant', 'health assistant', 'care coordinator'
                 ],
@@ -137,6 +135,11 @@ class ProcessIntelligence:
                     # Production processes
                     'build', 'make', 'create', 'construct', 'develop', 'produce',
                     'manufacture', 'assemble', 'fabricate', 'process',
+                    
+                    # Engineering and design - STRONG INDICATORS
+                    'engineering', 'engineer', 'design', 'cad', 'blueprint',
+                    'specification', 'bom', 'bill of material', 'routing',
+                    'workcenter', 'work center', 'product engineering',
                     
                     # Quality and testing
                     'quality', 'inspection', 'testing', 'qa', 'qc', 'quality control',
@@ -435,8 +438,29 @@ class ProcessIntelligence:
         # CRITICAL RULES for immediate classification
         company_name = getattr(process, 'company', '') or ''
         process_text = f"{process.name} {company_name} {' '.join([t.name for t in process.tasks])} {' '.join([r.name for r in process.resources])}".lower()
+        process_name_lower = process.name.lower()
         
-        # RULE 0: If company name contains "insurance", it's likely an INSURANCE process
+        # RULE 0A: If process name contains "engineering" or "product engineering", it's MANUFACTURING
+        if 'engineering' in process_name_lower or 'product engineering' in process_name_lower:
+            # Check for strong manufacturing indicators
+            manufacturing_indicators = ['bom', 'bill of material', 'routing', 'workcenter', 'work center', 
+                                       'fabrication', 'production', 'manufacturing', 'configuration']
+            mfg_count = sum(1 for ind in manufacturing_indicators if ind in process_text)
+            
+            if mfg_count >= 1:  # Even 1 manufacturing indicator with "engineering" = manufacturing
+                return ProcessClassification(
+                    process_type=ProcessType.MANUFACTURING,
+                    confidence=0.95,
+                    optimization_strategy=OptimizationStrategy.PARALLEL_PRODUCTION,
+                    characteristics=self.patterns[ProcessType.MANUFACTURING]['characteristics'],
+                    reasoning=[
+                        "CRITICAL RULE: 'Engineering' in process name - classified as MANUFACTURING",
+                        f"Manufacturing indicators found: {mfg_count}",
+                        "Engineering processes are production/manufacturing by definition"
+                    ]
+                )
+        
+        # RULE 0B: If company name contains "insurance", it's likely an INSURANCE process
         if 'insurance' in company_name.lower():
             # Check if this is a customer-facing insurance process
             customer_indicators = ['customer', 'service', 'support', 'inquiry', 'claim', 'policy']

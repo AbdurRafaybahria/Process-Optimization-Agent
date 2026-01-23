@@ -30,6 +30,15 @@ from .cms_transformer import CMSDataTransformer, ProcessValidationError
 from .process_intelligence import ProcessIntelligence, ProcessType, OptimizationStrategy
 from .user_journey_optimizer import UserJourneyOptimizer, UserJourneyMetrics
 from .task_classifier import TaskClassifier
+from .gateways import (
+    ParallelGatewayDetector, 
+    ExclusiveGatewayDetector,
+    GatewayDetectorBase, 
+    GatewayBranch, 
+    GatewaySuggestion,
+    DecisionPoint,
+    ExclusiveBranch
+)
 
 # Import NLP dependency analyzer (optional)
 try:
@@ -61,6 +70,9 @@ __all__ = [
     'IntelligentOptimizer', 'CMSClient', 'CMSDataTransformer', 'ProcessValidationError',
     'ProcessIntelligence', 'ProcessType', 'OptimizationStrategy',
     'UserJourneyOptimizer', 'UserJourneyMetrics', 'TaskClassifier',
+    'ParallelGatewayDetector', 'GatewaySuggestion',
+    'GatewayDetectorBase', 'GatewayBranch',
+    'ExclusiveGatewayDetector', 'DecisionPoint', 'ExclusiveBranch',
     'Visualizer', 'VISUALIZATION_AVAILABLE',
     # NLP components
     'NLPDependencyAnalyzer', 'TaskRelationship', 'DependencyType', 'ConfidenceLevel', 'NLP_ANALYZER_AVAILABLE',
