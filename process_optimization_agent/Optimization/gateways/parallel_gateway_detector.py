@@ -71,19 +71,15 @@ class ParallelGatewayDetector:
                         print(f"[PARALLEL-DEBUG]   - Task {task.get('task_id')}: {task.get('task_name')}")
                     
                     # Filter out tasks already used in previous parallel gateways
-                    # Convert task IDs to int for comparison (handle string/int mismatch and sub-task IDs like "720_1")
+                    # IMPORTANT: Track ACTUAL task IDs (including sub-task IDs like "39_1")
+                    # to prevent cascading gateways
                     available_tasks = []
                     for task in tasks_at_time:
                         task_id = task.get('task_id')
-                        # Normalize to int for comparison - handle sub-task IDs like "720_1"
-                        if isinstance(task_id, str):
-                            # Extract base task ID (before underscore if present)
-                            base_id_str = task_id.split('_')[0]
-                            task_id_normalized = int(base_id_str) if base_id_str.isdigit() else task_id
-                        else:
-                            task_id_normalized = task_id
+                        # Convert to string for consistent comparison
+                        task_id_str = str(task_id) if task_id is not None else None
                         
-                        if task_id_normalized not in used_parallel_tasks:
+                        if task_id_str and task_id_str not in used_parallel_tasks:
                             available_tasks.append(task)
                         else:
                             print(f"[PARALLEL-DEBUG]   ⊗ Task {task_id} already used in previous gateway")
@@ -109,13 +105,7 @@ class ParallelGatewayDetector:
                         # Check if predecessor is part of the same parallel group
                         # (this prevents creating duplicate gateways for tasks that started together)
                         if predecessor:
-                            pred_id = predecessor.get('task_id')
-                            # Handle sub-task IDs like "720_1"
-                            if isinstance(pred_id, str):
-                                base_id_str = pred_id.split('_')[0]
-                                pred_id_normalized = int(base_id_str) if base_id_str.isdigit() else pred_id
-                            else:
-                                pred_id_normalized = pred_id
+                            pred_id = str(predecessor.get('task_id'))
                             pred_start_time = predecessor.get('start_time', -1)
                             
                             # Check if any of the current parallel tasks started at the same time as predecessor
@@ -125,7 +115,7 @@ class ParallelGatewayDetector:
                             )
                             
                             if parallel_with_pred:
-                                print(f"[PARALLEL-DEBUG] ⚠️ Skipping redundant gateway - predecessor task {pred_id_normalized} is part of same parallel group")
+                                print(f"[PARALLEL-DEBUG] ⚠️ Skipping redundant gateway - predecessor task {pred_id} is part of same parallel group")
                                 continue
                             
                             suggestion = self._create_gateway_from_assignments(
@@ -136,17 +126,13 @@ class ParallelGatewayDetector:
                     
                     if suggestion and suggestion.confidence_score >= self.min_confidence:
                         suggestions.append(suggestion)
-                        # Mark all tasks in this gateway as used (normalize to int, handle sub-task IDs)
+                        # Mark all tasks in this gateway as used
+                        # Store ACTUAL task IDs (including sub-task IDs like "39_1")
                         for task in available_tasks:
                             task_id = task.get('task_id')
-                            if task_id:
-                                # Handle sub-task IDs like "720_1"
-                                if isinstance(task_id, str):
-                                    base_id_str = task_id.split('_')[0]
-                                    task_id_normalized = int(base_id_str) if base_id_str.isdigit() else task_id
-                                else:
-                                    task_id_normalized = task_id
-                                used_parallel_tasks.add(task_id_normalized)
+                            if task_id is not None:
+                                task_id_str = str(task_id)
+                                used_parallel_tasks.add(task_id_str)
                         print(f"[PARALLEL-DEBUG] ✅ Added parallel gateway at t={start_time}h with {len(available_tasks)} tasks")
                         print(f"[PARALLEL-DEBUG] Used parallel tasks so far: {used_parallel_tasks}")
             
@@ -154,7 +140,11 @@ class ParallelGatewayDetector:
             return suggestions
         
         # FALLBACK: Use process_task with order field (less accurate)
-        print("[PARALLEL-DEBUG] No task_assignments found, using process_task with order field")
+        print("=" * 80)
+        print("[PARALLEL-DEBUG] ⚠️ USING FALLBACK LOGIC (process_task with order field)")
+        print(f"[PARALLEL-DEBUG] Reason: No task_assignments found or task_assignments is empty")
+        print(f"[PARALLEL-DEBUG] This is LESS ACCURATE than using optimized schedule!")
+        print("=" * 80)
         process_tasks = cms_data.get('process_task', [])
         if not process_tasks:
             print("[PARALLEL-DEBUG] No process_task found in CMS data")

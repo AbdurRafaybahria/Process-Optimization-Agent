@@ -1880,46 +1880,20 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
             for task in start_tasks:
                 print(f"[BPMN-DEBUG]   - Task {task['task_id']}: {task['task_name']}")
         
-        # Detect exclusive (XOR) gateways FIRST using original CMS data
+        # Detect exclusive (XOR) gateways using original CMS data
         xor_detector = ExclusiveGatewayDetector(min_confidence=0.7)
         xor_suggestions = xor_detector.analyze_process(cms_data)
         
-        # Collect all tasks that are XOR branch targets (these should NOT be in parallel gateways)
-        xor_target_tasks = set()
-        for xor_suggestion in xor_suggestions:
-            for branch in xor_suggestion.branches:
-                if branch.target_task_id is not None:
-                    xor_target_tasks.add(branch.target_task_id)
+        print(f"[BPMN-DEBUG] Detected {len(xor_suggestions)} XOR gateways")
         
-        print(f"[BPMN-DEBUG] XOR targets to exclude from parallel: {xor_target_tasks}")
+        # IMPORTANT: DO NOT filter out XOR target tasks from parallel detection
+        # Tasks can BOTH run in parallel AND have XOR decision points afterward
+        # Example: 3 tasks start in parallel, then each has its own approval/rejection XOR gateway
         
-        # Filter task_assignments - only exclude XOR targets
-        # DO NOT exclude based on 'order' field - task_assignments.start_time tells us the actual schedule
-        original_count = len(optimized_cms_data['task_assignments'])
+        # Detect parallel gateways using the FULL optimized schedule
+        # Trust the optimization schedule - if tasks start at the same time, they run in parallel
+        print(f"[BPMN-DEBUG] Analyzing {len(optimized_cms_data['task_assignments'])} task assignments for parallel execution")
         
-        # Debug: Check task ID types
-        if optimized_cms_data['task_assignments']:
-            sample_ta_id = optimized_cms_data['task_assignments'][0]['task_id']
-            sample_excluded_id = next(iter(xor_target_tasks)) if xor_target_tasks else None
-            print(f"[BPMN-DEBUG] Sample task_assignment ID: {sample_ta_id} (type: {type(sample_ta_id).__name__})")
-            if sample_excluded_id:
-                print(f"[BPMN-DEBUG] Sample excluded ID: {sample_excluded_id} (type: {type(sample_excluded_id).__name__})")
-        
-        filtered_task_assignments = []
-        for ta in optimized_cms_data['task_assignments']:
-            task_id = ta['task_id']
-            # Convert to int for comparison (task_assignments use strings, exclusion set uses ints)
-            task_id_int = int(task_id) if isinstance(task_id, str) else task_id
-            if task_id_int not in xor_target_tasks:
-                filtered_task_assignments.append(ta)
-                print(f"[BPMN-DEBUG]   ✓ Keeping task {task_id} for parallel detection")
-            else:
-                print(f"[BPMN-DEBUG]   ✗ Excluding task {task_id} (XOR branch target)")
-        
-        optimized_cms_data['task_assignments'] = filtered_task_assignments
-        print(f"[BPMN-DEBUG] Filtered task assignments: {len(filtered_task_assignments)} kept, {original_count - len(filtered_task_assignments)} removed")
-        
-        # Detect parallel gateways using filtered data
         parallel_detector = ParallelGatewayDetector(min_confidence=0.7)
         parallel_suggestions = parallel_detector.analyze_process(optimized_cms_data)
         
