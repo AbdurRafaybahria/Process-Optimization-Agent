@@ -9,7 +9,7 @@ import logging
 import traceback
 import subprocess
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -243,6 +243,87 @@ def detect_data_format(payload: Dict[str, Any]) -> str:
     else:
         # Default to agent format if unclear
         return 'agent'
+
+
+def consolidate_parallel_gateways(parallel_gateways: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Consolidate overlapping parallel gateways into a single gateway.
+    
+    BPMN best practice: One parallel split gateway instead of multiple cascading gateways
+    with overlapping task references.
+    
+    Args:
+        parallel_gateways: List of parallel gateway dictionaries
+        
+    Returns:
+        Consolidated list of parallel gateways (usually just one)
+    """
+    if not parallel_gateways:
+        return []
+    
+    # Collect all unique task IDs from all parallel gateways
+    all_task_ids = set()
+    earliest_after_task_id = None
+    gateway_names = []
+    
+    logger.info(f"[CONSOLIDATE-DEBUG] Starting consolidation with {len(parallel_gateways)} gateways")
+    
+    for idx, gateway in enumerate(parallel_gateways):
+        gateway_names.append(gateway.get('name', ''))
+        after_task_id = gateway.get('after_task_id')
+        
+        logger.info(f"[CONSOLIDATE-DEBUG] Gateway {idx+1}: after_task_id={after_task_id}")
+        
+        # Track the earliest after_task_id (or None for start event)
+        if earliest_after_task_id is None or (after_task_id is not None and 
+            (earliest_after_task_id is None or after_task_id < earliest_after_task_id)):
+            earliest_after_task_id = after_task_id
+        
+        # Collect all unique target task IDs
+        for branch in gateway.get('branches', []):
+            task_id = branch.get('target_task_id')
+            if task_id is not None:
+                all_task_ids.add(task_id)
+                logger.info(f"[CONSOLIDATE-DEBUG]   - Added task {task_id} to consolidated set")
+    
+    logger.info(f"[CONSOLIDATE-DEBUG] Collected task IDs: {sorted(all_task_ids)}")
+    logger.info(f"[CONSOLIDATE-DEBUG] Earliest after_task_id: {earliest_after_task_id}")
+    
+    # Remove the after_task_id from target tasks (task can't trigger AND be a target)
+    if earliest_after_task_id is not None and earliest_after_task_id in all_task_ids:
+        all_task_ids.remove(earliest_after_task_id)
+        logger.info(f"[CONSOLIDATE] Removed trigger task {earliest_after_task_id} from branch targets")
+        logger.info(f"[CONSOLIDATE-DEBUG] Remaining task IDs: {sorted(all_task_ids)}")
+    
+    # If all gateways reference the same tasks (or overlap significantly), consolidate
+    if len(all_task_ids) == 0:
+        return []
+    
+    # Create a single consolidated gateway
+    consolidated_branches = []
+    for task_id in sorted(all_task_ids):
+        consolidated_branches.append({
+            "target_task_id": task_id,
+            "is_default": False
+        })
+    
+    # Create consolidated gateway name
+    if len(parallel_gateways) == 1:
+        consolidated_name = parallel_gateways[0].get('name', 'Parallel Execution')
+    else:
+        # Use a generic name or combine names
+        consolidated_name = "Parallel Task Execution"
+    
+    consolidated_gateway = {
+        "gateway_type": "PARALLEL",
+        "name": consolidated_name,
+        "after_task_id": earliest_after_task_id,
+        "branches": consolidated_branches
+    }
+    
+    logger.info(f"[CONSOLIDATE] Merged {len(parallel_gateways)} parallel gateways into 1 gateway with {len(consolidated_branches)} unique tasks")
+    
+    return [consolidated_gateway]
 
 
 def write_temp_process_json(payload: Dict[str, Any]) -> Dict[str, str]:
@@ -1818,6 +1899,240 @@ async def get_whatif_analysis_data(process_id: int, authorization: Optional[str]
         )
 
 
+@app.get("/save-optimized-version/{process_id}")
+async def get_optimized_version_for_cms(process_id: int, authorization: Optional[str] = Header(None)):
+    """
+    Get optimized process data in CMS-compatible format for saving as a new process version.
+    
+    This endpoint returns the complete optimized process including:
+    - Process metadata (name, code, overview, etc.)
+    - Workflow items (tasks in order)
+    - Gateway suggestions (parallel and exclusive)
+    
+    The output can be directly saved to CMS as a new process version.
+    """
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    
+    client = CMSClient(base_url=DEFAULT_CMS_URL, bearer_token=token)
+    transformer = CMSDataTransformer()
+    
+    try:
+        # Fetch process from CMS
+        cms_data = await asyncio.to_thread(client.get_process_with_relations, process_id)
+        if not cms_data:
+            raise HTTPException(status_code=404, detail=f"Process {process_id} not found in CMS")
+        
+        # Extract process metadata
+        process_name = cms_data.get('process_name', cms_data.get('name', 'Unknown Process'))
+        process_code = cms_data.get('process_code', f"PROC-{process_id}")
+        company_id = cms_data.get('company_id', cms_data.get('company', {}).get('id', 1))
+        process_overview = cms_data.get('process_overview', cms_data.get('description', ''))
+        process_status_id = cms_data.get('process_status_id', 1)
+        process_category_id = cms_data.get('process_category_id', 1)
+        
+        # Transform to process object for optimization
+        process = transformer.create_process_object(cms_data)
+        
+        # Log process details for debugging
+        logger.info(f"[PROCESS-DEBUG] Process has {len(process.tasks)} tasks and {len(process.resources)} resources")
+        for task in process.tasks:
+            logger.info(f"[PROCESS-DEBUG] Task {task.id}: {task.name}, Duration: {task.duration_hours}h, Skills: {[s.name for s in task.required_skills]}")
+        for resource in process.resources:
+            logger.info(f"[PROCESS-DEBUG] Resource {resource.id}: {resource.name}, Rate: ${resource.hourly_rate}/h, Capacity: {resource.total_available_hours}h, Skills: {[s.name for s in resource.skills]}")
+        
+        # Run optimization to get the optimized schedule
+        optimizer = IntelligentOptimizer(cms_data=cms_data)
+        optimization_result = optimizer.optimize(process)
+        
+        # Log optimization result
+        if optimization_result.schedule:
+            logger.info(f"[SCHEDULE-DEBUG] Schedule has {len(optimization_result.schedule.entries)} entries")
+            for entry in optimization_result.schedule.entries:
+                logger.info(f"[SCHEDULE-DEBUG] Entry: Task {entry.task_id} -> Resource {entry.resource_id}, {entry.start_hour}h - {entry.end_hour}h")
+        else:
+            logger.error(f"[SCHEDULE-DEBUG] No schedule returned from optimization!")
+        
+        # Build optimized data structure with task_assignments
+        optimized_cms_data = cms_data.copy()
+        optimized_cms_data['task_assignments'] = []
+        
+        if optimization_result.schedule:
+            for entry in optimization_result.schedule.entries:
+                task = next((t for t in process.tasks if t.id == entry.task_id), None)
+                resource = next((r for r in process.resources if r.id == entry.resource_id), None)
+                
+                if task and resource:
+                    optimized_cms_data['task_assignments'].append({
+                        'task_id': entry.task_id,
+                        'task_name': task.name,
+                        'resource_id': entry.resource_id,
+                        'resource_name': resource.name,
+                        'hourly_rate': resource.hourly_rate,
+                        'duration_hours': entry.end_hour - entry.start_hour,
+                        'duration_minutes': (entry.end_hour - entry.start_hour) * 60,
+                        'start_time': entry.start_hour,
+                        'end_time': entry.end_hour,
+                        'cost': (entry.end_hour - entry.start_hour) * resource.hourly_rate
+                    })
+        
+        # Calculate capacity requirement in minutes (total optimized process time)
+        capacity_requirement_minutes = 0
+        if optimization_result.schedule and optimization_result.schedule.entries:
+            max_end_time = max(entry.end_hour for entry in optimization_result.schedule.entries)
+            capacity_requirement_minutes = int(max_end_time * 60)
+        
+        # Build workflow items from optimized task assignments
+        workflow = []
+        sequence_number = 1
+        
+        # Get tasks sorted by their start time in the optimized schedule
+        task_order = {}
+        if optimization_result.schedule:
+            for entry in optimization_result.schedule.entries:
+                if entry.task_id not in task_order:
+                    task_order[entry.task_id] = entry.start_hour
+        
+        # Sort tasks by start time, then by original order
+        sorted_task_ids = sorted(task_order.keys(), key=lambda tid: (task_order[tid], tid))
+        
+        for task_id in sorted_task_ids:
+            # Get the original task ID (handling both string and int)
+            original_task_id = task_id
+            if isinstance(original_task_id, str) and original_task_id.isdigit():
+                original_task_id = int(original_task_id)
+            
+            workflow.append({
+                "item_type": "task",
+                "task_id": original_task_id,
+                "sequence_number": sequence_number,
+                "order": sequence_number
+            })
+            sequence_number += 1
+        
+        # Detect exclusive (XOR) gateways
+        xor_detector = ExclusiveGatewayDetector(min_confidence=0.7)
+        xor_suggestions = xor_detector.analyze_process(cms_data)
+        
+        logger.info(f"[WORKFLOW-DEBUG] Checking optimized_cms_data for task_assignments:")
+        task_assignments = optimized_cms_data.get('task_assignments', [])
+        logger.info(f"[WORKFLOW-DEBUG] Found {len(task_assignments)} task assignments")
+        for ta in task_assignments:
+            logger.info(f"[WORKFLOW-DEBUG]   Task {ta.get('task_id')}: start_time={ta.get('start_time')}h, duration={ta.get('duration')}h")
+        
+        # Detect parallel gateways
+        parallel_detector = ParallelGatewayDetector(min_confidence=0.7)
+        parallel_suggestions = parallel_detector.analyze_process(optimized_cms_data)
+        
+        logger.info(f"[GATEWAY-DEBUG] Parallel detector found {len(parallel_suggestions)} suggestions")
+        for i, sugg in enumerate(parallel_suggestions):
+            logger.info(f"[GATEWAY-DEBUG] Suggestion {i+1}: after_task_id={sugg.after_task_id}, branches={[b.target_task_id for b in sugg.branches]}")
+        
+        # Build gateways array
+        gateways = []
+        
+        # Add Exclusive (XOR) Gateways
+        for xor_suggestion in xor_suggestions:
+            branches = []
+            for branch in xor_suggestion.branches:
+                gateway_branch = {
+                    "condition": branch.condition or branch.description,
+                    "is_default": branch.is_default
+                }
+                
+                # Handle end events (termination branches)
+                if branch.end_event_name:
+                    gateway_branch["end_event_name"] = branch.end_event_name
+                    gateway_branch["target_task_id"] = None
+                # Handle target tasks
+                elif branch.target_task_id:
+                    # Only include numeric task IDs
+                    if isinstance(branch.target_task_id, int):
+                        gateway_branch["target_task_id"] = branch.target_task_id
+                    elif isinstance(branch.target_task_id, str) and branch.target_task_id.isdigit():
+                        gateway_branch["target_task_id"] = int(branch.target_task_id)
+                    else:
+                        # Placeholder/inferred task - skip for now
+                        gateway_branch["target_task_id"] = None
+                
+                branches.append(gateway_branch)
+            
+            gateway = {
+                "gateway_type": "EXCLUSIVE",
+                "name": xor_suggestion.after_task_name,
+                "after_task_id": int(xor_suggestion.after_task_id) if xor_suggestion.after_task_id is not None else None,
+                "branches": branches
+            }
+            gateways.append(gateway)
+        
+        # Add Parallel (AND) Gateways - with consolidation
+        parallel_gateways_raw = []
+        for parallel_suggestion in parallel_suggestions:
+            branches = []
+            for branch in parallel_suggestion.branches:
+                gateway_branch = {
+                    "target_task_id": int(branch.target_task_id) if branch.target_task_id is not None else None,
+                    "is_default": False
+                }
+                branches.append(gateway_branch)
+            
+            gateway = {
+                "gateway_type": "PARALLEL",
+                "name": parallel_suggestion.after_task_name,
+                "after_task_id": int(parallel_suggestion.after_task_id) if parallel_suggestion.after_task_id else None,
+                "branches": branches
+            }
+            parallel_gateways_raw.append(gateway)
+        
+        logger.info(f"[GATEWAY-DEBUG] Raw parallel gateways before consolidation: {len(parallel_gateways_raw)}")
+        for i, gw in enumerate(parallel_gateways_raw):
+            logger.info(f"[GATEWAY-DEBUG]   Gateway {i+1}: after_task={gw.get('after_task_id')}, branches={[b.get('target_task_id') for b in gw.get('branches', [])]}")
+        
+        # Consolidate overlapping parallel gateways into one
+        # BPMN best practice: One split gateway, not multiple cascading ones
+        if parallel_gateways_raw:
+            logger.info(f"[CONSOLIDATE] Before consolidation: {len(parallel_gateways_raw)} parallel gateways")
+            consolidated_parallel = consolidate_parallel_gateways(parallel_gateways_raw)
+            
+            logger.info(f"[CONSOLIDATE] After consolidation: {len(consolidated_parallel)} parallel gateways")
+            for i, gw in enumerate(consolidated_parallel):
+                logger.info(f"[CONSOLIDATE]   Consolidated Gateway {i+1}: after_task={gw.get('after_task_id')}, branches={[b.get('target_task_id') for b in gw.get('branches', [])]}")
+            
+            gateways.extend(consolidated_parallel)
+            logger.info(f"[CONSOLIDATE] After consolidation: {len(consolidated_parallel)} parallel gateways")
+        
+        # Get next process version (this would typically come from CMS, defaulting to 1)
+        process_version = cms_data.get('process_version', 0) + 1
+        
+        # Build the response in the exact format requested
+        response = {
+            "process_name": process_name,
+            "process_code": process_code,
+            "company_id": company_id,
+            "process_overview": process_overview,
+            "capacity_requirement_minutes": capacity_requirement_minutes,
+            "process_status_id": process_status_id,
+            "process_category_id": process_category_id,
+            "process_version": process_version,
+            "workflow": workflow,
+            "gateways": gateways
+        }
+        
+        logger.info(f"[SAVE-VERSION] Generated optimized version for process {process_id} with {len(workflow)} tasks and {len(gateways)} gateways")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_optimized_version_for_cms: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate optimized version: {str(e)}"
+        )
+
+
 @app.get("/bpmn/gateways/{process_id}")
 async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[str] = Header(None)):
     """
@@ -1944,7 +2259,8 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
             }
             bpmn_gateways.append(bpmn_gateway)
         
-        # Convert Parallel (AND) Gateway suggestions
+        # Convert Parallel (AND) Gateway suggestions - with consolidation
+        parallel_bpmn_gateways_raw = []
         for parallel_suggestion in parallel_suggestions:
             branches = []
             for branch in parallel_suggestion.branches:
@@ -1963,7 +2279,49 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
                     "benefits": parallel_suggestion.benefits
                 }
             }
-            bpmn_gateways.append(bpmn_gateway)
+            parallel_bpmn_gateways_raw.append(bpmn_gateway)
+        
+        # Consolidate overlapping parallel gateways (BPMN best practice)
+        if parallel_bpmn_gateways_raw:
+            logger.info(f"[BPMN-CONSOLIDATE] Before consolidation: {len(parallel_bpmn_gateways_raw)} parallel gateways")
+            
+            # Collect all unique task IDs and find earliest afterTaskId
+            all_task_ids = set()
+            earliest_after_task_id = None
+            
+            for gateway in parallel_bpmn_gateways_raw:
+                after_id = gateway.get('afterTaskId')
+                if earliest_after_task_id is None or (after_id is not None and 
+                    (earliest_after_task_id is None or after_id < earliest_after_task_id)):
+                    earliest_after_task_id = after_id
+                
+                for branch in gateway.get('branches', []):
+                    task_id = branch.get('targetTaskId')
+                    if task_id is not None:
+                        all_task_ids.add(task_id)
+            
+            # Remove the after_task_id from target tasks (task can't trigger AND be a target)
+            if earliest_after_task_id is not None and earliest_after_task_id in all_task_ids:
+                all_task_ids.remove(earliest_after_task_id)
+                logger.info(f"[BPMN-CONSOLIDATE] Removed trigger task {earliest_after_task_id} from branch targets")
+            
+            # Create consolidated parallel gateway
+            if all_task_ids:
+                consolidated_branches = [{"targetTaskId": tid} for tid in sorted(all_task_ids)]
+                consolidated_gateway = {
+                    "type": "PARALLEL",
+                    "name": "Parallel Task Execution",
+                    "afterTaskId": earliest_after_task_id,
+                    "branches": consolidated_branches,
+                    "metadata": {
+                        "confidence": max((g.get('metadata', {}).get('confidence', 0) 
+                                         for g in parallel_bpmn_gateways_raw), default=0),
+                        "benefits": "Consolidated from multiple parallel opportunities",
+                        "consolidated_from": len(parallel_bpmn_gateways_raw)
+                    }
+                }
+                bpmn_gateways.append(consolidated_gateway)
+                logger.info(f"[BPMN-CONSOLIDATE] After consolidation: 1 parallel gateway with {len(all_task_ids)} unique tasks")
         
         # Build response
         response = {
@@ -1973,8 +2331,9 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
             "summary": {
                 "total_gateways": len(bpmn_gateways),
                 "exclusive_gateways": len(xor_suggestions),
-                "parallel_gateways": len(parallel_suggestions),
-                "decision_points_detected": len([g for g in bpmn_gateways if g["type"] == "EXCLUSIVE"])
+                "parallel_gateways": 1 if parallel_bpmn_gateways_raw else 0,
+                "decision_points_detected": len([g for g in bpmn_gateways if g["type"] == "EXCLUSIVE"]),
+                "consolidated_parallel_gateways": len(parallel_bpmn_gateways_raw) if parallel_bpmn_gateways_raw else 0
             },
             "timestamp": datetime.now().isoformat()
         }

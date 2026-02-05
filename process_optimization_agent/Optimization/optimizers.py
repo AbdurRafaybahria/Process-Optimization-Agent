@@ -80,14 +80,20 @@ class ProcessOptimizer(BaseOptimizer):
         """
         assignments = {}
         
+        print(f"[FALLBACK-EXTRACT] Starting to extract original assignments from CMS data")
+        
         # Extract from process_task array
         process_tasks = cms_data.get('process_task', [])
+        print(f"[FALLBACK-EXTRACT] Found {len(process_tasks)} process tasks in CMS data")
+        
         for pt_wrapper in process_tasks:
             task_data = pt_wrapper.get('task', {})
             task_id = task_data.get('task_id')
             
-            # Get assigned jobs from task_job array
-            task_jobs = task_data.get('task_job', [])
+            # Get assigned jobs from jobTasks array (CMS uses camelCase)
+            task_jobs = task_data.get('jobTasks', [])
+            print(f"[FALLBACK-EXTRACT] Task {task_id} has {len(task_jobs)} job assignments")
+            
             if task_jobs and task_id:
                 # Use the first assigned job as the default
                 first_job = task_jobs[0]
@@ -95,8 +101,13 @@ class ProcessOptimizer(BaseOptimizer):
                 job_id = job_data.get('job_id')
                 if job_id:
                     assignments[str(task_id)] = str(job_id)
-                    print(f"[FALLBACK] Stored original assignment: Task {task_id} -> Resource {job_id}")
+                    print(f"[FALLBACK-EXTRACT] Stored original assignment: Task {task_id} -> Resource {job_id}")
+                else:
+                    print(f"[FALLBACK-EXTRACT] Task {task_id}: job_id is None in job_data: {job_data}")
+            elif task_id:
+                print(f"[FALLBACK-EXTRACT] Task {task_id} has no job assignments - skipping")
         
+        print(f"[FALLBACK-EXTRACT] Total original assignments extracted: {len(assignments)}")
         return assignments
     
     def optimize(self, process: Process, max_retries: int = 3) -> Schedule:

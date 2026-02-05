@@ -136,6 +136,14 @@ class ParallelGatewayDetector:
                         print(f"[PARALLEL-DEBUG] ✅ Added parallel gateway at t={start_time}h with {len(available_tasks)} tasks")
                         print(f"[PARALLEL-DEBUG] Used parallel tasks so far: {used_parallel_tasks}")
             
+            # Log any sequential tasks that were not included (correct behavior - they have dependencies)
+            if len(used_parallel_tasks) < len(task_assignments):
+                print(f"[PARALLEL-DEBUG] Sequential tasks (not in parallel gateways):")
+                for task in task_assignments:
+                    task_id_str = str(task.get('task_id'))
+                    if task_id_str not in used_parallel_tasks:
+                        print(f"[PARALLEL-DEBUG]   - Task {task.get('task_id')}: {task.get('task_name')} (starts at t={task.get('start_time')}h) - Sequential dependency")
+            
             print(f"[PARALLEL-DEBUG] Total parallel gateway suggestions: {len(suggestions)}")
             return suggestions
         
