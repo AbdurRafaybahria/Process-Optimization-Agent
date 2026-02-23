@@ -272,69 +272,109 @@ class ProcessOptimizer(BaseOptimizer):
     def _find_best_resource_simple(self, task: Task, process: Process, 
                                   resource_next_available: Dict[str, float],
                                   resource_workload: Dict[str, float]) -> Tuple[Optional[Resource], Optional[float]]:
-        """Find the best available resource using simplified logic"""
-        best_resource = None
-        best_start_hour = float('inf')
-        best_score = float('-inf')
-        
+        """
+        Find the best available resource using cascading logic:
+        1. Exact Match (100% skill match) + Lowest Cost
+        2. Partial Match (≥65% skill match) + Low Cost (cheaper than CMS default)
+        3. CMS Default Fallback
+        """
         required_skills = task.required_skills
+        PARTIAL_MATCH_THRESHOLD = 0.50  # 50% minimum skill match
+        
+        # Get CMS default resource for this task (for fallback and cost comparison)
+        cms_default_resource = None
+        cms_default_cost = float('inf')
+        
+        print(f"[DEBUG-CMS] Task {task.id}: _original_assignments exists? {bool(self._original_assignments)}")
+        print(f"[DEBUG-CMS] Task {task.id}: _original_assignments content: {self._original_assignments}")
+        
+        if self._original_assignments:
+            # Use string key to match dictionary format
+            task_id_str = str(task.id)
+            original_resource_id = self._original_assignments.get(task_id_str)
+            print(f"[DEBUG-CMS] Task {task.id}: Looking up '{task_id_str}' -> Resource ID: {original_resource_id}")
+            
+            if original_resource_id:
+                # Find resource by matching ID (handle both string and int)
+                print(f"[DEBUG-CMS] Task {task.id}: Searching for resource with ID matching '{original_resource_id}'")
+                print(f"[DEBUG-CMS] Available resource IDs: {[r.id for r in process.resources]}")
+                cms_default_resource = next((r for r in process.resources if str(r.id) == str(original_resource_id)), None)
+                if cms_default_resource:
+                    cms_default_cost = cms_default_resource.hourly_rate
+                    print(f"[DEBUG-CMS] Task {task.id}: Found CMS default resource {cms_default_resource.id} (${cms_default_cost:.2f}/hr)")
+                else:
+                    print(f"[DEBUG-CMS] Task {task.id}: Resource {original_resource_id} NOT FOUND in process.resources!")
+            else:
+                print(f"[DEBUG-CMS] Task {task.id}: No original assignment found for task ID '{task_id_str}'")
+        
+        # Candidates for each tier
+        exact_match_candidates = []
+        partial_match_candidates = []
+        
+        print(f"[RESOURCE-MATCH] Finding resource for task {task.id} ({task.name})")
+        print(f"[RESOURCE-MATCH] Required skills: {[f'{s.name}:{s.level.name}' for s in required_skills]}")
+        print(f"[RESOURCE-MATCH] CMS default: Resource {cms_default_resource.id if cms_default_resource else 'None'} (${cms_default_cost:.2f}/hr)")
         
         for resource in process.resources:
-            # Check if resource has required skills
-            if required_skills and not resource.has_all_skills(required_skills):
-                print(f"[DEBUG] Resource {resource.id} ({resource.name}) missing skills for task {task.id}")
-                continue
-            
-            # Check if resource has capacity
+            # Check capacity first
             needed_capacity = resource_workload[resource.id] + task.duration_hours
             if needed_capacity > resource.total_available_hours:
-                print(f"[DEBUG] Resource {resource.id} ({resource.name}) insufficient capacity for task {task.id}: "
-                      f"needs {task.duration_hours:.1f}h, workload={resource_workload[resource.id]:.1f}h, "
-                      f"total_available={resource.total_available_hours:.1f}h")
+                print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - SKIP: insufficient capacity")
                 continue
-                
-            # Get earliest available hour for this resource
+            
+            # Calculate skill match percentage
+            skill_match = resource.get_skill_score(required_skills) if required_skills else 1.0
             available_hour = resource_next_available.get(resource.id, 0.0)
             
-            # Calculate score based on optimization strategy
-            score = self._calculate_resource_score_simple(task, resource, available_hour, resource_workload)
+            print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - Skill: {skill_match*100:.1f}%, Cost: ${resource.hourly_rate:.2f}/hr")
             
-            # Select based on strategy
-            if self.strategy == "time":
-                # Prefer earliest available resource
-                if available_hour < best_start_hour:
-                    best_resource = resource
-                    best_start_hour = available_hour
-                    best_score = score
-            elif self.strategy == "cost":
-                # Prefer lower cost resources
-                if score > best_score:
-                    best_resource = resource
-                    best_start_hour = available_hour
-                    best_score = score
+            # Categorize into exact or partial match
+            if skill_match >= 1.0:
+                # Exact match (100% skills)
+                exact_match_candidates.append((resource, available_hour, skill_match))
+            elif skill_match >= PARTIAL_MATCH_THRESHOLD:
+                # Partial match (≥65% skills)
+                partial_match_candidates.append((resource, available_hour, skill_match))
+        
+        # TIER 1: Exact Match + Lowest Cost
+        if exact_match_candidates:
+            print(f"[RESOURCE-MATCH] TIER 1: Found {len(exact_match_candidates)} exact match(es)")
+            # Sort by hourly rate (lowest first), then by availability
+            exact_match_candidates.sort(key=lambda x: (x[0].hourly_rate, x[1]))
+            best_resource, best_start_hour, match_score = exact_match_candidates[0]
+            print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - Exact match, ${best_resource.hourly_rate:.2f}/hr")
+            return best_resource, best_start_hour
+        
+        # TIER 2: Partial Match + Must be cheaper than CMS default
+        if partial_match_candidates:
+            print(f"[RESOURCE-MATCH] TIER 2: Found {len(partial_match_candidates)} partial match(es)")
+            # Filter: must be cheaper than CMS default
+            affordable_candidates = [
+                (r, h, s) for r, h, s in partial_match_candidates 
+                if r.hourly_rate < cms_default_cost
+            ]
+            
+            if affordable_candidates:
+                # Sort by skill match (highest first), then by cost (lowest first)
+                affordable_candidates.sort(key=lambda x: (-x[2], x[0].hourly_rate))
+                best_resource, best_start_hour, match_score = affordable_candidates[0]
+                print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - {match_score*100:.1f}% match, ${best_resource.hourly_rate:.2f}/hr (cheaper than default)")
+                return best_resource, best_start_hour
             else:
-                # Balanced: consider both time and cost
-                if score > best_score:
-                    best_resource = resource
-                    best_start_hour = available_hour
-                    best_score = score
+                print(f"[RESOURCE-MATCH] No partial matches cheaper than CMS default (${cms_default_cost:.2f}/hr)")
         
-        # FALLBACK: If no resource found with matching skills, use original CMS assignment
-        if best_resource is None and self._original_assignments:
-            original_resource_id = self._original_assignments.get(str(task.id))
-            if original_resource_id:
-                fallback_resource = next((r for r in process.resources if str(r.id) == str(original_resource_id)), None)
-                if fallback_resource:
-                    # Check capacity only
-                    needed_capacity = resource_workload[fallback_resource.id] + task.duration_hours
-                    if needed_capacity <= fallback_resource.total_available_hours:
-                        available_hour = resource_next_available.get(fallback_resource.id, 0.0)
-                        print(f"[FALLBACK] Using original CMS assignment for task {task.id}: Resource {fallback_resource.id} ({fallback_resource.name})")
-                        return fallback_resource, available_hour
-                    else:
-                        print(f"[FALLBACK] Original resource {fallback_resource.id} has insufficient capacity for task {task.id}")
+        # TIER 3: CMS Default Fallback
+        if cms_default_resource:
+            needed_capacity = resource_workload[cms_default_resource.id] + task.duration_hours
+            if needed_capacity <= cms_default_resource.total_available_hours:
+                available_hour = resource_next_available.get(cms_default_resource.id, 0.0)
+                print(f"[RESOURCE-MATCH] ✅ FALLBACK: Using CMS default Resource {cms_default_resource.id} ({cms_default_resource.name}) - ${cms_default_resource.hourly_rate:.2f}/hr")
+                return cms_default_resource, available_hour
+            else:
+                print(f"[RESOURCE-MATCH] ❌ CMS default resource has insufficient capacity")
         
-        return best_resource, best_start_hour if best_resource else None
+        print(f"[RESOURCE-MATCH] ❌ No suitable resource found for task {task.id}")
+        return None, None
     
     def _calculate_resource_score_simple(self, task: Task, resource: Resource, 
                                         available_hour: float, resource_workload: Dict[str, float]) -> float:

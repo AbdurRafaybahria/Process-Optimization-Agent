@@ -427,8 +427,9 @@ class InsuranceProcessOptimizer:
     Handles all 10 insurance scenario types
     """
     
-    def __init__(self):
+    def __init__(self, cms_data: Optional[Dict[str, Any]] = None):
         self.scenario_detector = InsuranceScenarioDetector()
+        self.cms_data = cms_data
     
     def optimize(self, process: Process) -> InsuranceOptimizationResult:
         """
@@ -585,144 +586,50 @@ class InsuranceProcessOptimizer:
     def _optimize_standard_billing(self, process: Process) -> Tuple[Schedule, InsuranceMetrics]:
         """
         Optimize standard billing scenario
-        Strategy: Parallelize bill generation and verification
+        Strategy: Use ProcessOptimizer for intelligent resource matching with CMS fallback
         """
-        from ...Optimization.models import ScheduleEntry
-        from datetime import datetime, timedelta
+        from ...Optimization.optimizers import ProcessOptimizer
         
-        schedule = Schedule(process_id=process.id)
-        base_time = datetime.now()
+        print(f"   [INSURANCE-SCENARIO] Using STANDARD_BILLING optimization")
+        print(f"   [INSURANCE-SCENARIO] Falling back to ProcessOptimizer for intelligent resource matching")
         
-        # Map tasks to resources
-        task_resource_map = {}
-        for task in process.tasks:
-            task_lower = task.name.lower()
-            matched_resource = None
-            
-            if 'bill' in task_lower:
-                matched_resource = next((r for r in process.resources if 'billing' in r.name.lower()), None)
-            elif 'insurance' in task_lower or 'verif' in task_lower or 'claim' in task_lower or 'reconcil' in task_lower:
-                matched_resource = next((r for r in process.resources if 'insurance' in r.name.lower() or 'liaison' in r.name.lower()), None)
-            elif 'record' in task_lower or 'account' in task_lower:
-                matched_resource = next((r for r in process.resources if 'accountant' in r.name.lower()), None)
-            
-            if matched_resource:
-                task_resource_map[task.id] = matched_resource
+        # Use ProcessOptimizer with CMS data for intelligent resource assignment
+        optimizer = ProcessOptimizer(cms_data=self.cms_data)
+        schedule = optimizer.optimize(process)
         
-        # Identify tasks
-        bill_tasks = [t for t in process.tasks if 'bill' in t.name.lower()]
-        verify_tasks = [t for t in process.tasks if 'verif' in t.name.lower()]
-        submit_tasks = [t for t in process.tasks if 'submit' in t.name.lower() or 'submission' in t.name.lower()]
-        reconcile_tasks = [t for t in process.tasks if 'reconcil' in t.name.lower()]
-        record_tasks = [t for t in process.tasks if 'record' in t.name.lower()]
-        
-        current_time = 0.0
-        
-        # Parallel Block 1: Bill generation and verification run simultaneously
-        if bill_tasks and verify_tasks:
-            # Bill generation starts at time 0
-            bill_task = bill_tasks[0]
-            bill_resource = task_resource_map.get(bill_task.id)
-            if bill_resource:
-                start_dt = base_time + timedelta(hours=current_time)
-                end_dt = base_time + timedelta(hours=current_time + bill_task.duration_hours)
-                schedule.add_entry(ScheduleEntry(
-                    task_id=bill_task.id,
-                    resource_id=bill_resource.id,
-                    start_time=start_dt,
-                    end_time=end_dt,
-                    start_hour=current_time,
-                    end_hour=current_time + bill_task.duration_hours
-                ))
-            
-            # Verification also starts at time 0 (parallel)
-            verify_task = verify_tasks[0]
-            verify_resource = task_resource_map.get(verify_task.id)
-            if verify_resource:
-                start_dt = base_time + timedelta(hours=current_time)
-                end_dt = base_time + timedelta(hours=current_time + verify_task.duration_hours)
-                schedule.add_entry(ScheduleEntry(
-                    task_id=verify_task.id,
-                    resource_id=verify_resource.id,
-                    start_time=start_dt,
-                    end_time=end_dt,
-                    start_hour=current_time,
-                    end_hour=current_time + verify_task.duration_hours
-                ))
-            
-            # Record keeping starts after bill generation
-            if record_tasks:
-                record_task = record_tasks[0]
-                record_resource = task_resource_map.get(record_task.id)
-                record_start = current_time + bill_task.duration_hours
-                if record_resource:
-                    start_dt = base_time + timedelta(hours=record_start)
-                    end_dt = base_time + timedelta(hours=record_start + record_task.duration_hours)
-                    schedule.add_entry(ScheduleEntry(
-                        task_id=record_task.id,
-                        resource_id=record_resource.id,
-                        start_time=start_dt,
-                        end_time=end_dt,
-                        start_hour=record_start,
-                        end_hour=record_start + record_task.duration_hours
-                    ))
-            
-            parallel_time = max(bill_task.duration_hours, verify_task.duration_hours)
-            current_time += parallel_time
-        
-        # Sequential: Submit after both bill and verification complete
-        if submit_tasks:
-            submit_task = submit_tasks[0]
-            submit_resource = task_resource_map.get(submit_task.id)
-            if not submit_resource:
-                # If no resource mapped, try to find one based on task name
-                if 'claim' in submit_task.name.lower() or 'submit' in submit_task.name.lower():
-                    submit_resource = next((r for r in process.resources if 'insurance' in r.name.lower() or 'liaison' in r.name.lower()), None)
-            
-            if submit_resource:
-                start_dt = base_time + timedelta(hours=current_time)
-                end_dt = base_time + timedelta(hours=current_time + submit_task.duration_hours)
-                schedule.add_entry(ScheduleEntry(
-                    task_id=submit_task.id,
-                    resource_id=submit_resource.id,
-                    start_time=start_dt,
-                    end_time=end_dt,
-                    start_hour=current_time,
-                    end_hour=current_time + submit_task.duration_hours
-                ))
-                current_time += submit_task.duration_hours
-        
-        # Sequential: Reconcile after submission
-        if reconcile_tasks:
-            reconcile_task = reconcile_tasks[0]
-            reconcile_resource = task_resource_map.get(reconcile_task.id)
-            if reconcile_resource:
-                start_dt = base_time + timedelta(hours=current_time)
-                end_dt = base_time + timedelta(hours=current_time + reconcile_task.duration_hours)
-                schedule.add_entry(ScheduleEntry(
-                    task_id=reconcile_task.id,
-                    resource_id=reconcile_resource.id,
-                    start_time=start_dt,
-                    end_time=end_dt,
-                    start_hour=current_time,
-                    end_hour=current_time + reconcile_task.duration_hours
-                ))
-            current_time += reconcile_task.duration_hours
-        
-        # Apply skill-based load balancing if there's resource overload
-        schedule = self._apply_skill_based_load_balancing(process, schedule, base_time)
-        
-        # Recalculate current_time after load balancing
+        # Calculate metrics from schedule
         if schedule.entries:
-            current_time = max(entry.end_hour for entry in schedule.entries)
+            total_time = max([entry.end_hour for entry in schedule.entries])
+            total_cost = sum([
+                (entry.end_hour - entry.start_hour) * process.get_resource_by_id(entry.resource_id).hourly_rate
+                for entry in schedule.entries
+            ])
+        else:
+            total_time = 0
+            total_cost = 0
         
-        # Calculate optimized metrics
+        # Calculate before cost with proper skill matching
+        before_cost = 0
+        for task in process.tasks:
+            matched_rate = 50
+            for resource in process.resources:
+                if any(task_skill.name == res_skill.name 
+                       for task_skill in task.required_skills 
+                       for res_skill in resource.skills):
+                    matched_rate = resource.hourly_rate
+                    break
+            before_cost += task.duration_hours * matched_rate
+        
         original_time = sum(t.duration_hours * 60 for t in process.tasks)
-        time_saved = (original_time - (current_time * 60))
+        time_saved = (original_time - (total_time * 60))
         
         metrics = InsuranceMetrics(
-            total_process_time=current_time * 60,  # Convert to minutes
-            after_process_time=current_time * 60,
+            total_process_time=total_time * 60,  # Convert to minutes
+            total_labor_cost=total_cost,
+            before_process_time=original_time,
+            after_process_time=total_time * 60,
+            before_cost=before_cost,
+            after_cost=total_cost,
             time_savings_minutes=time_saved,
             time_savings_percent=(time_saved / original_time * 100) if original_time > 0 else 0
         )
@@ -1128,8 +1035,8 @@ class InsuranceProcessOptimizer:
         from ...Optimization.optimizers import ProcessOptimizer
         from datetime import datetime
         
-        # Use standard optimizer for generic insurance processes
-        optimizer = ProcessOptimizer()
+        # Use standard optimizer for generic insurance processes with CMS data for fallback
+        optimizer = ProcessOptimizer(cms_data=self.cms_data)
         schedule = optimizer.optimize(process)
         
         # Calculate metrics from schedule

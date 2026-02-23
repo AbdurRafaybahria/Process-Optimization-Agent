@@ -1983,29 +1983,57 @@ async def get_optimized_version_for_cms(process_id: int, authorization: Optional
             max_end_time = max(entry.end_hour for entry in optimization_result.schedule.entries)
             capacity_requirement_minutes = int(max_end_time * 60)
         
-        # Build workflow items from optimized task assignments
+        # Build workflow items - include ALL tasks from original CMS data
         workflow = []
         sequence_number = 1
         
-        # Get tasks sorted by their start time in the optimized schedule
-        task_order = {}
-        if optimization_result.schedule:
-            for entry in optimization_result.schedule.entries:
-                if entry.task_id not in task_order:
-                    task_order[entry.task_id] = entry.start_hour
+        # Normalize task IDs to integers for consistent comparison
+        def normalize_task_id(tid):
+            """Convert task ID to integer for consistent comparison"""
+            if isinstance(tid, int):
+                return tid
+            if isinstance(tid, str) and tid.isdigit():
+                return int(tid)
+            # For non-numeric strings (like "854"), try to extract number
+            if isinstance(tid, str):
+                import re
+                match = re.search(r'\d+', str(tid))
+                if match:
+                    return int(match.group())
+            return tid
         
-        # Sort tasks by start time, then by original order
+        # Use task_assignments for scheduled tasks - normalize IDs
+        task_order = {}
+        for task_assignment in optimized_cms_data.get('task_assignments', []):
+            task_id = normalize_task_id(task_assignment.get('task_id'))
+            start_time = task_assignment.get('start_time', 0)
+            if task_id not in task_order:
+                task_order[task_id] = start_time
+        
+        # IMPORTANT: Add unscheduled tasks at the end to ensure ALL tasks are in workflow
+        # This handles cases where optimizer fails to schedule some tasks
+        original_tasks = cms_data.get('process_task', [])
+        logger.info(f"[WORKFLOW-DEBUG] Found {len(original_tasks)} tasks in original CMS data")
+        logger.info(f"[WORKFLOW-DEBUG] Found {len(task_order)} tasks in optimized schedule: {list(task_order.keys())}")
+        
+        for task_wrapper in original_tasks:
+            task = task_wrapper.get('task', {})
+            task_id = normalize_task_id(task.get('task_id'))
+            if task_id and task_id not in task_order:
+                # Task not in schedule, add at end with high start time
+                logger.warning(f"[WORKFLOW-DEBUG] Task {task_id} ({task.get('task_name')}) was not scheduled by optimizer, adding to workflow")
+                task_order[task_id] = 999  # Place unscheduled tasks at end
+        
+        # Sort tasks by start time, then by task ID
         sorted_task_ids = sorted(task_order.keys(), key=lambda tid: (task_order[tid], tid))
         
+        logger.info(f"[WORKFLOW-DEBUG] Building workflow from {len(sorted_task_ids)} unique tasks")
         for task_id in sorted_task_ids:
-            # Get the original task ID (handling both string and int)
-            original_task_id = task_id
-            if isinstance(original_task_id, str) and original_task_id.isdigit():
-                original_task_id = int(original_task_id)
+            logger.info(f"[WORKFLOW-DEBUG] Adding task {task_id} at start_time {task_order[task_id]}h")
             
             workflow.append({
                 "item_type": "task",
-                "task_id": original_task_id,
+                "task_id": task_id,
                 "sequence_number": sequence_number,
                 "order": sequence_number
             })

@@ -53,7 +53,7 @@ class IntelligentOptimizer:
         )
         
         # Insurance workflow optimizer
-        self.optimizers[OptimizationStrategy.INSURANCE_WORKFLOW] = InsuranceProcessOptimizer()
+        self.optimizers[OptimizationStrategy.INSURANCE_WORKFLOW] = InsuranceProcessOptimizer(cms_data=self.cms_data)
         
         # Standard optimizer for manufacturing (parallel production)
         self.optimizers[OptimizationStrategy.PARALLEL_PRODUCTION] = ProcessOptimizer(
