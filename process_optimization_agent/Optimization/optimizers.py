@@ -49,9 +49,36 @@ class BaseOptimizer(ABC):
 
 
 class ProcessOptimizer(BaseOptimizer):
-    """Greedy rule-based optimizer for baseline scheduling"""
+    """Greedy rule-based optimizer with optional bin-packing for cost optimization"""
     
-    def __init__(self, optimization_strategy: str = "balanced", cms_data: Optional[Dict[str, Any]] = None):
+    # Bin-packing configuration
+    ENABLE_BIN_PACKING = True
+    BIN_PACKING_MODE = "balanced"  # conservative | balanced | aggressive
+    
+    # Mode-specific settings
+    BIN_PACKING_CONFIGS = {
+        "conservative": {
+            "respect_cms_defaults": True,
+            "min_skill_match": 0.95,
+            "max_utilization": 0.85,
+            "min_savings_threshold": 0.03,  # 3% minimum savings
+        },
+        "balanced": {
+            "respect_cms_defaults": True,  # Honor critical tasks only
+            "min_skill_match": 0.90,
+            "max_utilization": 0.90,
+            "min_savings_threshold": 0.05,  # 5% minimum savings
+        },
+        "aggressive": {
+            "respect_cms_defaults": False,
+            "min_skill_match": 0.85,
+            "max_utilization": 0.95,
+            "min_savings_threshold": 0.02,  # 2% minimum savings
+        }
+    }
+    
+    def __init__(self, optimization_strategy: str = "balanced", cms_data: Optional[Dict[str, Any]] = None, 
+                 bin_packing_mode: str = "balanced", bin_packing_enabled: bool = True):
         """
         Initialize optimizer with strategy
         
@@ -63,11 +90,18 @@ class ProcessOptimizer(BaseOptimizer):
         Args:
             optimization_strategy: Optimization strategy to use
             cms_data: Original CMS data for fallback assignments
+            bin_packing_mode: Bin-packing configuration mode (conservative, balanced, aggressive)
+            bin_packing_enabled: Whether to enable bin-packing optimization
         """
         super().__init__()
         self.strategy = optimization_strategy
         self.cms_data = cms_data
         self._original_assignments = self._extract_original_assignments(cms_data) if cms_data else {}
+        
+        # Bin-packing configuration
+        self._bin_packing_enabled = bin_packing_enabled
+        self._bin_packing_mode = bin_packing_mode
+        self._bin_packing_config = self.BIN_PACKING_CONFIGS.get(bin_packing_mode, self.BIN_PACKING_CONFIGS["balanced"])
     
     def _extract_original_assignments(self, cms_data: Dict[str, Any]) -> Dict[str, str]:
         """Extract original task-to-resource assignments from CMS data
@@ -110,9 +144,140 @@ class ProcessOptimizer(BaseOptimizer):
         print(f"[FALLBACK-EXTRACT] Total original assignments extracted: {len(assignments)}")
         return assignments
     
+    def _categorize_tasks(self, process: Process) -> Tuple[List[Task], List[Task]]:
+        """Categorize tasks into CMS-critical and flexible based on assignments
+        
+        Returns:
+            Tuple of (critical_tasks, flexible_tasks)
+        """
+        critical_tasks = []
+        flexible_tasks = []
+        
+        for task in process.tasks:
+            # Task is critical if it has a CMS default assignment
+            # indicating it may have regulatory/business requirements
+            task_id_str = str(task.id)
+            if task_id_str in self._original_assignments:
+                # Has CMS assignment - treat as critical in conservative/balanced modes
+                if self._bin_packing_config["respect_cms_defaults"]:
+                    critical_tasks.append(task)
+                else:
+                    flexible_tasks.append(task)
+            else:
+                # No CMS assignment - safe to optimize
+                flexible_tasks.append(task)
+        
+        print(f"[BIN-PACKING] Categorized: {len(critical_tasks)} critical, {len(flexible_tasks)} flexible tasks")
+        return critical_tasks, flexible_tasks
+    
+    def _validate_assignment(self, task: Task, resource: Resource, 
+                           resource_workload: Dict[str, float]) -> Tuple[bool, str]:
+        """Validate that an assignment is safe before applying
+        
+        Returns:
+            Tuple of (is_valid, reason)
+        """
+        # Check 1: Skill match
+        if task.required_skills:
+            skill_score = resource.get_skill_score(task.required_skills)
+            min_match = self._bin_packing_config["min_skill_match"]
+            if skill_score < min_match:
+                return False, f"Insufficient skill match ({skill_score*100:.1f}% < {min_match*100:.1f}%)"
+        
+        # Check 2: Capacity
+        needed_capacity = resource_workload.get(resource.id, 0.0) + task.duration_hours
+        max_util = self._bin_packing_config["max_utilization"]
+        if needed_capacity > resource.total_available_hours * max_util:
+            return False, f"Capacity exceeded ({needed_capacity:.1f}h > {resource.total_available_hours * max_util:.1f}h)"
+        
+        # Check 3: CMS protection (if in conservative/balanced mode)
+        if self._bin_packing_config["respect_cms_defaults"]:
+            task_id_str = str(task.id)
+            if task_id_str in self._original_assignments:
+                expected_resource_id = str(self._original_assignments[task_id_str])
+                if str(resource.id) != expected_resource_id:
+                    return False, f"CMS protected assignment (expected Resource {expected_resource_id})"
+        
+        return True, "OK"
+    
+    def _bin_pack_tasks(self, tasks: List[Task], process: Process,
+                       resource_workload: Dict[str, float]) -> Optional[Dict[int, Tuple[Resource, float]]]:
+        """Apply First-Fit Decreasing (FFD) bin-packing algorithm
+        
+        Returns:
+            Dict mapping task_id to (resource, start_hour) or None if failed
+        """
+        try:
+            print(f"[BIN-PACKING] Starting FFD algorithm for {len(tasks)} tasks")
+            
+            # Step 1: Sort tasks by duration (longest first) - key to FFD
+            sorted_tasks = sorted(tasks, key=lambda t: t.duration_hours, reverse=True)
+            print(f"[BIN-PACKING] Tasks sorted by duration: {[(t.id, t.duration_hours) for t in sorted_tasks[:5]]}...")
+            
+            # Step 2: Get resources with skill matches, sort by cost (cheapest first)
+            assignments = {}
+            temp_workload = resource_workload.copy()
+            
+            for task in sorted_tasks:
+                # Find resources that can handle this task
+                eligible_resources = []
+                
+                for resource in process.resources:
+                    # Check skill match
+                    if task.required_skills:
+                        skill_score = resource.get_skill_score(task.required_skills)
+                        if skill_score < self._bin_packing_config["min_skill_match"]:
+                            continue
+                    else:
+                        skill_score = 1.0
+                    
+                    # Check capacity
+                    needed_capacity = temp_workload.get(resource.id, 0.0) + task.duration_hours
+                    if needed_capacity > resource.total_available_hours * self._bin_packing_config["max_utilization"]:
+                        continue
+                    
+                    eligible_resources.append((resource, skill_score))
+                
+                if not eligible_resources:
+                    print(f"[BIN-PACKING] ❌ No eligible resources for task {task.id} - aborting")
+                    return None
+                
+                # Sort by: skill match (highest), then cost (lowest)
+                eligible_resources.sort(key=lambda x: (-x[1], x[0].hourly_rate))
+                
+                # Assign to best resource (first fit)
+                best_resource, skill_score = eligible_resources[0]
+                start_hour = temp_workload.get(best_resource.id, 0.0)
+                
+                assignments[task.id] = (best_resource, start_hour)
+                temp_workload[best_resource.id] = start_hour + task.duration_hours
+                
+                print(f"[BIN-PACKING]   Task {task.id} → Resource {best_resource.id} ({skill_score*100:.0f}% match, ${best_resource.hourly_rate:.2f}/hr)")
+            
+            print(f"[BIN-PACKING] ✅ Successfully packed {len(assignments)} tasks")
+            return assignments
+            
+        except Exception as e:
+            print(f"[BIN-PACKING] ❌ Exception: {str(e)}")
+            return None
+    
+    def _calculate_cost(self, assignments: Dict[int, Tuple[Resource, float]], 
+                       process: Process) -> float:
+        """Calculate total cost of assignments"""
+        total_cost = 0.0
+        for task_id, (resource, start_hour) in assignments.items():
+            task = process.get_task_by_id(task_id)
+            if task:
+                total_cost += task.duration_hours * resource.hourly_rate
+        return total_cost
+    
     def optimize(self, process: Process, max_retries: int = 3) -> Schedule:
         """
-        Optimize using simplified sequential or parallel scheduling
+        Optimize using hybrid bin-packing with 4-level fallback:
+        Level 1: Bin-packing with strict constraints (high skill match, cost savings threshold)
+        Level 2: Bin-packing with relaxed constraints (lower skill threshold)
+        Level 3: Greedy sequential scheduling (current proven method)
+        Level 4: Pure CMS defaults (handled within greedy)
         
         Args:
             process: The process to optimize
@@ -123,6 +288,168 @@ class ProcessOptimizer(BaseOptimizer):
         """
         # Detect and apply dependencies first
         self._detect_and_apply_dependencies(process)
+        
+        # Try bin-packing optimization first (Levels 1-2)
+        if self._bin_packing_enabled:
+            print(f"\n[BIN-PACKING] Attempting optimization with mode: {self._bin_packing_mode}")
+            
+            # Level 1: Strict constraints
+            print(f"[BIN-PACKING] Level 1: Strict constraints (skill≥{self._bin_packing_config['min_skill_match']*100:.0f}%, savings≥{self._bin_packing_config['min_savings_threshold']*100:.0f}%)")
+            binpack_schedule = self._try_bin_packing_optimization(process)
+            
+            if binpack_schedule:
+                # Calculate greedy baseline for comparison
+                greedy_schedule = self._optimize_greedy(process, max_retries)
+                greedy_cost = sum(e.cost for e in greedy_schedule.entries)
+                binpack_cost = sum(e.cost for e in binpack_schedule.entries)
+                
+                savings_pct = (greedy_cost - binpack_cost) / greedy_cost if greedy_cost > 0 else 0.0
+                
+                print(f"[BIN-PACKING] Cost comparison: Greedy=${greedy_cost:.2f} vs Bin-pack=${binpack_cost:.2f} (savings: {savings_pct*100:.1f}%)")
+                
+                if savings_pct >= self._bin_packing_config["min_savings_threshold"]:
+                    print(f"[BIN-PACKING] ✓ Level 1 SUCCESS - Using bin-packed schedule (saves ${greedy_cost - binpack_cost:.2f})")
+                    return binpack_schedule
+                else:
+                    print(f"[BIN-PACKING] Level 1 insufficient savings ({savings_pct*100:.1f}% < {self._bin_packing_config['min_savings_threshold']*100:.0f}%)")
+            else:
+                print(f"[BIN-PACKING] Level 1 failed to produce valid schedule")
+            
+            # Level 2: Relaxed constraints
+            if self._bin_packing_mode != "conservative":  # Only try relaxed for balanced/aggressive
+                print(f"[BIN-PACKING] Level 2: Relaxed constraints (skill≥85%, savings≥2%)")
+                relaxed_config = self._bin_packing_config.copy()
+                relaxed_config["min_skill_match"] = 0.85
+                relaxed_config["min_savings_threshold"] = 0.02
+                
+                # Temporarily swap config
+                original_config = self._bin_packing_config
+                self._bin_packing_config = relaxed_config
+                
+                binpack_schedule = self._try_bin_packing_optimization(process)
+                self._bin_packing_config = original_config  # Restore
+                
+                if binpack_schedule:
+                    greedy_schedule = self._optimize_greedy(process, max_retries)
+                    greedy_cost = sum(e.cost for e in greedy_schedule.entries)
+                    binpack_cost = sum(e.cost for e in binpack_schedule.entries)
+                    savings_pct = (greedy_cost - binpack_cost) / greedy_cost if greedy_cost > 0 else 0.0
+                    
+                    if savings_pct >= relaxed_config["min_savings_threshold"]:
+                        print(f"[BIN-PACKING] ✓ Level 2 SUCCESS - Using relaxed bin-packed schedule (saves ${greedy_cost - binpack_cost:.2f})")
+                        return binpack_schedule
+                    else:
+                        print(f"[BIN-PACKING] Level 2 insufficient savings ({savings_pct*100:.1f}% < 2%)")
+                else:
+                    print(f"[BIN-PACKING] Level 2 failed to produce valid schedule")
+            
+            print(f"[BIN-PACKING] Falling back to Level 3: Greedy sequential scheduling")
+        
+        # Level 3: Greedy scheduling (current proven method)
+        return self._optimize_greedy(process, max_retries)
+    
+    def _try_bin_packing_optimization(self, process: Process) -> Optional[Schedule]:
+        """
+        Attempt bin-packing optimization with current configuration.
+        Returns Schedule if successful, None if failed.
+        """
+        try:
+            # Categorize tasks
+            critical_tasks, flexible_tasks = self._categorize_tasks(process)
+            print(f"[BIN-PACKING] Task categorization: {len(critical_tasks)} critical (CMS-locked), {len(flexible_tasks)} flexible")
+            
+            # Bin-pack flexible tasks
+            if not flexible_tasks:
+                print(f"[BIN-PACKING] No flexible tasks to optimize, using greedy")
+                return None
+            
+            # Initialize resource workload tracking
+            resource_workload = {r.id: 0.0 for r in process.resources}
+            
+            assignments = self._bin_pack_tasks(flexible_tasks, process, resource_workload)
+            
+            if not assignments:
+                print(f"[BIN-PACKING] Bin-packing failed to assign all tasks")
+                return None
+            
+            # Validate all assignments
+            validation_workload = {r.id: 0.0 for r in process.resources}
+            for task_id, (resource, start_hour) in assignments.items():
+                task = process.get_task_by_id(task_id)
+                is_valid, reason = self._validate_assignment(task, resource, validation_workload)
+                if not is_valid:
+                    print(f"[BIN-PACKING] Validation failed for task {task_id}: {reason}")
+                    return None
+                # Update workload for next validation
+                validation_workload[resource.id] += task.duration_hours
+            
+            # Create schedule from assignments
+            schedule = Schedule(process_id=process.id)
+            resource_workload = {r.id: 0.0 for r in process.resources}
+            
+            # Add critical tasks first (use greedy for these)
+            for task in critical_tasks:
+                # Use simple assignment for critical tasks
+                resource_next_available = {r.id: 0.0 for r in process.resources}
+                best_resource, start_hour = self._find_best_resource_simple(
+                    task, process, resource_next_available, resource_workload
+                )
+                
+                if best_resource:
+                    duration_hours = task.duration_hours
+                    end_hour = start_hour + duration_hours
+                    cost = duration_hours * best_resource.hourly_rate
+                    
+                    entry = ScheduleEntry(
+                        task_id=task.id,
+                        resource_id=best_resource.id,
+                        start_time=process.start_date + timedelta(hours=start_hour),
+                        end_time=process.start_date + timedelta(hours=end_hour),
+                        start_hour=start_hour,
+                        end_hour=end_hour,
+                        cost=cost
+                    )
+                    schedule.entries.append(entry)
+                    resource_workload[best_resource.id] += duration_hours
+                else:
+                    print(f"[BIN-PACKING] Failed to assign critical task {task.id}")
+                    return None
+            
+            # Add bin-packed flexible tasks
+            for task_id, (resource, start_hour) in assignments.items():
+                task = process.get_task_by_id(task_id)
+                duration_hours = task.duration_hours
+                end_hour = start_hour + duration_hours
+                cost = duration_hours * resource.hourly_rate
+                
+                entry = ScheduleEntry(
+                    task_id=task.id,
+                    resource_id=resource.id,
+                    start_time=process.start_date + timedelta(hours=start_hour),
+                    end_time=process.start_date + timedelta(hours=end_hour),
+                    start_hour=start_hour,
+                    end_hour=end_hour,
+                    cost=cost
+                )
+                schedule.entries.append(entry)
+                resource_workload[resource.id] += duration_hours
+            
+            # Calculate metrics
+            schedule.calculate_metrics(process)
+            
+            print(f"[BIN-PACKING] Successfully created schedule with {len(schedule.entries)} entries")
+            return schedule
+            
+        except Exception as e:
+            print(f"[BIN-PACKING] Exception during optimization: {e}")
+            return None
+    
+    def _optimize_greedy(self, process: Process, max_retries: int = 3) -> Schedule:
+        """
+        Greedy sequential scheduling (Level 3 fallback).
+        This is the current proven working method.
+        """
+        print(f"[GREEDY] Starting greedy sequential scheduling")
         
         # Initialize schedule
         schedule = Schedule(process_id=process.id)
@@ -253,6 +580,15 @@ class ProcessOptimizer(BaseOptimizer):
         # Calculate final metrics
         schedule.calculate_metrics(process)
         
+        # Log workload distribution summary
+        print(f"\n[WORKLOAD-SUMMARY] Final Resource Utilization:")
+        for resource in process.resources:
+            workload = resource_workload.get(resource.id, 0.0)
+            utilization = (workload / max(resource.total_available_hours, 1.0)) * 100
+            status = "OPTIMAL" if 40 <= utilization <= 70 else ("LOW" if utilization < 40 else "HIGH")
+            tasks_count = sum(1 for entry in schedule.entries if entry.resource_id == resource.id)
+            print(f"[WORKLOAD-SUMMARY]   Resource {resource.id} ({resource.name}): {utilization:.1f}% utilized ({workload:.1f}h/{resource.total_available_hours:.1f}h), {tasks_count} tasks [{status}]")
+        
         # Detect remaining deadlocks
         deadlocks = self.deadlock_detector.detect_deadlocks(process, schedule)
         if deadlocks:
@@ -273,13 +609,19 @@ class ProcessOptimizer(BaseOptimizer):
                                   resource_next_available: Dict[str, float],
                                   resource_workload: Dict[str, float]) -> Tuple[Optional[Resource], Optional[float]]:
         """
-        Find the best available resource using cascading logic:
-        1. Exact Match (100% skill match) + Lowest Cost
-        2. Partial Match (≥65% skill match) + Low Cost (cheaper than CMS default)
-        3. CMS Default Fallback
+        Find the best available resource using cascading logic with workload balancing:
+        1. Exact Match (100% skill match) + Workload Balancing + Cost Optimization
+        2. Partial Match (≥50% skill match) + Workload Balancing + Cost Savings
+        3. CMS Default Fallback (if capacity allows)
         """
         required_skills = task.required_skills
         PARTIAL_MATCH_THRESHOLD = 0.50  # 50% minimum skill match
+        
+        # Workload balancing thresholds
+        LOW_UTILIZATION = 0.40      # < 40% - underutilized, prefer these
+        TARGET_UTILIZATION = 0.70   # 40-70% - optimal range
+        HIGH_UTILIZATION = 0.85     # 70-85% - approaching capacity
+        MAX_UTILIZATION = 0.95      # > 95% - prevent overload (leave 5% buffer)
         
         # Get CMS default resource for this task (for fallback and cost comparison)
         cms_default_resource = None
@@ -316,62 +658,119 @@ class ProcessOptimizer(BaseOptimizer):
         print(f"[RESOURCE-MATCH] CMS default: Resource {cms_default_resource.id if cms_default_resource else 'None'} (${cms_default_cost:.2f}/hr)")
         
         for resource in process.resources:
-            # Check capacity first
-            needed_capacity = resource_workload[resource.id] + task.duration_hours
-            if needed_capacity > resource.total_available_hours:
-                print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - SKIP: insufficient capacity")
+            # Check capacity with workload balancing - prevent overutilization
+            current_workload = resource_workload[resource.id]
+            needed_capacity = current_workload + task.duration_hours
+            utilization_ratio = needed_capacity / max(resource.total_available_hours, 1.0)
+            
+            # Hard limit: Don't exceed MAX_UTILIZATION threshold
+            if utilization_ratio > MAX_UTILIZATION:
+                print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - SKIP: would exceed {MAX_UTILIZATION*100:.0f}% utilization ({utilization_ratio*100:.1f}%)")
                 continue
             
             # Calculate skill match percentage
             skill_match = resource.get_skill_score(required_skills) if required_skills else 1.0
             available_hour = resource_next_available.get(resource.id, 0.0)
             
-            print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - Skill: {skill_match*100:.1f}%, Cost: ${resource.hourly_rate:.2f}/hr")
+            # Determine utilization status for logging
+            if utilization_ratio < LOW_UTILIZATION:
+                util_status = "LOW"
+            elif utilization_ratio < TARGET_UTILIZATION:
+                util_status = "OPTIMAL"
+            elif utilization_ratio < HIGH_UTILIZATION:
+                util_status = "HIGH"
+            else:
+                util_status = "CRITICAL"
             
-            # Categorize into exact or partial match
+            print(f"[RESOURCE-MATCH]   Resource {resource.id} ({resource.name}) - Skill: {skill_match*100:.1f}%, Cost: ${resource.hourly_rate:.2f}/hr, Utilization: {utilization_ratio*100:.1f}% ({util_status})")
+            
+            # Categorize into exact or partial match with utilization score
             if skill_match >= 1.0:
                 # Exact match (100% skills)
-                exact_match_candidates.append((resource, available_hour, skill_match))
+                exact_match_candidates.append((resource, available_hour, skill_match, utilization_ratio))
             elif skill_match >= PARTIAL_MATCH_THRESHOLD:
-                # Partial match (≥65% skills)
-                partial_match_candidates.append((resource, available_hour, skill_match))
+                # Partial match (≥50% skills)
+                partial_match_candidates.append((resource, available_hour, skill_match, utilization_ratio))
         
-        # TIER 1: Exact Match + Lowest Cost
+        # TIER 1: Exact Match + Workload Balancing + Cost Optimization
         if exact_match_candidates:
             print(f"[RESOURCE-MATCH] TIER 1: Found {len(exact_match_candidates)} exact match(es)")
-            # Sort by hourly rate (lowest first), then by availability
+            
+            # Prefer underutilized resources (better workload distribution)
+            underutilized = [(r, h, s, u) for r, h, s, u in exact_match_candidates if u < LOW_UTILIZATION]
+            optimal_util = [(r, h, s, u) for r, h, s, u in exact_match_candidates if LOW_UTILIZATION <= u < TARGET_UTILIZATION]
+            high_util = [(r, h, s, u) for r, h, s, u in exact_match_candidates if u >= TARGET_UTILIZATION]
+            
+            # Priority: underutilized > optimal > high (for balanced distribution)
+            best_candidate = None
+            selection_reason = ""
+            
+            if underutilized:
+                # Sort by cost (lowest first) among underutilized resources
+                underutilized.sort(key=lambda x: (x[0].hourly_rate, x[3]))  # cost, then utilization
+                best_candidate = underutilized[0]
+                selection_reason = f"underutilized ({best_candidate[3]*100:.1f}%), cheapest"
+            elif optimal_util:
+                # Sort by cost among optimally utilized resources
+                optimal_util.sort(key=lambda x: (x[0].hourly_rate, x[3]))
+                best_candidate = optimal_util[0]
+                selection_reason = f"optimal utilization ({best_candidate[3]*100:.1f}%)"
+            elif high_util:
+                # Last resort: high utilization but still below max
+                high_util.sort(key=lambda x: (x[0].hourly_rate, x[3]))
+                best_candidate = high_util[0]
+                selection_reason = f"high utilization ({best_candidate[3]*100:.1f}%), no better option"
+            
+            if best_candidate:
+                best_resource, best_start_hour, match_score, util_ratio = best_candidate
+                print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - Exact match, ${best_resource.hourly_rate:.2f}/hr, {selection_reason}")
+                return best_resource, best_start_hour
+            
+            # Fallback: original behavior if categorization fails
             exact_match_candidates.sort(key=lambda x: (x[0].hourly_rate, x[1]))
-            best_resource, best_start_hour, match_score = exact_match_candidates[0]
+            best_resource, best_start_hour, match_score, util_ratio = exact_match_candidates[0]
             print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - Exact match, ${best_resource.hourly_rate:.2f}/hr")
             return best_resource, best_start_hour
         
-        # TIER 2: Partial Match + Must be cheaper than CMS default
+        # TIER 2: Partial Match + Workload Balancing + Cost Savings
         if partial_match_candidates:
             print(f"[RESOURCE-MATCH] TIER 2: Found {len(partial_match_candidates)} partial match(es)")
             # Filter: must be cheaper than CMS default
             affordable_candidates = [
-                (r, h, s) for r, h, s in partial_match_candidates 
+                (r, h, s, u) for r, h, s, u in partial_match_candidates 
                 if r.hourly_rate < cms_default_cost
             ]
             
             if affordable_candidates:
-                # Sort by skill match (highest first), then by cost (lowest first)
-                affordable_candidates.sort(key=lambda x: (-x[2], x[0].hourly_rate))
-                best_resource, best_start_hour, match_score = affordable_candidates[0]
-                print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - {match_score*100:.1f}% match, ${best_resource.hourly_rate:.2f}/hr (cheaper than default)")
+                # Prefer underutilized resources, then sort by skill match and cost
+                underutilized = [(r, h, s, u) for r, h, s, u in affordable_candidates if u < LOW_UTILIZATION]
+                normal_util = [(r, h, s, u) for r, h, s, u in affordable_candidates if u >= LOW_UTILIZATION]
+                
+                best_list = underutilized if underutilized else normal_util
+                # Sort by skill match (highest first), then by utilization (lowest first), then cost
+                best_list.sort(key=lambda x: (-x[2], x[3], x[0].hourly_rate))
+                best_resource, best_start_hour, match_score, util_ratio = best_list[0]
+                
+                util_note = "balanced workload" if util_ratio < TARGET_UTILIZATION else "acceptable load"
+                print(f"[RESOURCE-MATCH] ✅ Selected Resource {best_resource.id} ({best_resource.name}) - {match_score*100:.1f}% match, ${best_resource.hourly_rate:.2f}/hr, {util_ratio*100:.1f}% util ({util_note})")
                 return best_resource, best_start_hour
             else:
                 print(f"[RESOURCE-MATCH] No partial matches cheaper than CMS default (${cms_default_cost:.2f}/hr)")
         
-        # TIER 3: CMS Default Fallback
+        # TIER 3: CMS Default Fallback (with workload check)
         if cms_default_resource:
-            needed_capacity = resource_workload[cms_default_resource.id] + task.duration_hours
-            if needed_capacity <= cms_default_resource.total_available_hours:
+            current_workload = resource_workload[cms_default_resource.id]
+            needed_capacity = current_workload + task.duration_hours
+            utilization_ratio = needed_capacity / max(cms_default_resource.total_available_hours, 1.0)
+            
+            # Check if CMS default can handle the load
+            if utilization_ratio <= MAX_UTILIZATION:
                 available_hour = resource_next_available.get(cms_default_resource.id, 0.0)
-                print(f"[RESOURCE-MATCH] ✅ FALLBACK: Using CMS default Resource {cms_default_resource.id} ({cms_default_resource.name}) - ${cms_default_resource.hourly_rate:.2f}/hr")
+                util_warning = "⚠️ HIGH LOAD" if utilization_ratio > HIGH_UTILIZATION else ""
+                print(f"[RESOURCE-MATCH] ✅ FALLBACK: Using CMS default Resource {cms_default_resource.id} ({cms_default_resource.name}) - ${cms_default_resource.hourly_rate:.2f}/hr, {utilization_ratio*100:.1f}% util {util_warning}")
                 return cms_default_resource, available_hour
             else:
-                print(f"[RESOURCE-MATCH] ❌ CMS default resource has insufficient capacity")
+                print(f"[RESOURCE-MATCH] ❌ CMS default resource would exceed {MAX_UTILIZATION*100:.0f}% utilization ({utilization_ratio*100:.1f}%)")
         
         print(f"[RESOURCE-MATCH] ❌ No suitable resource found for task {task.id}")
         return None, None
