@@ -23,7 +23,7 @@ except ImportError:
 # Import core optimization components
 from .models import Task, Resource, Process, Schedule
 from .optimizers import ProcessOptimizer, RLBasedOptimizer, GeneticOptimizer
-from .analyzers import DependencyDetector, WhatIfAnalyzer, ProcessMiner
+from .analyzers import DependencyDetector, WhatIfAnalyzer
 from .intelligent_optimizer import IntelligentOptimizer
 from .cms_client import CMSClient
 from .cms_transformer import CMSDataTransformer, ProcessValidationError
@@ -66,7 +66,7 @@ from ..scenarios.insurance.insurance_models import InsuranceProcess, InsuranceMe
 __all__ = [
     'Task', 'Resource', 'Process', 'Schedule',
     'ProcessOptimizer', 'RLBasedOptimizer', 'GeneticOptimizer',
-    'DependencyDetector', 'WhatIfAnalyzer', 'ProcessMiner',
+    'DependencyDetector', 'WhatIfAnalyzer',
     'IntelligentOptimizer', 'CMSClient', 'CMSDataTransformer', 'ProcessValidationError',
     'ProcessIntelligence', 'ProcessType', 'OptimizationStrategy',
     'UserJourneyOptimizer', 'UserJourneyMetrics', 'TaskClassifier',

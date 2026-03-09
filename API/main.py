@@ -1126,6 +1126,9 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                                         deps_respected = False
                                     dependency_chain.append(dep_id)
                         
+                        # Sort dependency_chain for deterministic output
+                        dependency_chain = sorted(dependency_chain)
+                        
                         task_info_list.append({
                             "task_id": task.id,
                             "task_name": task.name,
@@ -1163,6 +1166,8 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                         if info["dependencies_respected"]:
                             dep_names = [next((t.name for t in process.tasks if t.id == dep_id), dep_id) 
                                         for dep_id in info["dependency_chain"]]
+                            # Sort dep_names for deterministic output
+                            dep_names = sorted(dep_names)
                             reason = f"Must wait for dependencies: {', '.join(dep_names)}"
                         else:
                             reason = "Has dependencies (may not be properly enforced in schedule)"

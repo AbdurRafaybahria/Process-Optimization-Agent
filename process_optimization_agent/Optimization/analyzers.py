@@ -2,35 +2,26 @@
 Analysis components for the Process Optimization Agent
 """
 
-from typing import Dict, List, Set, Any, Optional, Union
+from typing import Dict, List, Set, Any, Optional, Union, Tuple
 import networkx as nx
-from .models import Process, Task, Resource, Skill, SkillLevel, Schedule
-from typing import List, Dict, Set, Tuple, Optional, Any, Union
-from dataclasses import dataclass, field
+from .models import Process, Task, Resource, Skill, Schedule
 from collections import defaultdict, deque
-import json
-import os
 import warnings
 import copy
 import re
-import spacy
-import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Make spacy optional
 NLP_AVAILABLE = False
 try:
-    import spacy
+    import spacy  # type: ignore
     NLP_AVAILABLE = True
 except ImportError:
     warnings.warn(
         "spaCy not found. Install with 'pip install spacy' and download a language model "
         "with 'python -m spacy download en_core_web_sm' for better dependency detection."
     )
-
-from .models import Task, Resource, Process, Schedule, ScheduleEntry
-from typing import Tuple
 
 # Import the advanced NLP dependency analyzer
 try:
@@ -85,7 +76,7 @@ class DependencyDetector:
         self.dependency_keywords = {
             'after': ['after', 'following', 'once', 'when', 'until', 'subsequent to'],
             'before': ['before', 'prior to', 'in preparation for', 'to prepare for', 'preceding'],
-            'requires': ['requires', 'needs', 'depends on', 'relies on', 'using', 'with', 'must have'],
+            'requires': ['requires', 'needs', 'depends on', 'relies on', 'using' , 'with', 'must have'],
             'parallel': ['meanwhile', 'concurrently', 'in parallel', 'at the same time', 'simultaneously']
         }
         
@@ -269,60 +260,6 @@ class DependencyDetector:
         
         return dict(dependencies)
     
-    def _detect_similarity_based_parallelism(self, tasks: List[Task]) -> Dict[str, Set[str]]:
-        """Detect tasks that can run in parallel based on description similarity
-        
-        Args:
-            tasks: List of tasks to analyze
-            
-        Returns:
-            Dict mapping task IDs to sets of task IDs that can run in parallel
-        """
-        parallelism = defaultdict(set)
-        
-        # Skip if we don't have enough tasks
-        if len(tasks) < 2:
-            return {}
-            
-        # Prepare text data for similarity analysis
-        task_texts = []
-        task_ids = []
-        
-        for task in tasks:
-            if hasattr(task, 'description') and task.description:
-                task_texts.append(f"{task.name}. {task.description}")
-                task_ids.append(task.id)
-        
-        if len(task_texts) < 2:
-            return {}
-            
-        try:
-            # Calculate TF-IDF vectors
-            tfidf_matrix = self.vectorizer.fit_transform(task_texts)
-            
-            # Calculate cosine similarity
-            similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
-            
-            # Find similar tasks that can run in parallel
-            for i, task_id in enumerate(task_ids):
-                for j, other_id in enumerate(task_ids):
-                    if i != j and similarity_matrix[i][j] > self.similarity_threshold:
-                        # Only add if tasks don't have direct dependencies
-                        task = next((t for t in tasks if t.id == task_id), None)
-                        other_task = next((t for t in tasks if t.id == other_id), None)
-                        
-                        if task and other_task:
-                            # Check if tasks don't depend on each other
-                            if (task_id not in other_task.dependencies and 
-                                other_id not in task.dependencies):
-                                parallelism[task_id].add(other_id)
-                                parallelism[other_id].add(task_id)
-                                
-        except Exception as e:
-            print(f"Warning: Error in similarity analysis: {str(e)}")
-            
-        return dict(parallelism)
-    
     def _detect_resource_dependencies(self, tasks: List[Task], resources: List[Resource]) -> Dict[str, Set[str]]:
         """Detect dependencies based on resource sharing and conflicts
         
@@ -350,135 +287,6 @@ class DependencyDetector:
                     task_to_shared[task_id].update(t for t in task_set if t != task_id)
         
         return dict(task_to_shared)
-    
-    def _detect_pattern_dependencies(self, tasks: List[Task]) -> Dict[str, Set[str]]:
-        """Detect dependencies based on common workflow patterns and parallel execution potential"""
-        dependencies = defaultdict(set)
-        
-        # Categorize tasks by type and identify parallel potential
-        task_info = {}
-        for task in tasks:
-            text = f"{task.name} {task.description}".lower()
-            task_info[task.id] = {
-                'type': None,
-                'can_parallelize': False,
-                'text': text,
-                'keywords': set(),
-                'entities': set()
-            }
-            
-            # Extract keywords and entities for better matching
-            if self.use_nlp and self.nlp is not None:
-                doc = self.nlp(text)
-                # Get noun chunks as potential keywords
-                task_info[task.id]['keywords'].update(
-                    chunk.text.lower() for chunk in doc.noun_chunks
-                    if len(chunk.text.split()) <= 3  # Limit to 1-3 word phrases
-                )
-                # Get named entities
-                task_info[task.id]['entities'].update(
-                    ent.text.lower() for ent in doc.ents
-                )
-            
-            # Match task patterns
-            for task_type, pattern_info in self.task_patterns.items():
-                if re.search(pattern_info['pattern'], text, re.IGNORECASE):
-                    task_info[task.id]['type'] = task_type
-                    task_info[task.id]['can_parallelize'] = pattern_info['parallel']
-                    break
-        
-        # Enhanced workflow rules with parallel execution support
-        workflow_rules = [
-            # Sequential dependencies (must happen in order)
-            {
-                'name': 'design_before_development',
-                'prereq_types': ['design'],
-                'dependent_types': ['development'],
-                'is_sequential': True
-            },
-            {
-                'name': 'development_before_testing',
-                'prereq_types': ['development'],
-                'dependent_types': ['testing', 'review'],
-                'is_sequential': True
-            },
-            {
-                'name': 'testing_before_deployment',
-                'prereq_types': ['testing', 'review'],
-                'dependent_types': ['deployment'],
-                'is_sequential': True
-            },
-            # Parallel execution opportunities
-            {
-                'name': 'parallel_design_tasks',
-                'prereq_types': ['design'],
-                'dependent_types': ['design'],
-                'is_sequential': False,
-                'max_parallel': 3  # Maximum number of parallel design tasks
-            },
-            {
-                'name': 'parallel_development',
-                'prereq_types': ['development'],
-                'dependent_types': ['development'],
-                'is_sequential': False,
-                'max_parallel': 4  # Maximum number of parallel development tasks
-            }
-        ]
-        
-        # Apply workflow rules
-        for rule in workflow_rules:
-            prereq_tasks = [
-                tid for tid, info in task_info.items() 
-                if info['type'] in rule['prereq_types']
-            ]
-            
-            dependent_tasks = [
-                tid for tid, info in task_info.items() 
-                if info['type'] in rule['dependent_types']
-            ]
-            
-            if rule.get('is_sequential', True):
-                # Sequential dependencies
-                for prereq in prereq_tasks:
-                    for dependent in dependent_tasks:
-                        if prereq != dependent:  # No self-dependencies
-                            dependencies[dependent].add(prereq)
-            else:
-                # Parallel execution - limit dependencies to enable parallelization
-                max_parallel = rule.get('max_parallel', len(prereq_tasks))
-                for i in range(0, len(prereq_tasks), max_parallel):
-                    parallel_group = prereq_tasks[i:i + max_parallel]
-                    for task in parallel_group[1:]:
-                        # Make tasks in the same group dependent on the first task in the group
-                        # This creates a chain that enables parallel execution of the group
-                        dependencies[task].add(parallel_group[0])
-        
-        # Add explicit parallel execution hints from task descriptions
-        for task in tasks:
-            if not hasattr(task, 'description') or not task.description:
-                continue
-                
-            text = task.description.lower()
-            for keyword in self.dependency_keywords['parallel']:
-                if keyword in text:
-                    # Mark this task as parallelizable
-                    if task.id in task_info:
-                        task_info[task.id]['can_parallelize'] = True
-        
-        return dict(dependencies)
-    
-    def _text_similarity(self, text1: str, text2: str) -> float:
-        """Simple text similarity measure"""
-        words1 = set(text1.lower().split())
-        words2 = set(text2.lower().split())
-        
-        if not words1 or not words2:
-            return 0.0
-        
-        intersection = words1.intersection(words2)
-        union = words1.union(words2)
-        
-        return len(intersection) / len(union)
     
     def validate_dependencies(self, tasks: List[Task], dependencies: Dict[str, Set[str]]) -> Dict[str, Set[str]]:
         """Validate and clean up detected dependencies"""
@@ -546,108 +354,6 @@ class DependencyDetector:
                 deps[node] = {dep for dep in deps[node] if dep not in cycle_nodes}
         
         return deps
-
-    # --- Proposal and review helpers ---
-    def propose_dependencies(self, tasks: List[Task], dep_threshold: float = 0.7,
-                             mode: str = "balanced") -> List[Dict[str, Any]]:
-        """Propose dependency edges with confidence and reason.
-        Returns a list of dicts: {from_id, to_id, confidence, reasons}
-        where edge is from prerequisite -> dependent.
-        """
-        proposals: List[Dict[str, Any]] = []
-        if not tasks:
-            return proposals
-
-        # Build name/desc lookup
-        id_to_task = {t.id: t for t in tasks}
-        others = tasks
-
-        # 1) Rule/NLP based directional hints (uses existing single-task detection)
-        detected = self.detect_dependencies(tasks, other_tasks=others)
-        for to_id, dep_ids in detected.items():
-            for from_id in dep_ids:
-                if from_id == to_id:
-                    continue
-                proposals.append({
-                    'from_id': from_id,
-                    'to_id': to_id,
-                    'confidence': 0.85,
-                    'reasons': ['rule_nlp']
-                })
-
-        # 2) Semantic similarity ordering hints (weak, only if balanced/aggressive)
-        if mode in ("balanced", "aggressive"):
-            try:
-                # simple TF-IDF similarity on names+descriptions
-                texts = []
-                ids = []
-                for t in tasks:
-                    text = f"{t.name}. {getattr(t, 'description', '')}".strip()
-                    texts.append(text)
-                    ids.append(t.id)
-                if len(texts) >= 2:
-                    tfidf = self.vectorizer.fit_transform(texts)
-                    sim = cosine_similarity(tfidf, tfidf)
-                    for i, a in enumerate(ids):
-                        for j, b in enumerate(ids):
-                            if i == j:
-                                continue
-                            score = float(sim[i, j])
-                            if score >= dep_threshold:
-                                # Heuristic: prefer earlier 'order' as prerequisite if available
-                                ta, tb = id_to_task[a], id_to_task[b]
-                                order_a = getattr(ta, 'order', None)
-                                order_b = getattr(tb, 'order', None)
-                                if order_a is not None and order_b is not None and order_a < order_b:
-                                    frm, to = a, b
-                                else:
-                                    # default direction a->b
-                                    frm, to = a, b
-                                proposals.append({
-                                    'from_id': frm,
-                                    'to_id': to,
-                                    'confidence': min(0.8, max(0.7, score)),
-                                    'reasons': ['semantic_similarity']
-                                })
-            except Exception:
-                pass
-
-        # Merge duplicates keeping highest confidence and combined reasons
-        merged: Dict[Tuple[str, str], Dict[str, Any]] = {}
-        for p in proposals:
-            key = (p['from_id'], p['to_id'])
-            if key not in merged or p['confidence'] > merged[key]['confidence']:
-                merged[key] = p
-            else:
-                # combine reasons
-                merged[key]['reasons'] = list(set(merged[key]['reasons']) | set(p['reasons']))
-
-        return list(merged.values())
-
-    def apply_dependency_proposals(self, process: Process, proposals: List[Dict[str, Any]],
-                                   min_confidence: float = 0.75) -> int:
-        """Apply proposals with confidence >= min_confidence to process.tasks.
-        Returns the number of edges applied.
-        """
-        if not proposals:
-            return 0
-        applied = 0
-        tasks_by_id = {t.id: t for t in process.tasks}
-        for prop in proposals:
-            if prop.get('confidence', 0.0) < min_confidence:
-                continue
-            frm = prop.get('from_id')
-            to = prop.get('to_id')
-            if frm not in tasks_by_id or to not in tasks_by_id or frm == to:
-                continue
-            tgt = tasks_by_id[to]
-            deps = set(getattr(tgt, 'dependencies', set()) or set())
-            if frm not in deps:
-                deps.add(frm)
-                # Preserve dependencies as a set for downstream logic relying on set ops
-                tgt.dependencies = set(deps)
-                applied += 1
-        return applied
     
     def detect_sequential_dependencies(self, tasks: List[Task]) -> Dict[str, Set[str]]:
         """
@@ -1708,7 +1414,7 @@ class WhatIfAnalyzer:
         # Add new resources if specified
         if 'add_resources' in scenario and scenario['add_resources']:
             try:
-                from process_optimization_agent.models import Resource, Skill
+                # Resource and Skill already imported at top of file
                 for res in scenario['add_resources']:
                     skills = []
                     for sk in res.get('skills', []):
@@ -1743,290 +1449,3 @@ class WhatIfAnalyzer:
                 print(f"[WARNING] Failed to modify resources: {_e}")
         
         return modified_process
-    
-    def _calculate_improvement_legacy(self, baseline: Dict, scenario_schedule: Schedule) -> Dict[str, float]:
-        """
-        Calculate improvement metrics for a scenario compared to baseline.
-        
-        Args:
-            baseline: Dictionary containing baseline metrics
-            scenario_schedule: Schedule object from scenario optimization
-            
-        Returns:
-            Dict with improvement metrics including time, cost, and combined score
-        """
-        if not baseline:
-            return {}
-            
-        improvements = {}
-        
-        # Calculate time improvement (lower is better)
-        if 'total_duration' in baseline and hasattr(scenario_schedule, 'total_duration_hours'):
-            time_improvement = (baseline['total_duration'] - scenario_schedule.total_duration_hours) / \
-                             baseline['total_duration'] * 100
-            improvements['time_pct'] = time_improvement
-        
-        # Calculate cost improvement (lower is better)
-        if 'total_cost' in baseline and hasattr(scenario_schedule, 'total_cost'):
-            cost_improvement = (baseline['total_cost'] - scenario_schedule.total_cost) / \
-                             baseline['total_cost'] * 100
-            improvements['cost_pct'] = cost_improvement
-            
-        # Calculate combined score (weighted average)
-        if 'time_pct' in improvements and 'cost_pct' in improvements:
-            improvements['score'] = (improvements['time_pct'] * 0.6 + 
-                                   improvements['cost_pct'] * 0.4)
-        
-        return improvements
-
-
-class ProcessMiner:
-    """Learns from historical process data to improve optimization"""
-    
-    def __init__(self):
-        """Initialize process mining capabilities"""
-        self.historical_data = []
-        self.patterns = {}
-        self.performance_metrics = {}
-    
-    def add_historical_process(self, process: Process, schedule: Schedule, 
-                             actual_metrics: Optional[Dict[str, Any]] = None):
-        """Add a completed process to historical data"""
-        self.historical_data.append({
-            'process': process,
-            'schedule': schedule,
-            'actual_metrics': actual_metrics or {},
-            'timestamp': datetime.now()
-        })
-    
-    def mine_patterns(self) -> Dict[str, Any]:
-        """Mine patterns from historical data"""
-        if not self.historical_data:
-            return {}
-        
-        patterns = {
-            'common_dependencies': self._mine_dependency_patterns(),
-            'resource_preferences': self._mine_resource_patterns(),
-            'duration_estimates': self._mine_duration_patterns(),
-            'bottlenecks': self._mine_bottleneck_patterns()
-        }
-        
-        self.patterns = patterns
-        return patterns
-    
-    def _mine_dependency_patterns(self) -> Dict[str, float]:
-        """Mine common dependency patterns"""
-        dependency_counts = defaultdict(int)
-        total_processes = len(self.historical_data)
-        
-        for data in self.historical_data:
-            process = data['process']
-            for task in process.tasks:
-                for dep in task.dependencies:
-                    dep_task = process.get_task_by_id(dep)
-                    if dep_task:
-                        pattern = f"{dep_task.name.lower()} -> {task.name.lower()}"
-                        dependency_counts[pattern] += 1
-        
-        # Convert to probabilities
-        dependency_patterns = {}
-        for pattern, count in dependency_counts.items():
-            dependency_patterns[pattern] = count / total_processes
-        
-        return dependency_patterns
-    
-    def _mine_resource_patterns(self) -> Dict[str, Dict[str, float]]:
-        """Mine resource assignment patterns"""
-        resource_patterns = defaultdict(lambda: defaultdict(int))
-        
-        for data in self.historical_data:
-            schedule = data['schedule']
-            process = data['process']
-            
-            for entry in schedule.entries:
-                task = process.get_task_by_id(entry.task_id)
-                resource = process.get_resource_by_id(entry.resource_id)
-                
-                if task and resource:
-                    # Track task type -> resource skill patterns
-                    for skill in task.required_skills:
-                        for res_skill in resource.skills:
-                            if skill.name.lower() == res_skill.name.lower():
-                                pattern = f"{skill.name.lower()}"
-                                resource_patterns[pattern][resource.id] += 1
-        
-        # Convert to preferences
-        preferences = {}
-        for skill, resource_counts in resource_patterns.items():
-            total = sum(resource_counts.values())
-            preferences[skill] = {
-                res_id: count / total 
-                for res_id, count in resource_counts.items()
-            }
-        
-        return preferences
-    
-    def _mine_duration_patterns(self) -> Dict[str, Dict[str, float]]:
-        """Mine task duration estimation patterns"""
-        duration_patterns = defaultdict(list)
-        
-        for data in self.historical_data:
-            actual_metrics = data.get('actual_metrics', {})
-            if 'task_durations' in actual_metrics:
-                process = data['process']
-                for task_id, actual_duration in actual_metrics['task_durations'].items():
-                    task = process.get_task_by_id(task_id)
-                    if task:
-                        estimated_duration = task.duration_hours
-                        if estimated_duration > 0:
-                            ratio = actual_duration / estimated_duration
-                            task_type = self._categorize_task(task)
-                            duration_patterns[task_type].append(ratio)
-        
-        # Calculate statistics
-        duration_stats = {}
-        for task_type, ratios in duration_patterns.items():
-            if ratios:
-                duration_stats[task_type] = {
-                    'mean_ratio': sum(ratios) / len(ratios),
-                    'std_ratio': (sum((r - sum(ratios)/len(ratios))**2 for r in ratios) / len(ratios))**0.5,
-                    'sample_count': len(ratios)
-                }
-        
-        return duration_stats
-    
-    def _mine_bottleneck_patterns(self) -> Dict[str, Any]:
-        """Mine common bottleneck patterns"""
-        bottlenecks = defaultdict(int)
-        
-        for data in self.historical_data:
-            schedule = data['schedule']
-            if schedule.critical_path:
-                for task_id in schedule.critical_path:
-                    bottlenecks[task_id] += 1
-        
-        return dict(bottlenecks)
-    
-    def _categorize_task(self, task: Task):
-        """Categorize task based on name and description"""
-        # Simple categorization based on task name keywords
-        name = task.name.lower()
-        if any(keyword in name for keyword in ['test', 'qa', 'verify']):
-            return 'testing'
-        elif any(keyword in name for keyword in ['dev', 'implement', 'code', 'build']):
-            return 'development'
-        elif any(keyword in name for keyword in ['review', 'inspect', 'audit']):
-            return 'review'
-        elif any(keyword in name for keyword in ['deploy', 'release', 'publish']):
-            return 'deployment'
-        elif any(keyword in name for keyword in ['plan', 'design', 'architecture']):
-            return 'design'
-        elif any(keyword in name for keyword in ['meeting', 'discuss', 'sync']):
-            return 'meeting'
-        return 'other'
-        
-    def analyze(self, process: Process, schedule: Schedule) -> List[str]:
-        """
-        Analyze process and schedule to generate insights
-        
-        Args:
-            process: The process being analyzed
-            schedule: The schedule to analyze
-            
-        Returns:
-            List of insight strings
-        """
-        insights = []
-        
-        # Check for unscheduled tasks
-        scheduled_task_ids = {entry.task_id for entry in schedule.entries}
-        unscheduled_tasks = [t for t in process.tasks if t.id not in scheduled_task_ids]
-        
-        if unscheduled_tasks:
-            insight = f"Found {len(unscheduled_tasks)} unscheduled tasks. "
-            insight += "Consider reviewing task dependencies and resource assignments."
-            insights.append(insight)
-        
-        # Check resource utilization
-        if hasattr(schedule, 'resource_utilization') and schedule.resource_utilization:
-            utilizations = [
-                (rid, hours) 
-                for rid, hours in schedule.resource_utilization.items() 
-                if isinstance(hours, (int, float))
-            ]
-            
-            if utilizations:
-                resource_map = {r.id: r for r in process.resources}
-                max_util = max(utilizations, key=lambda x: x[1])
-                min_util = min(utilizations, key=lambda x: x[1])
-                
-                max_resource = resource_map.get(max_util[0], None)
-                min_resource = resource_map.get(min_util[0], None)
-                
-                if max_resource and min_resource and max_util[1] > 0:
-                    insight = f"Resource utilization varies from {min_util[1]:.1f}h ({min_resource.name}) "
-                    insight += f"to {max_util[1]:.1f}h ({max_resource.name}). Consider rebalancing workload."
-                    insights.append(insight)
-        
-        # Check for long-running tasks
-        if schedule.entries:
-            max_duration = max(entry.duration_hours for entry in schedule.entries)
-            long_tasks = [
-                (process.get_task_by_id(entry.task_id).name, entry.duration_hours)
-                for entry in schedule.entries 
-                if entry.duration_hours >= 8  # Consider tasks > 8h as long-running
-            ]
-            
-            for task_name, duration in long_tasks:
-                insights.append(f"Long-running task: '{task_name}' takes {duration:.1f} hours. Consider breaking it down.")
-        
-        # Add some general recommendations if no specific insights
-        if not insights:
-            insights.extend([
-                "Process schedule looks well-optimized.",
-                "All tasks have been successfully scheduled.",
-                "Resource utilization appears balanced across the team."
-            ])
-        
-        return insights[:5]  # Return up to 5 most important insights
-    
-    def get_recommendations(self, process: Process) -> Dict[str, Any]:
-        """Get optimization recommendations based on mined patterns"""
-        if not self.patterns:
-            self.mine_patterns()
-        
-        recommendations = {
-            'dependency_suggestions': [],
-            'resource_suggestions': [],
-            'duration_adjustments': [],
-            'bottleneck_warnings': []
-        }
-        
-        # Dependency recommendations
-        if 'common_dependencies' in self.patterns:
-            for task in process.tasks:
-                task_name = task.name.lower()
-                for pattern, probability in self.patterns['common_dependencies'].items():
-                    if probability > 0.5 and task_name in pattern:
-                        recommendations['dependency_suggestions'].append({
-                            'task': task.name,
-                            'suggested_pattern': pattern,
-                            'confidence': probability
-                        })
-        
-        # Resource recommendations
-        if 'resource_preferences' in self.patterns:
-            for task in process.tasks:
-                for skill in task.required_skills:
-                    skill_name = skill.name.lower()
-                    if skill_name in self.patterns['resource_preferences']:
-                        preferences = self.patterns['resource_preferences'][skill_name]
-                        best_resource = max(preferences.items(), key=lambda x: x[1])
-                        recommendations['resource_suggestions'].append({
-                            'task': task.name,
-                            'skill': skill_name,
-                            'recommended_resource': best_resource[0],
-                            'confidence': best_resource[1]
-                        })
-        
-        return recommendations
