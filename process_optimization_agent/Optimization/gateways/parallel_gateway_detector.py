@@ -149,7 +149,7 @@ class ParallelGatewayDetector:
         
         # FALLBACK: Use process_task with order field (less accurate)
         print("=" * 80)
-        print("[PARALLEL-DEBUG] ⚠️ USING FALLBACK LOGIC (process_task with order field)")
+        print("[PARALLEL-DEBUG] [WARNING] USING FALLBACK LOGIC (process_task with order field)")
         print(f"[PARALLEL-DEBUG] Reason: No task_assignments found or task_assignments is empty")
         print(f"[PARALLEL-DEBUG] This is LESS ACCURATE than using optimized schedule!")
         print("=" * 80)

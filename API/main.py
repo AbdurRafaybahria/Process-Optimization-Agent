@@ -33,7 +33,7 @@ if PROJECT_ROOT not in sys.path:
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
 from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost
-from process_optimization_agent.Optimization.gateways import ParallelGatewayDetector, ExclusiveGatewayDetector
+from process_optimization_agent.Optimization.gateways import ParallelGatewayDetector, ExclusiveGatewayDetector, InclusiveGatewayDetector
 
 import webbrowser as _webbrowser
 import os as _os
@@ -724,6 +724,14 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         process_name = cms_data.get('name', 'Unknown Process')
         xor_analysis = xor_detector.format_suggestions_for_api(xor_suggestions, process_id_int, process_name)
         print(f"[GATEWAY] Found {len(xor_suggestions)} exclusive (XOR) gateway opportunities")
+        
+        # INCLUSIVE GATEWAY (OR) DETECTION
+        # Analyze the process to detect conditional multi-path routing
+        # This identifies scenarios where one or more branches execute based on conditions
+        or_detector = InclusiveGatewayDetector(min_confidence=0.65)
+        or_suggestions = or_detector.analyze_process(cms_data)
+        or_analysis = {"inclusive_gateway_suggestions": len(or_suggestions)}
+        print(f"[GATEWAY] Found {len(or_suggestions)} inclusive (OR) gateway opportunities")
         
         # CALCULATE ORIGINAL COST BEFORE JOB RESOLUTION
         # We'll calculate this after job resolution by adding back the savings
@@ -2234,6 +2242,12 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
         
         print(f"[BPMN-DEBUG] Detected {len(xor_suggestions)} XOR gateways")
         
+        # Detect inclusive (OR) gateways using original CMS data
+        or_detector = InclusiveGatewayDetector(min_confidence=0.65)
+        or_suggestions = or_detector.analyze_process(cms_data)
+        
+        print(f"[BPMN-DEBUG] Detected {len(or_suggestions)} Inclusive OR gateways")
+        
         # IMPORTANT: DO NOT filter out XOR target tasks from parallel detection
         # Tasks can BOTH run in parallel AND have XOR decision points afterward
         # Example: 3 tasks start in parallel, then each has its own approval/rejection XOR gateway
@@ -2288,6 +2302,51 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
                     "confidence": xor_suggestion.confidence_score,
                     "decision_type": decision_type,
                     "justification": xor_suggestion.justification
+                }
+            }
+            bpmn_gateways.append(bpmn_gateway)
+        
+        # Convert Inclusive (OR) Gateway suggestions
+        for or_suggestion in or_suggestions:
+            branches = []
+            for branch in or_suggestion.branches:
+                bpmn_branch = {
+                    "condition": branch.condition or branch.description,
+                    "isDefault": branch.is_default
+                }
+                
+                # Handle end events (branches that don't lead to tasks)
+                if branch.end_event_name:
+                    bpmn_branch["endEventName"] = branch.end_event_name
+                    bpmn_branch["targetTaskId"] = None
+                # Handle target tasks
+                elif branch.target_task_id:
+                    # Only include valid task IDs
+                    if isinstance(branch.target_task_id, int):
+                        bpmn_branch["targetTaskId"] = branch.target_task_id
+                    elif isinstance(branch.target_task_id, str) and branch.target_task_id.isdigit():
+                        bpmn_branch["targetTaskId"] = int(branch.target_task_id)
+                    else:
+                        # Invalid or placeholder ID
+                        bpmn_branch["targetTaskId"] = None
+                        bpmn_branch["taskName"] = branch.task_name
+                
+                branches.append(bpmn_branch)
+            
+            # Extract pattern type from justification
+            pattern_type = or_suggestion.justification.get('pattern_type', 'Inclusive OR')
+            matched_patterns = or_suggestion.justification.get('matched_patterns', [])
+            
+            bpmn_gateway = {
+                "type": "INCLUSIVE",
+                "name": f"{or_suggestion.after_task_name} - Conditional Paths",
+                "afterTaskId": int(or_suggestion.after_task_id) if or_suggestion.after_task_id is not None else None,
+                "branches": branches,
+                "metadata": {
+                    "confidence": or_suggestion.confidence_score,
+                    "pattern_type": pattern_type,
+                    "matched_patterns": matched_patterns,
+                    "justification": or_suggestion.justification
                 }
             }
             bpmn_gateways.append(bpmn_gateway)
@@ -2364,8 +2423,10 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
             "summary": {
                 "total_gateways": len(bpmn_gateways),
                 "exclusive_gateways": len(xor_suggestions),
+                "inclusive_gateways": len(or_suggestions),
                 "parallel_gateways": 1 if parallel_bpmn_gateways_raw else 0,
                 "decision_points_detected": len([g for g in bpmn_gateways if g["type"] == "EXCLUSIVE"]),
+                "conditional_paths_detected": len([g for g in bpmn_gateways if g["type"] == "INCLUSIVE"]),
                 "consolidated_parallel_gateways": len(parallel_bpmn_gateways_raw) if parallel_bpmn_gateways_raw else 0
             },
             "timestamp": datetime.now().isoformat()

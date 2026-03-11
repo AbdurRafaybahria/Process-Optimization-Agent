@@ -104,7 +104,8 @@ class GatewayDetectorBase(ABC):
                         'task_name': task.get('task_name', task.get('name', '')),
                         'duration_minutes': task.get('duration_minutes', 0),
                         'duration_hours': task.get('duration_minutes', 0) / 60 if task.get('duration_minutes') else 0,
-                        'order': pt_wrapper.get('order', 0)
+                        'order': pt_wrapper.get('order', 0),
+                        'dependencies': task.get('dependencies', [])
                     }
                     
                     # Extract job assignments from process_task_job array
@@ -114,6 +115,14 @@ class GatewayDetectorBase(ABC):
                         first_job = jobs[0].get('job', {})
                         task_data['resource_name'] = first_job.get('job_name', first_job.get('name', ''))
                         task_data['resource_id'] = first_job.get('job_id')
+                    
+                    # Also extract from jobTasks if available
+                    if not jobs and 'jobTasks' in task:
+                        job_tasks = task.get('jobTasks', [])
+                        if job_tasks:
+                            first_job = job_tasks[0].get('job', {})
+                            task_data['resource_name'] = first_job.get('name', '')
+                            task_data['resource_id'] = first_job.get('job_id')
                     
                     tasks.append(task_data)
             print(f"[GATEWAY-BASE] Extracted {len(tasks)} tasks from process_task array")
