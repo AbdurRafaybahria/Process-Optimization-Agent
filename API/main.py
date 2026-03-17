@@ -32,7 +32,7 @@ if PROJECT_ROOT not in sys.path:
 
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
-from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost
+from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost, get_eligible_jobs_for_task
 from process_optimization_agent.Optimization.gateways import ParallelGatewayDetector, ExclusiveGatewayDetector, InclusiveGatewayDetector
 
 import webbrowser as _webbrowser
@@ -1838,6 +1838,65 @@ async def get_whatif_analysis_data(process_id: int, authorization: Optional[str]
             
             original_order = cms_task_info.get("order", idx + 1) if cms_task_info else idx + 1
             
+            # Extract required skills for filtering
+            task_required_skills_for_filtering = []
+            for skill in task_data.get("required_skills", []):
+                if isinstance(skill, dict):
+                    task_required_skills_for_filtering.append({
+                        "name": skill.get("name", ""),
+                        "level_rank": skill.get("level_rank", 3)
+                    })
+                else:
+                    task_required_skills_for_filtering.append({
+                        "name": str(skill),
+                        "level_rank": 3  # Default to INTERMEDIATE
+                    })
+            
+            # Get currently assigned job from CMS data
+            current_job_id = None
+            current_job_name = None
+            if cms_task_info:
+                cms_task = cms_task_info.get("task", {})
+                job_tasks = cms_task.get("jobTasks", [])
+                if job_tasks:
+                    current_job = job_tasks[0].get("job", {})
+                    current_job_id = current_job.get("job_id")
+                    current_job_name = current_job.get("name", "")
+            
+            # Get eligible jobs for this task
+            eligible_jobs = []
+            if all_jobs_map:
+                try:
+                    eligible_jobs_raw = get_eligible_jobs_for_task(
+                        task_required_skills=task_required_skills_for_filtering,
+                        all_jobs_map=all_jobs_map,
+                        current_job_id=current_job_id,
+                        skill_match_threshold=0.90,
+                        max_results=20
+                    )
+                    
+                    # Format for frontend
+                    for job in eligible_jobs_raw:
+                        eligible_jobs.append({
+                            "job_id": job.get("job_id"),
+                            "name": job.get("name", ""),
+                            "job_code": job.get("jobCode", ""),
+                            "hourly_rate": job.get("hourlyRate", 0),
+                            "max_hours_per_day": job.get("maxHoursPerDay", 8),
+                            "skill_match_score": job.get("skill_match_score", 1.0),
+                            "skill_match_percentage": job.get("skill_match_percentage", 100),
+                            "is_current": job.get("is_current", False),
+                            "skills": [
+                                {
+                                    "name": s.get("name", ""),
+                                    "level_name": s.get("level_name", "INTERMEDIATE")
+                                }
+                                for s in job.get("skills", [])
+                            ]
+                        })
+                except Exception as e:
+                    print(f"[WARNING] Could not get eligible jobs for task {task_data['id']}: {e}")
+            
             tasks_constraints.append({
                 "task_id": task_data["id"],
                 "name": task_data["name"],
@@ -1849,7 +1908,12 @@ async def get_whatif_analysis_data(process_id: int, authorization: Optional[str]
                 "required_skills": [
                     skill.get("name") if isinstance(skill, dict) else str(skill)
                     for skill in task_data.get("required_skills", [])
-                ]
+                ],
+                "eligible_jobs": eligible_jobs,
+                "current_assignment": {
+                    "job_id": current_job_id,
+                    "job_name": current_job_name
+                } if current_job_id else None
             })
         
         # Sort tasks by original order

@@ -1272,3 +1272,143 @@ def optimize_process_cost(
     optimizer = CostOptimizer(all_jobs_map, skill_match_threshold)
     return optimizer.optimize_process(process_data)
 
+
+def get_eligible_jobs_for_task(
+    task_required_skills: List[Dict[str, Any]],
+    all_jobs_map: Dict[int, Dict[str, Any]],
+    current_job_id: Optional[int] = None,
+    skill_match_threshold: float = 0.90,
+    max_results: int = 20
+) -> List[Dict[str, Any]]:
+    """
+    Find ALL jobs that are eligible for a task based on skill requirements.
+    Uses the same matching logic as CostOptimizer but returns all matching jobs.
+    
+    Args:
+        task_required_skills: List of required skill dicts from task
+        all_jobs_map: All jobs from CMS (job_id -> job_data)
+        current_job_id: Currently assigned job ID (will be marked in results)
+        skill_match_threshold: Minimum skill match (default 90%)
+        max_results: Maximum number of results to return (default 20)
+        
+    Returns:
+        List of eligible jobs sorted by:
+        1. Skill match score (descending)
+        2. Hourly rate (ascending)
+        
+        Each job dict includes:
+        - All original job fields
+        - skill_match_score: 0-1 score
+        - skill_match_percentage: 0-100 percentage
+        - is_current: True if this is the currently assigned job
+    """
+    eligible_jobs = []
+    
+    # Extract required skill information
+    required_skill_names = set()
+    required_skill_levels = {}
+    
+    for skill in task_required_skills:
+        skill_name = (skill.get('name', '') or '').lower().strip()
+        if skill_name:
+            required_skill_names.add(skill_name)
+            # Store required level (default to 3 = INTERMEDIATE)
+            level_rank = skill.get('level_rank', 3) or 3
+            required_skill_levels[skill_name] = level_rank
+    
+    # If no required skills, return all jobs sorted by rate
+    if not required_skill_names:
+        all_jobs_list = []
+        for job_id, job_data in all_jobs_map.items():
+            job_copy = job_data.copy()
+            job_copy['skill_match_score'] = 1.0
+            job_copy['skill_match_percentage'] = 100
+            job_copy['is_current'] = (job_id == current_job_id)
+            all_jobs_list.append(job_copy)
+        
+        # Sort by hourly rate
+        all_jobs_list.sort(key=lambda j: j.get('hourlyRate', 999))
+        return all_jobs_list[:max_results]
+    
+    # Helper function for fuzzy skill matching (from CostOptimizer)
+    def fuzzy_skill_match(skill1: str, skill2: str) -> bool:
+        """Check if two skill names are similar enough to match"""
+        s1 = skill1.lower().strip().replace('_', ' ').replace('-', ' ')
+        s2 = skill2.lower().strip().replace('_', ' ').replace('-', ' ')
+        
+        # Exact match
+        if s1 == s2:
+            return True
+        
+        # Containment
+        if s1 in s2 or s2 in s1:
+            return True
+        
+        # Word overlap
+        words1 = set(s1.split())
+        words2 = set(s2.split())
+        if words1 & words2:
+            overlap = len(words1 & words2)
+            total = max(len(words1), len(words2))
+            if overlap / total >= 0.5:
+                return True
+        
+        return False
+    
+    # Check each job for eligibility
+    for job_id, job_data in all_jobs_map.items():
+        job_hourly_rate = job_data.get('hourlyRate', 0) or 0
+        
+        # Extract job skills
+        job_skills = job_data.get('skills', [])
+        job_skill_map = {}
+        for js in job_skills:
+            js_name = (js.get('name', '') or '').lower().strip()
+            js_level = js.get('level_rank', 3) or 3
+            if js_name:
+                job_skill_map[js_name] = js_level
+        
+        # Calculate skill match
+        matched_skills = 0
+        level_ok = True
+        
+        for req_skill in required_skill_names:
+            if req_skill in job_skill_map:
+                matched_skills += 1
+                # Check level requirement
+                if job_skill_map[req_skill] < required_skill_levels.get(req_skill, 3):
+                    level_ok = False
+                    break
+            else:
+                # Try fuzzy match
+                fuzzy_matched = False
+                for job_skill_name, job_skill_level in job_skill_map.items():
+                    if fuzzy_skill_match(req_skill, job_skill_name):
+                        matched_skills += 1
+                        if job_skill_level < required_skill_levels.get(req_skill, 3):
+                            level_ok = False
+                        fuzzy_matched = True
+                        break
+                if not fuzzy_matched:
+                    pass  # Skill not matched
+        
+        if not level_ok:
+            continue
+        
+        # Check if match percentage meets threshold
+        match_percentage = (matched_skills / len(required_skill_names) * 100) if required_skill_names else 100
+        match_score = matched_skills / len(required_skill_names) if required_skill_names else 1.0
+        
+        if match_score >= skill_match_threshold:
+            # This job qualifies
+            job_copy = job_data.copy()
+            job_copy['skill_match_score'] = round(match_score, 3)
+            job_copy['skill_match_percentage'] = round(match_percentage, 1)
+            job_copy['is_current'] = (job_id == current_job_id)
+            eligible_jobs.append(job_copy)
+    
+    # Sort by skill match score (descending), then by hourly rate (ascending)
+    eligible_jobs.sort(key=lambda j: (-j['skill_match_score'], j.get('hourlyRate', 999)))
+    
+    return eligible_jobs[:max_results]
+
