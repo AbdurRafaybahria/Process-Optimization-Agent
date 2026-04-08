@@ -98,6 +98,13 @@ class CMSDataTransformer:
             "resources": [],
             "dependencies": []
         }
+
+        # Preserve BPMN-specific fields from the digital twin payload when available.
+        # Downstream consumers can use these directly instead of re-deriving structure.
+        if "workflow" in process_data:
+            transformed["workflow"] = process_data.get("workflow") or []
+        if "gateways" in process_data:
+            transformed["gateways"] = process_data.get("gateways") or []
         
         # Extract tasks and resources with robust error handling
         # Handle both CMS format (process_task) and direct format (tasks)
@@ -161,8 +168,12 @@ class CMSDataTransformer:
         if "dependencies" in process_data and process_data["dependencies"]:
             transformed["dependencies"] = process_data["dependencies"]
         else:
-            # Auto-detect dependencies based on task order
-            transformed["dependencies"] = self._infer_dependencies(transformed["tasks"])
+            # Prefer real task-level dependencies from the digital twin payload.
+            # Only synthesize a sequential chain when the source data has no explicit graph.
+            transformed["dependencies"] = (
+                self._build_global_dependencies_from_tasks(transformed["tasks"]) or
+                self._infer_dependencies(transformed["tasks"])
+            )
         
         # Final normalization to ensure consistency
         normalized = self._normalize_agent_format(transformed)
@@ -354,7 +365,35 @@ class CMSDataTransformer:
             
             # Also update task's dependency list
             current_task["dependencies"].append(previous_task["id"])
-        
+
+        return dependencies
+
+    def _build_global_dependencies_from_tasks(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        """
+        Build root-level dependency edges from task-level dependencies.
+
+        CMS payloads often store the real process graph on each task instead of as a
+        top-level dependency list. Preserving those edges avoids flattening branching
+        BPMN flows into a fake sequential chain.
+        """
+        dependencies = []
+        seen_edges = set()
+
+        for task in tasks:
+            task_id = str(task.get("id", ""))
+            if not task_id:
+                continue
+
+            for dependency_id in task.get("dependencies", []) or []:
+                from_task = str(dependency_id)
+                edge = (from_task, task_id)
+                if from_task and edge not in seen_edges:
+                    dependencies.append({
+                        "from": from_task,
+                        "to": task_id
+                    })
+                    seen_edges.add(edge)
+
         return dependencies
     
     def create_process_object(self, cms_data: Dict[str, Any]) -> Process:
