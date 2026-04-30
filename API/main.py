@@ -2078,24 +2078,56 @@ async def get_optimized_version_for_cms(process_id: int, authorization: Optional
                 if match:
                     return int(match.group())
             return tid
+
+        def normalize_job_id(jid):
+            """Convert job/resource ID to integer when possible."""
+            if jid is None:
+                return None
+            if isinstance(jid, int):
+                return jid
+            if isinstance(jid, str) and jid.isdigit():
+                return int(jid)
+            return jid
         
         # Use task_assignments for scheduled tasks - normalize IDs
         task_order = {}
+        optimized_job_map = {}
         for task_assignment in optimized_cms_data.get('task_assignments', []):
             task_id = normalize_task_id(task_assignment.get('task_id'))
             start_time = task_assignment.get('start_time', 0)
             if task_id not in task_order:
                 task_order[task_id] = start_time
+            if task_id not in optimized_job_map:
+                optimized_job_map[task_id] = normalize_job_id(task_assignment.get('resource_id'))
         
         # IMPORTANT: Add unscheduled tasks at the end to ensure ALL tasks are in workflow
         # This handles cases where optimizer fails to schedule some tasks
         original_tasks = cms_data.get('process_task', [])
+        cms_job_map = {}
         logger.info(f"[WORKFLOW-DEBUG] Found {len(original_tasks)} tasks in original CMS data")
         logger.info(f"[WORKFLOW-DEBUG] Found {len(task_order)} tasks in optimized schedule: {list(task_order.keys())}")
         
         for task_wrapper in original_tasks:
             task = task_wrapper.get('task', {})
             task_id = normalize_task_id(task.get('task_id'))
+
+            # Build fallback map from original CMS assignment.
+            # Priority: task.jobTasks -> process_task.job -> task.job_id
+            cms_job_id = None
+            job_tasks = task.get('jobTasks', []) if isinstance(task, dict) else []
+            if job_tasks:
+                first_job = (job_tasks[0] or {}).get('job', {})
+                cms_job_id = first_job.get('job_id')
+            if cms_job_id is None and isinstance(task_wrapper, dict):
+                process_task_job = task_wrapper.get('job', {})
+                if process_task_job:
+                    cms_job_id = process_task_job.get('job_id')
+            if cms_job_id is None and isinstance(task, dict):
+                cms_job_id = task.get('job_id')
+
+            if task_id is not None and task_id not in cms_job_map:
+                cms_job_map[task_id] = normalize_job_id(cms_job_id)
+
             if task_id and task_id not in task_order:
                 # Task not in schedule, add at end with high start time
                 logger.warning(f"[WORKFLOW-DEBUG] Task {task_id} ({task.get('task_name')}) was not scheduled by optimizer, adding to workflow")
@@ -2107,10 +2139,21 @@ async def get_optimized_version_for_cms(process_id: int, authorization: Optional
         logger.info(f"[WORKFLOW-DEBUG] Building workflow from {len(sorted_task_ids)} unique tasks")
         for task_id in sorted_task_ids:
             logger.info(f"[WORKFLOW-DEBUG] Adding task {task_id} at start_time {task_order[task_id]}h")
+
+            assigned_job_id = optimized_job_map.get(task_id)
+            if assigned_job_id is None:
+                assigned_job_id = cms_job_map.get(task_id)
+                if assigned_job_id is not None:
+                    logger.info(f"[WORKFLOW-DEBUG] Task {task_id} using CMS fallback job_id={assigned_job_id}")
+                else:
+                    logger.warning(f"[WORKFLOW-DEBUG] Task {task_id} has no optimized or CMS job assignment; setting job_id=None")
+            else:
+                logger.info(f"[WORKFLOW-DEBUG] Task {task_id} using optimized job_id={assigned_job_id}")
             
             workflow.append({
                 "item_type": "task",
                 "task_id": task_id,
+                "job_id": assigned_job_id,
                 "sequence_number": sequence_number,
                 "order": sequence_number
             })

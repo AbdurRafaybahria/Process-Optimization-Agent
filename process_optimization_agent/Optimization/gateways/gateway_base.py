@@ -6,6 +6,8 @@ Provides shared functionality for gateway detection and formatting.
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
+import html
+import re
 
 
 @dataclass
@@ -62,6 +64,16 @@ class GatewayDetectorBase(ABC):
             'neutral': ['pending', 'hold', 'review', 'escalate', 'defer',
                        'revision', 'correction', 'resubmit']
         }
+
+    @staticmethod
+    def _clean_text(value: Any) -> str:
+        """Convert CMS rich text/HTML fields into plain searchable text."""
+        if value is None:
+            return ''
+        text = html.unescape(str(value))
+        text = re.sub(r'<[^>]+>', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
     
     @abstractmethod
     def analyze_process(self, process_data: Dict[str, Any]) -> List[GatewaySuggestion]:
@@ -99,11 +111,33 @@ class GatewayDetectorBase(ABC):
                 task = pt_wrapper.get('task', {})
                 if task:
                     # Extract task data and add order info from wrapper
+                    duration_minutes = (
+                        task.get('duration_minutes')
+                        or task.get('task_capacity_minutes')
+                        or task.get('duration')
+                        or 0
+                    )
+                    try:
+                        duration_minutes = float(duration_minutes)
+                    except (TypeError, ValueError):
+                        duration_minutes = 0
+
+                    task_overview = self._clean_text(
+                        task.get('task_overview')
+                        or task.get('overview')
+                        or task.get('description')
+                        or ''
+                    )
+                    task_name = task.get('task_name', task.get('name', ''))
+
                     task_data = {
                         'task_id': task.get('task_id'),
-                        'task_name': task.get('task_name', task.get('name', '')),
-                        'duration_minutes': task.get('duration_minutes', 0),
-                        'duration_hours': task.get('duration_minutes', 0) / 60 if task.get('duration_minutes') else 0,
+                        'task_name': task_name,
+                        'task_overview': task_overview,
+                        'description': task_overview,
+                        'search_text': f"{task_name} {task_overview}".strip(),
+                        'duration_minutes': duration_minutes,
+                        'duration_hours': duration_minutes / 60 if duration_minutes else 0,
                         'order': pt_wrapper.get('order', 0),
                         'dependencies': task.get('dependencies', [])
                     }
@@ -115,6 +149,7 @@ class GatewayDetectorBase(ABC):
                         first_job = jobs[0].get('job', {})
                         task_data['resource_name'] = first_job.get('job_name', first_job.get('name', ''))
                         task_data['resource_id'] = first_job.get('job_id')
+                        task_data['search_text'] = f"{task_data['search_text']} {task_data['resource_name']}".strip()
                     
                     # Also extract from jobTasks if available
                     if not jobs and 'jobTasks' in task:
@@ -123,6 +158,7 @@ class GatewayDetectorBase(ABC):
                             first_job = job_tasks[0].get('job', {})
                             task_data['resource_name'] = first_job.get('name', '')
                             task_data['resource_id'] = first_job.get('job_id')
+                            task_data['search_text'] = f"{task_data['search_text']} {task_data['resource_name']}".strip()
                     
                     tasks.append(task_data)
             print(f"[GATEWAY-BASE] Extracted {len(tasks)} tasks from process_task array")
@@ -138,6 +174,13 @@ class GatewayDetectorBase(ABC):
                     'task_name': task_assignment.get('task_name'),
                     'resource_name': task_assignment.get('resource_name'),
                     'resource_id': task_assignment.get('resource_id'),
+                    'task_overview': self._clean_text(task_assignment.get('task_overview', '')),
+                    'description': self._clean_text(task_assignment.get('description', '')),
+                    'search_text': self._clean_text(
+                        f"{task_assignment.get('task_name', '')} "
+                        f"{task_assignment.get('task_overview', '')} "
+                        f"{task_assignment.get('description', '')}"
+                    ),
                     'duration_minutes': task_assignment.get('duration_minutes', 0),
                     'duration_hours': task_assignment.get('duration_hours', 0)
                 })

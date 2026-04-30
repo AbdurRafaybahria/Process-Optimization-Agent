@@ -260,9 +260,10 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
         for task in tasks:
             task_id = task.get('task_id')
             task_name = task.get('task_name', '')
+            task_text = task.get('search_text') or f"{task_name} {task.get('task_overview', '')}"
             
-            # Check 1: Task name contains decision keywords
-            decision_type, keywords_found = self._detect_decision_type(task_name)
+            # Check 1: Task name/overview contains decision keywords
+            decision_type, keywords_found = self._detect_decision_type(task_text)
             
             if not decision_type:
                 # Check 2: Task might be implicit decision point
@@ -321,7 +322,7 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
         - Successor task patterns
         - Resource/job patterns
         """
-        task_name = task.get('task_name', '').lower()
+        task_name = (task.get('search_text') or task.get('task_name', '')).lower()
         resource_name = task.get('resource_name', '').lower()
         
         # Check resource name for decision indicators
@@ -375,7 +376,9 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
                         'task_name': task.get('task_name'),
                         'distance': other_order - current_order,
                         'has_explicit_dependency': is_explicit_successor,
-                        'flow_type': self._classify_flow_type(task.get('task_name', ''))
+                        'flow_type': self._classify_flow_type(
+                            f"{task.get('task_name', '')} {task.get('task_overview', '')}"
+                        )
                     }
                     successors.append(successor_info)
         
@@ -422,10 +425,13 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
             elif len(flow_types) == 1:
                 confidence += 0.1
         
-        # Factor 4: Task name contains decision indicators (0-15%)
-        task_name_lower = task.get('task_name', '').lower()
-        strong_indicators = ['decision', 'approval', 'review', 'evaluate']
-        if any(ind in task_name_lower for ind in strong_indicators):
+        # Factor 4: Task text contains decision indicators (0-15%)
+        task_text_lower = (task.get('search_text') or task.get('task_name', '')).lower()
+        strong_indicators = [
+            'decision', 'approval', 'review', 'evaluate', 'exclusive gateway',
+            'one path', 'approve/reject', 'approval or rejection', 'valid or invalid'
+        ]
+        if any(ind in task_text_lower for ind in strong_indicators):
             confidence += 0.15
         
         return min(confidence, 1.0)
@@ -512,8 +518,25 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
             branches[-1].is_default = True
             branches[-1].condition = None
             branches[-1].condition_expression = None
+
+        outcome_types = {branch.outcome_type for branch in branches}
+        if len(outcome_types) < 2 and self._description_declares_xor(decision_point, tasks):
+            print(f"[XOR INFERENCE] Description declares XOR for '{decision_point.task_name}'. Inferring outcome branches...")
+            return self._infer_branches_from_decision(decision_point, tasks, task_sequence)
         
         return branches
+
+    def _description_declares_xor(self, decision_point: DecisionPoint, tasks: List[Dict]) -> bool:
+        """Detect explicit XOR language in descriptions when CMS still has one linear successor."""
+        task = self._get_task_by_id(tasks, decision_point.task_id) or {}
+        text = (task.get('search_text') or decision_point.task_name).lower()
+        explicit_xor_terms = [
+            'exclusive gateway', 'one path', 'only one path', 'approve/reject',
+            'approval or rejection', 'valid or invalid', 'if valid', 'if invalid',
+            'passes all checks', 'issues are detected', 'routed for correction',
+            'routed for rework'
+        ]
+        return any(term in text for term in explicit_xor_terms)
     
     def _select_primary_successor(self, successors: List[Dict]) -> Optional[Dict]:
         """Select the primary/most relevant successor from a group"""

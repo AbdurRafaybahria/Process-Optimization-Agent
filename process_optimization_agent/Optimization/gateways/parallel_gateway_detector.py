@@ -6,7 +6,9 @@ and suggests gateway configurations compatible with CMS structure
 
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass
+import html
 import json
+import re
 
 from .gateway_base import GatewayDetectorBase, GatewayBranch, GatewaySuggestion
 
@@ -24,6 +26,12 @@ class ParallelGatewayDetector:
             min_confidence: Minimum confidence score to suggest a gateway (0.0-1.0)
         """
         self.min_confidence = min_confidence
+        self._stopwords = {
+            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'can', 'for', 'from',
+            'in', 'into', 'is', 'it', 'of', 'on', 'or', 'process', 'task', 'tasks',
+            'the', 'these', 'this', 'to', 'with', 'within', 'workflow', 'system',
+            'order', 'orders', 'customer', 'customers'
+        }
     
     def analyze_process(self, cms_data: Dict[str, Any]) -> List[GatewaySuggestion]:
         """
@@ -143,6 +151,24 @@ class ParallelGatewayDetector:
                     task_id_str = str(task.get('task_id'))
                     if task_id_str not in used_parallel_tasks:
                         print(f"[PARALLEL-DEBUG]   - Task {task.get('task_id')}: {task.get('task_name')} (starts at t={task.get('start_time')}h) - Sequential dependency")
+
+            # Also inspect CMS task descriptions. Optimizer timing can be fully
+            # sequential even when the authored workflow says a gateway should
+            # split after a task.
+            process_tasks = cms_data.get('process_task', [])
+            if process_tasks:
+                process_tasks_sorted = sorted(process_tasks, key=lambda x: x.get('order', 0))
+                semantic_suggestions = self._find_description_based_gateways(process_tasks_sorted, cms_data)
+                existing_after_task_ids = {suggestion.after_task_id for suggestion in suggestions}
+                for suggestion in semantic_suggestions:
+                    if (
+                        suggestion
+                        and suggestion.confidence_score >= self.min_confidence
+                        and suggestion.after_task_id not in existing_after_task_ids
+                    ):
+                        suggestions.append(suggestion)
+                        existing_after_task_ids.add(suggestion.after_task_id)
+                        print(f"[PARALLEL-DEBUG] Added description-based gateway after task {suggestion.after_task_id}")
             
             print(f"[PARALLEL-DEBUG] Total parallel gateway suggestions: {len(suggestions)}")
             return suggestions
@@ -163,6 +189,21 @@ class ParallelGatewayDetector:
         # Sort by order
         process_tasks_sorted = sorted(process_tasks, key=lambda x: x.get('order', 0))
         
+        # First use task descriptions/overviews to find where the workflow says
+        # parallelism should split. Task order is only a later fallback.
+        semantic_suggestions = self._find_description_based_gateways(process_tasks_sorted, cms_data)
+        semantic_after_task_ids = set()
+        for suggestion in semantic_suggestions:
+            if suggestion and suggestion.confidence_score >= self.min_confidence:
+                suggestions.append(suggestion)
+                semantic_after_task_ids.add(suggestion.after_task_id)
+                print(f"[PARALLEL-DEBUG] Added description-based gateway after task {suggestion.after_task_id}")
+
+        if semantic_after_task_ids:
+            print("[PARALLEL-DEBUG] Description-based gateways found; skipping order-only fallback suggestions")
+            print(f"[PARALLEL-DEBUG] Total parallel gateway suggestions: {len(suggestions)}")
+            return suggestions
+
         # CHECK FOR PARALLEL TASKS AT START (from Start Event)
         first_order = process_tasks_sorted[0].get('order', 0)
         start_tasks = [pt for pt in process_tasks_sorted if pt.get('order', 0) == first_order]
@@ -192,6 +233,10 @@ class ParallelGatewayDetector:
             
             if not current_task_id:
                 continue
+
+            if current_task_id in semantic_after_task_ids:
+                print(f"[PARALLEL-DEBUG] Skipping order fallback for task {current_task_id}; description already produced a gateway")
+                continue
             
             # Look ahead to find tasks that could run in parallel
             parallel_candidates = self._find_parallel_candidates(
@@ -213,6 +258,144 @@ class ParallelGatewayDetector:
         
         print(f"[PARALLEL-DEBUG] Total parallel gateway suggestions: {len(suggestions)}")
         return suggestions
+
+    def _find_description_based_gateways(
+        self,
+        process_tasks: List[Dict[str, Any]],
+        cms_data: Dict[str, Any]
+    ) -> List[GatewaySuggestion]:
+        """
+        Detect parallel gateways from task descriptions/overviews.
+
+        This handles CMS workflows where the order column is linear, but the
+        business description says a task should split into parallel branches.
+        """
+        suggestions = []
+
+        for current_task_wrapper in process_tasks:
+            current_task = current_task_wrapper.get('task', {})
+            task_id = current_task.get('task_id')
+            task_name = current_task.get('task_name', f'Task {task_id}')
+            task_text = self._task_text(current_task)
+
+            if not self._has_parallel_split_signal(task_text):
+                continue
+
+            candidates = self._find_description_parallel_candidates(
+                current_task_wrapper, process_tasks
+            )
+
+            if len(candidates) < 2:
+                print(f"[PARALLEL-DEBUG] Description mentions parallelism in task {task_id}, but only {len(candidates)} matching branch task(s) were found")
+                continue
+
+            suggestion = self._create_gateway_suggestion(
+                current_task_wrapper,
+                candidates,
+                cms_data
+            )
+            if not suggestion:
+                continue
+
+            suggestion.confidence_score = max(suggestion.confidence_score, 0.88)
+            suggestion.justification["why_parallel"] = (
+                f"Task '{task_name}' description explicitly indicates parallel execution; "
+                "branch tasks were matched from task names/overviews instead of relying on CMS order"
+            )
+            suggestion.justification["semantic_evidence"] = self._parallel_evidence(task_text)
+            suggestion.justification["matched_branch_tasks"] = [
+                {
+                    "task_id": candidate.get('task', {}).get('task_id'),
+                    "task_name": candidate.get('task', {}).get('task_name')
+                }
+                for candidate in candidates
+            ]
+            suggestions.append(suggestion)
+
+        return suggestions
+
+    def _find_description_parallel_candidates(
+        self,
+        current_task_wrapper: Dict[str, Any],
+        all_tasks: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        current_task = current_task_wrapper.get('task', {})
+        current_task_id = current_task.get('task_id')
+        current_order = current_task_wrapper.get('order', 0)
+        source_tokens = self._tokens(self._task_text(current_task))
+
+        def score_candidate(candidate_wrapper: Dict[str, Any]) -> float:
+            candidate_task = candidate_wrapper.get('task', {})
+            name_tokens = self._tokens(candidate_task.get('task_name', ''))
+            text_tokens = self._tokens(self._task_text(candidate_task))
+            name_overlap = len(name_tokens & source_tokens)
+            if name_overlap == 0:
+                return 0.0
+            score = name_overlap * 2.0
+            score += len((text_tokens - name_tokens) & source_tokens) * 0.5
+            return score
+
+        downstream = [
+            wrapper for wrapper in all_tasks
+            if wrapper.get('task', {}).get('task_id') != current_task_id
+            and wrapper.get('order', 0) > current_order
+        ]
+        search_space = downstream if downstream else [
+            wrapper for wrapper in all_tasks
+            if wrapper.get('task', {}).get('task_id') != current_task_id
+        ]
+
+        scored_candidates = []
+        for candidate_wrapper in search_space:
+            score = score_candidate(candidate_wrapper)
+            if score >= 2.0:
+                scored_candidates.append((score, candidate_wrapper))
+
+        scored_candidates.sort(key=lambda item: (-item[0], item[1].get('order', 0)))
+        return [candidate for _, candidate in scored_candidates[:4]]
+
+    def _has_parallel_split_signal(self, text: str) -> bool:
+        text_lower = text.lower()
+        split_phrases = [
+            'after scheduling', 'after assignment', 'after assigning',
+            'can be performed in parallel', 'can run in parallel',
+            'executed in parallel', 'execute in parallel',
+            'parallel execution', 'parallel gateway',
+            'simultaneously', 'independent and do not depend'
+        ]
+        has_parallel_phrase = any(phrase in text_lower for phrase in split_phrases)
+        has_after_context = any(phrase in text_lower for phrase in ['after ', 'following ', 'then '])
+        return has_parallel_phrase and has_after_context
+
+    def _parallel_evidence(self, text: str) -> List[str]:
+        text_lower = text.lower()
+        phrases = [
+            'after scheduling', 'can be performed in parallel',
+            'executed in parallel', 'parallel execution',
+            'parallel gateway', 'simultaneously',
+            'independent and do not depend'
+        ]
+        return [phrase for phrase in phrases if phrase in text_lower]
+
+    def _task_text(self, task: Dict[str, Any]) -> str:
+        return self._clean_text(
+            f"{task.get('task_name', '')} "
+            f"{task.get('task_overview', '')} "
+            f"{task.get('overview', '')} "
+            f"{task.get('description', '')}"
+        )
+
+    def _clean_text(self, value: Any) -> str:
+        if value is None:
+            return ''
+        text = html.unescape(str(value))
+        text = re.sub(r'<[^>]+>', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
+
+    def _tokens(self, text: str) -> Set[str]:
+        tokens = set(re.findall(r'[a-zA-Z][a-zA-Z]+', self._clean_text(text).lower()))
+        return {token for token in tokens if token not in self._stopwords and len(token) > 2}
     
     def _find_parallel_candidates(
         self, 
