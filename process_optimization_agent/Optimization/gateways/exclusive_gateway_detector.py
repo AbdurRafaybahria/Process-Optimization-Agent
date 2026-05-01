@@ -533,10 +533,32 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
         explicit_xor_terms = [
             'exclusive gateway', 'one path', 'only one path', 'approve/reject',
             'approval or rejection', 'valid or invalid', 'if valid', 'if invalid',
+            'if the invoice is valid', 'if the invoice is incomplete',
+            'if the payment matches', 'if the payment clears', 'if the payment fails',
+            'if the account is current', 'if the account is overdue',
+            'if the exception is resolved', 'if the exception cannot be resolved',
             'passes all checks', 'issues are detected', 'routed for correction',
             'routed for rework'
         ]
-        return any(term in text for term in explicit_xor_terms)
+        if any(term in text for term in explicit_xor_terms):
+            return True
+
+        has_conditional_pairs = text.count(' if ') >= 2 or text.startswith('if ')
+        contrasting_outcomes = [
+            ('valid', 'incomplete'),
+            ('valid', 'inconsistent'),
+            ('matches', 'partial'),
+            ('matches', 'disputed'),
+            ('clears', 'fails'),
+            ('current', 'overdue'),
+            ('resolved', 'rejected'),
+            ('responds', 'not received'),
+            ('discrepancies', 'correction')
+        ]
+        return has_conditional_pairs and any(
+            positive in text and negative in text
+            for positive, negative in contrasting_outcomes
+        )
     
     def _select_primary_successor(self, successors: List[Dict]) -> Optional[Dict]:
         """Select the primary/most relevant successor from a group"""

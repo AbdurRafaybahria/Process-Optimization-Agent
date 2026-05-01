@@ -187,7 +187,43 @@ class GatewayDetectorBase(ABC):
             return tasks
         elif 'tasks' in process_data:
             print(f"[GATEWAY-BASE] Found 'tasks' with {len(process_data['tasks'])} items")
-            return process_data['tasks']
+            tasks = []
+            for task in process_data['tasks']:
+                task_name = task.get('task_name') or task.get('name', '')
+                task_overview = self._clean_text(
+                    task.get('task_overview')
+                    or task.get('overview')
+                    or task.get('description')
+                    or ''
+                )
+                duration_minutes = (
+                    task.get('duration_minutes')
+                    or task.get('task_capacity_minutes')
+                    or task.get('duration')
+                    or 0
+                )
+                try:
+                    duration_minutes = float(duration_minutes)
+                except (TypeError, ValueError):
+                    duration_minutes = 0
+
+                normalized_task = task.copy()
+                normalized_task.update({
+                    'task_id': task.get('task_id') or task.get('id'),
+                    'task_name': task_name,
+                    'task_overview': task_overview,
+                    'description': task_overview,
+                    'search_text': f"{task_name} {task_overview}".strip(),
+                    'duration_minutes': duration_minutes,
+                    'duration_hours': (
+                        task.get('duration_hours')
+                        or (duration_minutes / 60 if duration_minutes else 0)
+                    ),
+                    'order': task.get('order', 0),
+                    'dependencies': task.get('dependencies', [])
+                })
+                tasks.append(normalized_task)
+            return tasks
         
         print("[GATEWAY-BASE] No tasks or task_assignments found!")
         return []

@@ -421,7 +421,12 @@ class CMSDataTransformer:
                     for s in task_data["required_skills"]
                 ],
                 dependencies=set(task_data["dependencies"]),  # Convert to set
-                user_involvement=UserInvolvement.from_string(task_data.get("user_involvement", "direct"))
+                order=task_data.get("order"),
+                user_involvement=UserInvolvement.from_string(task_data.get("user_involvement", "direct")),
+                metadata={
+                    "code": task_data.get("code", ""),
+                    "source_order": task_data.get("order")
+                }
             )
             tasks.append(task)
         

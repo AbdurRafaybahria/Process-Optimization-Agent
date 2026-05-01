@@ -276,9 +276,12 @@ class ProcessOptimizer(BaseOptimizer):
         """
         # Detect and apply dependencies first
         self._detect_and_apply_dependencies(process)
+        has_logical_dependencies = any(
+            bool(getattr(task, 'dependencies', None)) for task in process.tasks
+        )
         
         # Try bin-packing optimization first (Levels 1-2)
-        if self._bin_packing_enabled:
+        if self._bin_packing_enabled and not has_logical_dependencies:
             print(f"\n[BIN-PACKING] Attempting optimization with mode: {self._bin_packing_mode}")
             
             # Level 1: Strict constraints
@@ -332,6 +335,8 @@ class ProcessOptimizer(BaseOptimizer):
                     print(f"[BIN-PACKING] Level 2 failed to produce valid schedule")
             
             print(f"[BIN-PACKING] Falling back to Level 3: Greedy sequential scheduling")
+        elif self._bin_packing_enabled and has_logical_dependencies:
+            print("[BIN-PACKING] Skipping bin-packing because logical task dependencies are present")
         
         # Level 3: Greedy scheduling (current proven method)
         return self._optimize_greedy(process, max_retries)
@@ -447,6 +452,7 @@ class ProcessOptimizer(BaseOptimizer):
         resource_workload = {r.id: 0.0 for r in process.resources}  # Total hours assigned
         completed_tasks = set()
         scheduled_tasks = set()
+        task_completion_times = {}
         
         # Priority queue for ready tasks (priority, task_id)
         ready_tasks = []
@@ -482,6 +488,7 @@ class ProcessOptimizer(BaseOptimizer):
                             retry_count += 1
                             completed_tasks.clear()
                             scheduled_tasks.clear()
+                            task_completion_times.clear()
                             ready_tasks = []
                             resource_availability = {r.id: process.start_date for r in process.resources}
                             
@@ -521,6 +528,13 @@ class ProcessOptimizer(BaseOptimizer):
                 print(f"[DEBUG] Found resource {best_resource.id} for task {task_id}")
                 # Use task's duration directly
                 duration_hours = task.duration_hours
+                dependency_ready_hour = 0.0
+                if getattr(task, 'dependencies', None):
+                    dependency_ready_hour = max(
+                        task_completion_times.get(dep_id, 0.0)
+                        for dep_id in task.dependencies
+                    )
+                start_hour = max(start_hour, dependency_ready_hour)
                 end_hour = start_hour + duration_hours
                 cost = duration_hours * best_resource.hourly_rate
                 
@@ -544,6 +558,7 @@ class ProcessOptimizer(BaseOptimizer):
                 
                 # Mark task as completed for dependency checking
                 completed_tasks.add(task.id)
+                task_completion_times[task.id] = end_hour
                 failed_attempts.pop(task_id, None)  # Clear any failed attempts
                 
                 # Check for newly ready tasks

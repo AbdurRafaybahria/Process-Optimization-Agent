@@ -101,6 +101,10 @@ class ParallelGatewayDetector:
                         print(f"[PARALLEL-DEBUG] ⚠️ Skipping gateway at t={start_time}h - only {len(available_tasks)} available task(s) after filtering")
                         continue
                     
+                    if not self._is_timing_parallel_group_logically_valid(start_time, available_tasks, cms_data):
+                        print(f"[PARALLEL-DEBUG] Skipping timing-based gateway at t={start_time}h because it conflicts with logical workflow dependencies")
+                        continue
+
                     # Create parallel gateway suggestion
                     if start_time == 0:
                         # Gateway at the start of the process
@@ -396,6 +400,79 @@ class ParallelGatewayDetector:
     def _tokens(self, text: str) -> Set[str]:
         tokens = set(re.findall(r'[a-zA-Z][a-zA-Z]+', self._clean_text(text).lower()))
         return {token for token in tokens if token not in self._stopwords and len(token) > 2}
+
+    def _is_timing_parallel_group_logically_valid(
+        self,
+        start_time: float,
+        tasks_at_time: List[Dict[str, Any]],
+        cms_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Validate optimizer timing against the authored workflow.
+
+        A schedule can accidentally place dependent tasks at the same time when
+        dependency detection is weak. This prevents those timing artifacts from
+        becoming BPMN gateways.
+        """
+        process_tasks = cms_data.get('process_task', [])
+        if not process_tasks:
+            return True
+
+        task_ids = {
+            str(task.get('task_id'))
+            for task in tasks_at_time
+            if task.get('task_id') is not None
+        }
+        order_by_task_id = {}
+        explicit_deps_by_task_id = {}
+
+        for wrapper in process_tasks:
+            task = wrapper.get('task', {})
+            task_id = task.get('task_id')
+            if task_id is None:
+                continue
+            task_id_str = str(task_id)
+            order_by_task_id[task_id_str] = wrapper.get('order')
+            explicit_deps_by_task_id[task_id_str] = {
+                str(dep) for dep in task.get('dependencies', []) or []
+            }
+
+        if start_time == 0:
+            known_orders = [
+                order for task_id, order in order_by_task_id.items()
+                if task_id in task_ids and order is not None
+            ]
+            all_orders = [order for order in order_by_task_id.values() if order is not None]
+
+            if known_orders and all_orders:
+                first_order = min(all_orders)
+                first_order_task_ids = {
+                    task_id for task_id, order in order_by_task_id.items()
+                    if order == first_order
+                }
+                if not task_ids.issubset(first_order_task_ids):
+                    return self._process_declares_start_parallelism(cms_data)
+
+        for task_id in task_ids:
+            if explicit_deps_by_task_id.get(task_id, set()) & task_ids:
+                return False
+
+        return True
+
+    def _process_declares_start_parallelism(self, cms_data: Dict[str, Any]) -> bool:
+        process_text = self._clean_text(
+            f"{cms_data.get('process_name', '')} "
+            f"{cms_data.get('process_overview', '')} "
+            f"{cms_data.get('description', '')}"
+        ).lower()
+        start_parallel_terms = [
+            'starts in parallel',
+            'begin in parallel',
+            'initial tasks run in parallel',
+            'from the start',
+            'at the start'
+        ]
+        return any(term in process_text for term in start_parallel_terms)
     
     def _find_parallel_candidates(
         self, 
