@@ -38,7 +38,11 @@ if PROJECT_ROOT not in sys.path:
 # Import CMS integration modules
 from process_optimization_agent import CMSClient, CMSDataTransformer, ProcessValidationError, IntelligentOptimizer
 from process_optimization_agent.Optimization.multi_job_resolver import MultiJobResolver, resolve_multi_job_tasks, CostOptimizer, optimize_process_cost, get_eligible_jobs_for_task
-from process_optimization_agent.Optimization.gateways import ParallelGatewayDetector, ExclusiveGatewayDetector, InclusiveGatewayDetector
+from process_optimization_agent.Optimization.gateways import (
+    ParallelGatewayDetector,
+    ExclusiveGatewayDetector,
+    InclusiveGatewayDetector,
+)
 
 import webbrowser as _webbrowser
 import os as _os
@@ -2254,6 +2258,8 @@ async def get_optimized_version_for_cms(process_id: int, authorization: Optional
             
             gateways.extend(consolidated_parallel)
             logger.info(f"[CONSOLIDATE] After consolidation: {len(consolidated_parallel)} parallel gateways")
+
+        logger.info("[GATEWAY-LLM] LLM gateway suggestions disabled")
         
         # Get next process version (this would typically come from CMS, defaulting to 1)
         process_version = cms_data.get('process_version', 0) + 1
@@ -2526,6 +2532,49 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
                 }
                 bpmn_gateways.append(consolidated_gateway)
                 logger.info(f"[BPMN-CONSOLIDATE] After consolidation: 1 parallel gateway with {len(all_task_ids)} unique tasks")
+
+        logger.info("[BPMN-GATEWAY-LLM] LLM gateway suggestions disabled")
+
+        # Defensive cleanup: remove any LLM-only fields if upstream data still contains them.
+        cleaned_gateways = []
+        for gateway in bpmn_gateways:
+            metadata = gateway.get("metadata") or {}
+            if metadata.get("source") == "llm":
+                # Skip LLM-only gateways entirely
+                continue
+
+            cleaned_branches = []
+            for branch in gateway.get("branches", []):
+                branch.pop("suggestedTaskId", None)
+                branch.pop("suggestedTask", None)
+                branch.pop("isSuggestedTask", None)
+
+                has_target = branch.get("targetTaskId") is not None
+                has_end = branch.get("endEventName") is not None
+                if has_target or has_end:
+                    cleaned_branches.append(branch)
+
+            if len(cleaned_branches) < 2 and gateway.get("type") == "EXCLUSIVE":
+                continue
+
+            if cleaned_branches:
+                gateway["branches"] = cleaned_branches
+
+            metadata.pop("source", None)
+            metadata.pop("model", None)
+            metadata.pop("suggested_tasks", None)
+            if metadata:
+                gateway["metadata"] = metadata
+            else:
+                gateway.pop("metadata", None)
+
+            cleaned_gateways.append(gateway)
+
+        bpmn_gateways = cleaned_gateways
+
+        exclusive_count = len([g for g in bpmn_gateways if g.get("type") == "EXCLUSIVE"])
+        inclusive_count = len([g for g in bpmn_gateways if g.get("type") == "INCLUSIVE"])
+        parallel_count = len([g for g in bpmn_gateways if g.get("type") == "PARALLEL"])
         
         # Build response
         response = {
@@ -2534,12 +2583,14 @@ async def get_bpmn_gateway_suggestions(process_id: int, authorization: Optional[
             "gateways": bpmn_gateways,
             "summary": {
                 "total_gateways": len(bpmn_gateways),
-                "exclusive_gateways": len(xor_suggestions),
-                "inclusive_gateways": len(or_suggestions),
-                "parallel_gateways": 1 if parallel_bpmn_gateways_raw else 0,
-                "decision_points_detected": len([g for g in bpmn_gateways if g["type"] == "EXCLUSIVE"]),
-                "conditional_paths_detected": len([g for g in bpmn_gateways if g["type"] == "INCLUSIVE"]),
-                "consolidated_parallel_gateways": len(parallel_bpmn_gateways_raw) if parallel_bpmn_gateways_raw else 0
+                "exclusive_gateways": exclusive_count,
+                "inclusive_gateways": inclusive_count,
+                "parallel_gateways": parallel_count,
+                "decision_points_detected": exclusive_count,
+                "conditional_paths_detected": inclusive_count,
+                "consolidated_parallel_gateways": len(parallel_bpmn_gateways_raw) if parallel_bpmn_gateways_raw else 0,
+                "gateway_source": "heuristic",
+                "gateway_source_reason": "llm_disabled"
             },
             "timestamp": datetime.now().isoformat()
         }

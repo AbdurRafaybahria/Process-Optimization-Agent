@@ -458,6 +458,19 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
                 flow_groups[flow_type].append(successor)
             else:
                 flow_groups['neutral'].append(successor)
+
+        # For approval/review-style decisions, force the positive path to the immediate next task
+        # to avoid skipping the next sequential step.
+        immediate_next = next(
+            (s for s in decision_point.successor_tasks if s.get('distance') == 1),
+            None
+        )
+        if immediate_next and decision_point.decision_type in {
+            'approval', 'review', 'validation', 'eligibility'
+        }:
+            for group in flow_groups.values():
+                group[:] = [s for s in group if s.get('task_id') != immediate_next.get('task_id')]
+            flow_groups['positive'].insert(0, immediate_next)
         
         # Check if we have actual successors or need to infer branches
         has_explicit_successors = any(successors for successors in flow_groups.values())
@@ -513,11 +526,32 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
                 )
                 branches.append(branch)
         
-        # If we have branches but no default, mark the last one as default
+        # If we are missing a negative branch, add a rework loop to the decision task
+        if branches and not any(b.outcome_type == 'negative' for b in branches):
+            task_data = self._get_task_by_id(tasks, decision_point.task_id)
+            negative_condition, negative_expr = self._generate_condition(decision_point, 'negative')
+            branches.append(ExclusiveBranch(
+                branch_id=f"xor_branch_{len(branches) + 1}",
+                target_task_id=decision_point.task_id,
+                task_name=decision_point.task_name,
+                condition=negative_condition,
+                condition_expression=negative_expr,
+                outcome_type='negative',
+                probability=self._estimate_probability('negative'),
+                is_default=False,
+                duration_minutes=task_data.get('duration_minutes', 0) if task_data else 0,
+                assigned_jobs=self._get_task_jobs(task_data) if task_data else []
+            ))
+
+        # If we have branches but no default, prefer a neutral/positive default (avoid negative defaults)
         if branches and not has_default:
-            branches[-1].is_default = True
-            branches[-1].condition = None
-            branches[-1].condition_expression = None
+            preferred_default = next((b for b in branches if b.outcome_type == 'neutral'), None)
+            if not preferred_default:
+                preferred_default = next((b for b in branches if b.outcome_type == 'positive'), None)
+            if preferred_default:
+                preferred_default.is_default = True
+                preferred_default.condition = None
+                preferred_default.condition_expression = None
 
         outcome_types = {branch.outcome_type for branch in branches}
         if len(outcome_types) < 2 and self._description_declares_xor(decision_point, tasks):
@@ -629,14 +663,14 @@ class ExclusiveGatewayDetector(GatewayDetectorBase):
         
         branches.append(ExclusiveBranch(
             branch_id="xor_branch_2",
-            target_task_id=None if is_termination else f"{decision_point.task_id}_rejected",  # None for end events
-            task_name=negative_task_name if not is_termination else None,  # No task name for end events
+            target_task_id=None if is_termination else decision_point.task_id,
+            task_name=negative_task_name if is_termination else decision_point.task_name,
             condition=negative_condition,
             condition_expression=negative_expr,
             outcome_type='negative',
             probability=0.15,
             is_default=False,
-            duration_minutes=0 if is_termination else 15,  # No duration for immediate termination
+            duration_minutes=0 if is_termination else 15,
             assigned_jobs=self._get_task_jobs(None)
         ))
         
