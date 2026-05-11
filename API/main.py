@@ -773,6 +773,38 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         # Pass real job skills data for accurate job matching
         resolver = MultiJobResolver(best_fit_threshold=0.90, jobs_with_skills=jobs_with_skills)
         resolved_cms_data = resolver.resolve_process(cms_data)
+
+        # Use gateway detection results as primary source for timing logic
+        # Fallback to existing gateways only if no detected gateways are available
+        detected_gateways = []
+        try:
+            process_id_int = int(process_id) if process_id is not None else 0
+
+            # Parallel gateways (AND)
+            if gateway_suggestions:
+                parallel_gateways = [
+                    gateway_detector.format_for_cms(suggestion, process_id_int)
+                    for suggestion in gateway_suggestions
+                ]
+                consolidated_parallel = consolidate_parallel_gateways(parallel_gateways)
+                detected_gateways.extend(consolidated_parallel)
+
+            # Exclusive gateways (XOR)
+            if xor_suggestions:
+                detected_gateways.extend(
+                    xor_detector.format_for_cms(xor_suggestions, process_id_int, process_name)
+                )
+
+            # Inclusive gateways (OR)
+            if or_suggestions:
+                detected_gateways.extend(
+                    or_detector.format_for_cms(or_suggestions, process_id_int, process_name)
+                )
+        except Exception as e:
+            print(f"[GATEWAY] Warning: Could not build detected gateways: {e}")
+
+        if detected_gateways:
+            resolved_cms_data["gateways"] = detected_gateways
         
         # Extract resolution details for response
         multi_job_resolutions = resolved_cms_data.pop('_multi_job_resolutions', [])
@@ -926,10 +958,6 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
         print(f"[COST] Optimized cost AFTER all optimizations: ${optimized_total_cost:.2f}")
         print(f"[COST] Total savings: ${total_savings:.2f}")
         
-        # Calculate time saved
-        time_saved = current_total_time - optimized_total_time
-        time_saved_percentage = (time_saved / current_total_time * 100) if current_total_time > 0 else 0
-        
         # Build task assignments
         task_assignments = []
         for entry in schedule.entries if schedule else []:
@@ -948,6 +976,186 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                     "end_time": entry.end_hour,
                     "cost": (entry.end_hour - entry.start_hour) * resource.hourly_rate
                 })
+        
+        # ===== FIX TASK ASSIGNMENT TIMES BASED ON BPMN GATEWAYS & NLP DEPENDENCIES =====
+        # Primary source: gateways (BPMN structure)
+        # Secondary source: NLP dependency analyzer results
+        # Never use network_diagram as source - it's a visualization only
+        if task_assignments:
+            print(f"[FIX-TIMES] Analyzing {len(task_assignments)} task assignments using BPMN gateways and NLP dependencies")
+            
+            # PRIMARY SOURCE: Gateways from BPMN definition
+            gateways_data = resolved_cms_data.get('gateways', [])
+            print(f"[FIX-TIMES] Found {len(gateways_data)} gateways in BPMN definition")
+            
+            gateway_map = {}  # after_task_id -> list of target_task_ids
+            gateway_types = {}  # after_task_id -> gateway_type
+            
+            task_lookup = {str(ta["task_id"]): ta for ta in task_assignments}
+            all_task_ids = set(task_lookup.keys())
+            
+            # Parse gateways from BPMN
+            for gateway in gateways_data:
+                after_task_id = str(gateway.get('after_task_id', ''))
+                gateway_type = (gateway.get('type') or gateway.get('gateway_type') or 'EXCLUSIVE').upper()
+                
+                if after_task_id:
+                    targets = [str(t) for branch in gateway.get('branches', []) for t in ([branch.get('target_task_id')]) if branch.get('target_task_id')]
+                    if targets:
+                        gateway_map[after_task_id] = targets
+                        gateway_types[after_task_id] = gateway_type
+                        print(f"[FIX-TIMES] Gateway: {after_task_id} -> {targets} (type={gateway_type})")
+            
+            # If NO gateways found, try SECONDARY SOURCE: NLP dependency analyzer
+            if not gateway_map:
+                print(f"[FIX-TIMES] No gateways defined in BPMN, checking NLP dependency analyzer results")
+                
+                # Check if NLP detected any parallel groups
+                parallel_deps = resolved_cms_data.get('parallel_execution', {})
+                if parallel_deps and parallel_deps.get('enabled'):
+                    parallel_groups = parallel_deps.get('parallel_groups', [])
+                    print(f"[FIX-TIMES] NLP found {len(parallel_groups)} parallel groups")
+                    for group in parallel_groups:
+                        group_id = group.get('group_id', 'unknown')
+                        tasks = group.get('tasks', [])
+                        print(f"[FIX-TIMES] NLP Parallel Group {group_id}: {tasks}")
+            
+            # Find starting task
+            tasks_as_targets = set()
+            for targets in gateway_map.values():
+                tasks_as_targets.update(targets)
+            
+            start_task_id = next((tid for tid in all_task_ids if tid not in tasks_as_targets), None)
+            
+            if not start_task_id:
+                for pt in resolved_cms_data.get('process_task', []):
+                    if pt.get('order') == 1:
+                        start_task_id = str(pt.get('task_id'))
+                        break
+            
+            if not start_task_id and all_task_ids:
+                start_task_id = sorted(all_task_ids)[0]
+            
+            print(f"[FIX-TIMES] Starting task: {start_task_id}")
+            
+            # Build schedule using gateways (parallel tasks share start time; others sequential)
+            if start_task_id:
+                current_time = 0.0
+                processed = set()
+                task_completion_times = {}
+
+                # Build ordered task list from process_task order
+                ordered_task_ids = []
+                for pt in resolved_cms_data.get('process_task', []):
+                    task_data = pt.get('task', {})
+                    task_id = task_data.get('task_id')
+                    if task_id is not None:
+                        task_id_str = str(task_id)
+                        if task_id_str in task_lookup and task_id_str not in ordered_task_ids:
+                            ordered_task_ids.append(task_id_str)
+                for task_id in sorted(all_task_ids):
+                    if task_id not in ordered_task_ids:
+                        ordered_task_ids.append(task_id)
+
+                # Build parallel groups map
+                parallel_groups = {}
+                parallel_target_to_after = {}
+                for after_task_id, targets in gateway_map.items():
+                    if gateway_types.get(after_task_id) == 'PARALLEL' and len(targets) > 1:
+                        parallel_groups[after_task_id] = targets
+                        for target in targets:
+                            parallel_target_to_after[target] = after_task_id
+
+                for task_id in ordered_task_ids:
+                    if task_id in processed:
+                        continue
+
+                    # If task belongs to a parallel group, schedule the whole group together
+                    if task_id in parallel_target_to_after:
+                        after_task_id = parallel_target_to_after[task_id]
+
+                        if after_task_id and after_task_id in task_lookup and after_task_id not in processed:
+                            task_assn = task_lookup[after_task_id]
+                            task_assn["start_time"] = current_time
+                            end_time = current_time + task_assn["duration_hours"]
+                            task_assn["end_time"] = end_time
+                            task_completion_times[after_task_id] = end_time
+                            processed.add(after_task_id)
+                            current_time = end_time
+                            print(f"[FIX-TIMES] Task {after_task_id}: {task_assn['start_time']:.2f}h-{end_time:.2f}h (sequential)")
+
+                        start_time = task_completion_times.get(after_task_id, 0.0)
+                        max_end = start_time
+                        print(f"[FIX-TIMES] PARALLEL gateway: {after_task_id} -> {parallel_groups[after_task_id]}")
+
+                        for target_task_id in parallel_groups[after_task_id]:
+                            if target_task_id in task_lookup and target_task_id not in processed:
+                                task_assn = task_lookup[target_task_id]
+                                task_assn["start_time"] = start_time
+                                end_time = start_time + task_assn["duration_hours"]
+                                task_assn["end_time"] = end_time
+                                task_completion_times[target_task_id] = end_time
+                                processed.add(target_task_id)
+                                max_end = max(max_end, end_time)
+                                print(f"[FIX-TIMES]   - {target_task_id}: {task_assn['start_time']:.2f}h-{end_time:.2f}h (parallel)")
+
+                        current_time = max_end
+                        continue
+
+                    # Default sequential scheduling for non-parallel tasks
+                    if task_id in task_lookup:
+                        task_assn = task_lookup[task_id]
+                        task_assn["start_time"] = current_time
+                        end_time = current_time + task_assn["duration_hours"]
+                        task_assn["end_time"] = end_time
+                        task_completion_times[task_id] = end_time
+                        processed.add(task_id)
+                        current_time = end_time
+                        print(f"[FIX-TIMES] Task {task_id}: {task_assn['start_time']:.2f}h-{end_time:.2f}h (sequential)")
+
+                print(f"[FIX-TIMES] Process timeline corrected: {current_time:.2f}h total")
+        
+        # ===== EXTRACT BPMN DEPENDENCIES FROM PROCESS DATA =====
+        # This ensures we validate parallelism against the actual BPMN process definition
+        bpmn_task_dependencies = {}  # Maps task_id -> set of task IDs it depends on
+        try:
+            # Extract from process_task array
+            process_tasks_data = resolved_cms_data.get('process_task', [])
+            for pt_wrapper in process_tasks_data:
+                task_data = pt_wrapper.get('task', {})
+                task_id = str(task_data.get('task_id', ''))
+                if task_id:
+                    bpmn_task_dependencies[task_id] = set()
+            
+            # Extract dependencies from gateways (conditional branches)
+            gateways = resolved_cms_data.get('gateways', [])
+            for gateway in gateways:
+                after_task_id = str(gateway.get('after_task_id', ''))
+                branches = gateway.get('branches', [])
+                
+                # Each branch target depends on the gateway's after_task
+                for branch in branches:
+                    target_task_id = str(branch.get('target_task_id', ''))
+                    if target_task_id and after_task_id:
+                        if target_task_id not in bpmn_task_dependencies:
+                            bpmn_task_dependencies[target_task_id] = set()
+                        bpmn_task_dependencies[target_task_id].add(after_task_id)
+                
+                # Additionally, track convergence (if multiple branches converge)
+                converge_at_task_id = str(gateway.get('converge_at_task_id', ''))
+                if converge_at_task_id and branches:
+                    if converge_at_task_id not in bpmn_task_dependencies:
+                        bpmn_task_dependencies[converge_at_task_id] = set()
+                    # Convergence task depends on all branch targets
+                    for branch in branches:
+                        target_task_id = str(branch.get('target_task_id', ''))
+                        if target_task_id:
+                            bpmn_task_dependencies[converge_at_task_id].add(target_task_id)
+            
+            print(f"[BPMN-DEPS] Extracted task dependencies: {bpmn_task_dependencies}")
+        except Exception as e:
+            print(f"[BPMN-DEPS] Error extracting dependencies: {e}")
+            bpmn_task_dependencies = {}
         
         # Analyze execution patterns: parallel vs sequential
         parallel_tasks = []
@@ -1143,8 +1351,15 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                                         deps_respected = False
                                     dependency_chain.append(dep_id)
                         
+                        # CRITICAL FIX: Check BPMN dependencies too
+                        # If task has BPMN dependencies, it cannot run in parallel with unrelated tasks
+                        bpmn_deps = bpmn_task_dependencies.get(str(task.id), set())
+                        if bpmn_deps:
+                            # Task has BPMN dependencies - add to dependency_chain for tracking
+                            dependency_chain.extend(list(bpmn_deps))
+                        
                         # Sort dependency_chain for deterministic output
-                        dependency_chain = sorted(dependency_chain)
+                        dependency_chain = sorted(list(set(dependency_chain)))
                         
                         task_info_list.append({
                             "task_id": task.id,
@@ -1153,26 +1368,50 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                             "duration_hours": entry.end_hour - entry.start_hour,
                             "start_time": entry.start_hour,
                             "end_time": entry.end_hour,
-                            "has_dependencies": bool(task.dependencies),
+                            "has_dependencies": bool(task.dependencies or bpmn_deps),
                             "dependencies_respected": deps_respected,
                             "dependency_chain": dependency_chain
                         })
                 
                 if len(entries) > 1:
                     # Multiple tasks starting at same time
-                    # Check if any have dependencies - if so, they're running in parallel incorrectly
-                    has_deps = any(info["has_dependencies"] for info in task_info_list)
-                    task_names = [info["task_name"] for info in task_info_list]
-                    
-                    parallel_tasks.append({
-                        "start_time": start_time,
-                        "task_count": len(entries),
-                        "tasks": task_names,
-                        "task_details": task_info_list,
-                        "note": "Some tasks have dependencies but are running in parallel" if has_deps else "Independent tasks running in parallel"
-                    })
+                    # CRITICAL FIX: Check if ANY have BPMN dependencies that would prevent parallelism
+                    bpmn_deps_in_group = False
                     for info in task_info_list:
-                        parallel_task_ids.add(info["task_id"])
+                        bpmn_deps = bpmn_task_dependencies.get(str(info["task_id"]), set())
+                        if bpmn_deps:
+                            bpmn_deps_in_group = True
+                            break
+                    
+                    # If there are BPMN dependencies in the group, treat as sequential
+                    if bpmn_deps_in_group:
+                        print(f"[VALIDATION] Time {start_time}: Tasks have BPMN dependencies - marking as sequential")
+                        for info in task_info_list:
+                            sequential_tasks.append({
+                                "task_id": info["task_id"],
+                                "task_name": info["task_name"],
+                                "resource_name": info["resource_name"],
+                                "duration_hours": info["duration_hours"],
+                                "start_time": info["start_time"],
+                                "end_time": info["end_time"],
+                                "has_dependencies": info["has_dependencies"],
+                                "reason": f"BPMN dependencies prevent parallelism: {', '.join(bpmn_task_dependencies.get(str(info['task_id']), set()))}"
+                            })
+                            sequential_task_ids.add(info["task_id"])
+                    else:
+                        # Check if any have dependencies - if so, they're running in parallel incorrectly
+                        has_deps = any(info["has_dependencies"] for info in task_info_list)
+                        task_names = [info["task_name"] for info in task_info_list]
+                        
+                        parallel_tasks.append({
+                            "start_time": start_time,
+                            "task_count": len(entries),
+                            "tasks": task_names,
+                            "task_details": task_info_list,
+                            "note": "Some tasks have dependencies but are running in parallel" if has_deps else "Independent tasks running in parallel"
+                        })
+                        for info in task_info_list:
+                            parallel_task_ids.add(info["task_id"])
                 else:
                     # Single task at this time point = sequential execution
                     info = task_info_list[0]
@@ -1243,6 +1482,26 @@ async def optimize_cms_process_json(process_id: int, authorization: Optional[str
                                                   if task.get("has_dependencies"))
                 if tasks_with_deps_in_parallel > 0:
                     execution_pattern_analysis["warning"] = f"{tasks_with_deps_in_parallel} tasks with dependencies are running in parallel - dependencies may not be properly enforced"
+            
+            # ===== CALCULATE TIME SAVED (CRITICAL FIX) =====
+            # If all tasks are sequential due to BPMN dependencies, there's no time savings
+            if not parallel_task_ids or len(parallel_task_ids) == 0:
+                # No actual parallelism - all tasks are sequential (set by BPMN dependencies)
+                time_saved = 0.0
+                time_saved_percentage = 0.0
+                optimized_total_time = current_total_time
+                print(f"[TIME-VALIDATION] No parallelism possible - all tasks are sequential due to BPMN dependencies")
+                print(f"[TIME-VALIDATION] Corrected optimized_total_time: {optimized_total_time:.2f}h (same as sequential)")
+            else:
+                time_saved = current_total_time - optimized_total_time
+                time_saved_percentage = (time_saved / current_total_time * 100) if current_total_time > 0 else 0
+                print(f"[TIME-VALIDATION] Parallelism detected: time saved = {time_saved:.2f}h ({time_saved_percentage:.1f}%)")
+        else:
+            # No schedule entries - no optimization possible
+            time_saved = 0.0
+            time_saved_percentage = 0.0
+            optimized_total_time = current_total_time
+            print(f"[TIME-VALIDATION] No schedule entries - no optimization possible")
         
         # Generate suggestions
         suggestions = []
